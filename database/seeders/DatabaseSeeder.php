@@ -14,29 +14,29 @@ class DatabaseSeeder extends Seeder
     {
         // ── 1. Admin ─────────────────────────────────────────────────────────
         User::create([
-            'nombre'   => 'Administrador',
-            'email'    => 'admin@incidencias.test',
+            'nombre' => 'Administrador',
+            'email' => 'admin@incidencias.test',
             'password' => Hash::make('password'),
-            'rol'      => RolUsuario::Admin,
-            'activo'   => true,
+            'rol' => RolUsuario::Admin,
+            'activo' => true,
         ]);
 
         // ── 2. Subdirección Académica ─────────────────────────────────────────
         User::create([
-            'nombre'   => 'María González',
-            'email'    => 'subdireccion@incidencias.test',
+            'nombre' => 'Alan',
+            'email' => 'subdireccion@incidencias.test',
             'password' => Hash::make('password'),
-            'rol'      => RolUsuario::SubdireccionAcademica,
-            'activo'   => true,
+            'rol' => RolUsuario::SubdireccionAcademica,
+            'activo' => true,
         ]);
 
         // ── 3. Capital Humano ─────────────────────────────────────────────────
         User::create([
-            'nombre'   => 'Roberto Méndez',
-            'email'    => 'capitalhumano@incidencias.test',
+            'nombre' => 'Roberto Méndez',
+            'email' => 'capitalhumano@incidencias.test',
             'password' => Hash::make('password'),
-            'rol'      => RolUsuario::CapitalHumano,
-            'activo'   => true,
+            'rol' => RolUsuario::CapitalHumano,
+            'activo' => true,
         ]);
 
         // ── 4. Áreas (10) ─────────────────────────────────────────────────────
@@ -48,7 +48,6 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Gestión Escolar',                                       'slug' => 'gestion-escolar'],
             ['nombre' => 'Becas y Apoyos Económicos',                             'slug' => 'becas'],
             ['nombre' => 'Servicio Social y Titulación',                          'slug' => 'servicio-social'],
-            ['nombre' => 'Capital Humano',                                        'slug' => 'capital-humano'],
             ['nombre' => 'Unidad de Informática',                                 'slug' => 'informatica'],
             ['nombre' => 'Biblioteca y Actividades Culturales',                   'slug' => 'biblioteca'],
         ];
@@ -67,7 +66,6 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Lic. Ana Flores',       'email' => 'jefe.gestion@incidencias.test',        'area' => 'gestion-escolar'],
             ['nombre' => 'Lic. Mario Torres',     'email' => 'jefe.becas@incidencias.test',          'area' => 'becas'],
             ['nombre' => 'Lic. Sandra López',     'email' => 'jefe.servicio@incidencias.test',       'area' => 'servicio-social'],
-            ['nombre' => 'Lic. Luis Gutiérrez',   'email' => 'jefe.capitalhumano@incidencias.test',  'area' => 'capital-humano'],
             ['nombre' => 'Ing. Pedro Sánchez',    'email' => 'jefe.informatica@incidencias.test',    'area' => 'informatica'],
             ['nombre' => 'Lic. Claudia Reyes',    'email' => 'jefe.biblioteca@incidencias.test',     'area' => 'biblioteca'],
         ];
@@ -77,12 +75,12 @@ class DatabaseSeeder extends Seeder
         foreach ($jefes as $jefe) {
             $area = $areasIndexadas->get($jefe['area']);
             User::create([
-                'nombre'   => $jefe['nombre'],
-                'email'    => $jefe['email'],
+                'nombre' => $jefe['nombre'],
+                'email' => $jefe['email'],
                 'password' => Hash::make('password'),
-                'rol'      => RolUsuario::JefeInmediato,
-                'area_id'  => $area?->id,
-                'activo'   => true,
+                'rol' => RolUsuario::JefeInmediato,
+                'area_id' => $area?->id,
+                'activo' => true,
             ]);
         }
     }

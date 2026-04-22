@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Panel\Subdireccion;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ComentarIncidenciaRequest;
 use App\Http\Requests\Subdireccion\AprobarIncidenciaRequest;
 use App\Http\Requests\Subdireccion\RechazarIncidenciaRequest;
 use App\Models\Incidencia;
@@ -24,20 +23,18 @@ class IncidenciaController extends Controller
         $query = Incidencia::with(['area:id,nombre'])
             ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->estado))
             ->when($request->filled('tipo'), fn ($q) => $q->where('tipo_incidencia', $request->tipo))
-            ->when($request->filled('buscar'), fn ($q) =>
-                $q->where(fn ($q2) =>
-                    $q2->where('folio', 'like', "%{$request->buscar}%")
-                       ->orWhere('numero_empleado', 'like', "%{$request->buscar}%")
-                       ->orWhere('reportante_nombre', 'like', "%{$request->buscar}%")
-                )
+            ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($q2) => $q2->where('folio', 'like', "%{$request->buscar}%")
+                ->orWhere('numero_empleado', 'like', "%{$request->buscar}%")
+                ->orWhere('reportante_nombre', 'like', "%{$request->buscar}%")
+            )
             )
             ->latest();
 
         return Inertia::render('Panel/Subdireccion/Incidencias/Index', [
             'incidencias' => $query->paginate(20)->withQueryString(),
-            'filtros'     => $request->only(['estado', 'tipo', 'buscar']),
-            'estados'     => EstadoIncidencia::cases(),
-            'tipos'       => TipoIncidencia::cases(),
+            'filtros' => $request->only(['estado', 'tipo', 'buscar']),
+            'estados' => EstadoIncidencia::cases(),
+            'tipos' => TipoIncidencia::cases(),
         ]);
     }
 
@@ -71,17 +68,5 @@ class IncidenciaController extends Controller
         return redirect()
             ->route('panel.subdireccion.incidencias.show', $incidencia)
             ->with('success', "Incidencia {$incidencia->folio} rechazada.");
-    }
-
-    public function comentar(ComentarIncidenciaRequest $request, Incidencia $incidencia): RedirectResponse
-    {
-        $this->incidenciaService->comentar(
-            incidencia: $incidencia,
-            user: $request->user(),
-            comentario: $request->comentario,
-            esInterno: (bool) $request->boolean('es_interno'),
-        );
-
-        return back()->with('success', 'Comentario agregado.');
     }
 }

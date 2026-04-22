@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreIncidenciaPublicaRequest;
 use App\Models\Area;
+use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Services\IncidenciaService;
 use Illuminate\Http\JsonResponse;
@@ -40,12 +41,20 @@ class IncidenciaPublicaController extends Controller
     {
         $request->validate(['numero' => ['required', 'string', 'max:20']]);
 
-        $resultados = Incidencia::where('numero_empleado', $request->numero)
-            ->select('reportante_nombre', 'email_reportante')
-            ->distinct()
-            ->orderByDesc('created_at')
+        $numero = trim((string) $request->numero);
+
+        $resultados = Empleado::query()
+            ->where('numero_empleado', 'like', "{$numero}%")
+            ->orderByDesc('updated_at')
             ->limit(5)
-            ->get();
+            ->get(['numero_empleado', 'nombre', 'email', 'tipo'])
+            ->map(fn (Empleado $e) => [
+                // Mantener compatibilidad con el frontend existente.
+                'numero_empleado' => $e->numero_empleado,
+                'reportante_nombre' => $e->nombre,
+                'email_reportante' => $e->email,
+                'tipo_empleado' => $e->tipo?->value,
+            ]);
 
         return response()->json($resultados->values());
     }
@@ -55,10 +64,10 @@ class IncidenciaPublicaController extends Controller
         $incidencia = Incidencia::where('folio', $folio)->firstOrFail();
 
         return Inertia::render('Public/Incidencias/Confirmacion', [
-            'folio'            => $incidencia->folio,
-            'token'            => $incidencia->token_seguimiento,
-            'numero_empleado'  => $incidencia->numero_empleado,
-            'tipo_incidencia'  => $incidencia->tipo_incidencia->label(),
+            'folio' => $incidencia->folio,
+            'token' => $incidencia->token_seguimiento,
+            'numero_empleado' => $incidencia->numero_empleado,
+            'tipo_incidencia' => $incidencia->tipo_incidencia->label(),
             'fecha_incidencia' => $incidencia->fecha_incidencia->format('d/m/Y'),
         ]);
     }

@@ -39,8 +39,10 @@ type Props = {
 };
 
 const ROL_LABELS: Record<string, string> = {
-    admin: 'Administrador',
-    subdirector: 'Subdirector',
+    admin:                  'Administrador',
+    jefe_inmediato:         'Jefe Inmediato',
+    capital_humano:         'Capital Humano',
+    subdireccion_academica: 'Subdirección Académica',
 };
 
 export default function Index({ usuarios, filtros, roles }: Props) {

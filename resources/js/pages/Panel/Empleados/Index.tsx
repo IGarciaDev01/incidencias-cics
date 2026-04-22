@@ -11,7 +11,7 @@ type Empleado = {
     reportante_nombre: string;
     email_reportante: string | null;
     total_incidencias: number;
-    ultima_incidencia: string;
+    ultima_incidencia: string | null;
 };
 
 type Paginado<T> = {
@@ -111,7 +111,9 @@ export default function Index({ empleados, filtros }: Props) {
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
-                                            {new Date(emp.ultima_incidencia).toLocaleDateString('es-MX')}
+                                            {emp.ultima_incidencia
+                                                ? new Date(emp.ultima_incidencia).toLocaleDateString('es-MX')
+                                                : <span className="text-gray-300 italic">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <Link

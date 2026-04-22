@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('numero_empleado', 20);
             $table->string('reportante_nombre', 150);
             $table->string('email_reportante', 150)->nullable();
-            $table->enum('tipo_solicitante', ['docente', 'administrativo']);
+            $table->enum('tipo_solicitante', ['docente', 'administrativo', 'paae']);
             $table->foreignId('area_id')->nullable()->constrained('areas')->nullOnDelete();
             $table->date('fecha_incidencia');
             $table->enum('tipo_incidencia', [

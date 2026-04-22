@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Select,
     SelectContent,
@@ -12,10 +11,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { store, buscarEmpleado } from '@/routes/incidencias';
 
 type Area = { id: number; nombre: string };
-type EmpleadoSugerido = { reportante_nombre: string; email_reportante: string | null };
+type EmpleadoSugerido = {
+    numero_empleado: string;
+    reportante_nombre: string;
+    email_reportante: string | null;
+    tipo_empleado: 'docente' | 'administrativo' | 'paae' | null;
+};
 
 type Props = { areas: Area[] };
 
@@ -31,7 +36,7 @@ export default function Create({ areas }: Props) {
         numero_empleado:   '',
         reportante_nombre: '',
         email_reportante:  '',
-        tipo_solicitante:  '',
+        tipo_empleado:     '',
         area_id:           '',
         fecha_incidencia:  '',
         tipo_incidencia:   '',
@@ -46,6 +51,24 @@ export default function Create({ areas }: Props) {
     const [busquedaHecha, setBusquedaHecha] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const seleccionarSugerido = useCallback((sugerido: EmpleadoSugerido) => {
+        setData((prev) => ({
+            ...prev,
+            numero_empleado: sugerido.numero_empleado,
+            reportante_nombre: sugerido.reportante_nombre,
+            email_reportante:  sugerido.email_reportante ?? '',
+            tipo_empleado: sugerido.tipo_empleado ?? '',
+        }));
+        setNombreManual(false);
+        setSugeridos([]);
+    }, [setData]);
+
+    const activarNombreManual = useCallback(() => {
+        setNombreManual(true);
+        setSugeridos([]);
+        setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '', tipo_empleado: '' }));
+    }, [setData]);
+
     useEffect(() => {
         const numero = data.numero_empleado.trim();
 
@@ -56,18 +79,36 @@ export default function Create({ areas }: Props) {
             return;
         }
 
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
 
         debounceRef.current = setTimeout(async () => {
             setBuscando(true);
             try {
-                const res = await fetch(buscarEmpleado.url({ numero }));
+                const res = await fetch(
+                    buscarEmpleado.url({ query: { numero } }),
+                    { headers: { Accept: 'application/json' } },
+                );
+
+                if (!res.ok) {
+                    throw new Error('No se pudo consultar el empleado.');
+                }
+
                 const json: EmpleadoSugerido[] = await res.json();
                 setSugeridos(json);
                 setBusquedaHecha(true);
+
+                // Si existe coincidencia exacta, autocompletar de inmediato.
+                const exacto = json.find((e) => e.numero_empleado === numero);
+                if (exacto) {
+                    seleccionarSugerido(exacto);
+                    return;
+                }
+
                 if (json.length === 0) {
                     setNombreManual(true);
-                    setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '' }));
+                    setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '', tipo_empleado: '' }));
                 } else {
                     setNombreManual(false);
                 }
@@ -79,23 +120,12 @@ export default function Create({ areas }: Props) {
             }
         }, 500);
 
-        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-    }, [data.numero_empleado]);
-
-    function seleccionarSugerido(sugerido: EmpleadoSugerido) {
-        setData((prev) => ({
-            ...prev,
-            reportante_nombre: sugerido.reportante_nombre,
-            email_reportante:  sugerido.email_reportante ?? '',
-        }));
-        setSugeridos([]);
-    }
-
-    function activarNombreManual() {
-        setNombreManual(true);
-        setSugeridos([]);
-        setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '' }));
-    }
+        return () => {
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
+        };
+    }, [data.numero_empleado, seleccionarSugerido, setData]);
 
     const tipoSeleccionado = TIPOS_INCIDENCIA.find((t) => t.value === data.tipo_incidencia);
 
@@ -229,18 +259,23 @@ export default function Create({ areas }: Props) {
 
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Tipo de solicitante <span className="text-red-500">*</span></Label>
-                            <Select value={data.tipo_solicitante} onValueChange={(v) => setData('tipo_solicitante', v)} required>
+                            <Label>Tipo de empleado <span className="text-red-500">*</span></Label>
+                            <Select
+                                value={data.tipo_empleado}
+                                onValueChange={(v) => setData('tipo_empleado', v)}
+                                required={nombreManual || !data.tipo_empleado}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecciona..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="docente">Docente</SelectItem>
                                     <SelectItem value="administrativo">Administrativo</SelectItem>
+                                    <SelectItem value="paae">PAAE</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <input type="hidden" name="tipo_solicitante" value={data.tipo_solicitante} />
-                            <InputError message={errors.tipo_solicitante} />
+                            <input type="hidden" name="tipo_empleado" value={data.tipo_empleado} />
+                            <InputError message={errors.tipo_empleado} />
                         </div>
 
                         <div className="grid gap-2">

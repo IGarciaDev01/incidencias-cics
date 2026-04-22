@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
+use App\Models\Empleado;
 use App\Models\Incidencia;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,43 +13,54 @@ class EmpleadoController extends Controller
 {
     public function index(Request $request): Response
     {
-        $user  = $request->user();
-        $query = Incidencia::query();
-
-        if ($user->esJefeInmediato() && $user->area_id) {
-            $query->where('area_id', $user->area_id);
-        }
+        $user = $request->user();
 
         $buscar = $request->string('buscar')->trim();
 
-        if ($buscar->isNotEmpty()) {
-            $query->where(function ($q) use ($buscar) {
-                $q->where('numero_empleado', 'like', "%{$buscar}%")
-                    ->orWhere('reportante_nombre', 'like', "%{$buscar}%");
-            });
+        $incidenciasBase = Incidencia::query()
+            ->whereColumn('incidencias.numero_empleado', 'empleados.numero_empleado');
+
+        if ($user->esJefeInmediato()) {
+            abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
+
+            $incidenciasBase->where('area_id', $user->area_id);
         }
 
-        $empleados = $query
-            ->select('numero_empleado', 'reportante_nombre', 'email_reportante')
-            ->selectRaw('COUNT(*) as total_incidencias')
-            ->selectRaw('MAX(created_at) as ultima_incidencia')
-            ->groupBy('numero_empleado', 'reportante_nombre', 'email_reportante')
+        $empleados = Empleado::query()
+            ->selectRaw('numero_empleado, nombre as reportante_nombre, email as email_reportante')
+            ->when($buscar->isNotEmpty(), function ($q) use ($buscar) {
+                $q->where(function ($q2) use ($buscar) {
+                    $q2->where('numero_empleado', 'like', "%{$buscar}%")
+                        ->orWhere('nombre', 'like', "%{$buscar}%");
+                });
+            })
+            ->addSelect([
+                'total_incidencias' => (clone $incidenciasBase)->selectRaw('COUNT(*)'),
+                'ultima_incidencia' => (clone $incidenciasBase)->selectRaw('MAX(created_at)'),
+            ])
+            ->when(
+                $user->esJefeInmediato(),
+                fn ($q) => $q->whereExists((clone $incidenciasBase)->selectRaw('1'))
+            )
             ->orderByDesc('ultima_incidencia')
             ->paginate(30)
             ->withQueryString();
 
         return Inertia::render('Panel/Empleados/Index', [
             'empleados' => $empleados,
-            'filtros'   => ['buscar' => (string) $buscar],
+            'filtros' => ['buscar' => (string) $buscar],
         ]);
     }
 
     public function show(Request $request, string $numeroEmpleado): Response
     {
-        $user  = $request->user();
+        $user = $request->user();
+        $empleadoModel = Empleado::where('numero_empleado', $numeroEmpleado)->firstOrFail();
         $query = Incidencia::where('numero_empleado', $numeroEmpleado);
 
-        if ($user->esJefeInmediato() && $user->area_id) {
+        if ($user->esJefeInmediato()) {
+            abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
+
             $query->where('area_id', $user->area_id);
         }
 
@@ -57,16 +69,18 @@ class EmpleadoController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        abort_if($incidencias->isEmpty(), 404, 'Empleado no encontrado.');
+        if ($user->esJefeInmediato()) {
+            abort_if($incidencias->isEmpty(), 404, 'Empleado no encontrado.');
+        }
 
         $empleado = [
-            'numero_empleado'   => $numeroEmpleado,
-            'reportante_nombre' => $incidencias->first()->reportante_nombre,
-            'email_reportante'  => $incidencias->first()->email_reportante,
+            'numero_empleado' => $numeroEmpleado,
+            'reportante_nombre' => $empleadoModel->nombre,
+            'email_reportante' => $empleadoModel->email,
         ];
 
         return Inertia::render('Panel/Empleados/Show', [
-            'empleado'    => $empleado,
+            'empleado' => $empleado,
             'incidencias' => $incidencias,
         ]);
     }

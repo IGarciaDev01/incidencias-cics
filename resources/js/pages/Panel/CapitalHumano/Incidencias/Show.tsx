@@ -9,7 +9,6 @@ import {
     index,
     aprobar,
     rechazar,
-    comentar,
 } from '@/routes/panel/capital_humano/incidencias';
 
 type HistorialItem = {
@@ -37,7 +36,7 @@ type Incidencia = {
     area: { id: number; nombre: string } | null;
     revisado_por: { id: number; nombre: string } | null;
     historial: HistorialItem[];
-    archivos: { id: number; nombre_original: string; tamanio_bytes: number }[];
+    archivos: { id: number; nombre_original: string; tamanio_bytes: number; tamanio_legible?: string; url?: string }[];
 };
 
 type Props = { incidencia: Incidencia };
@@ -75,7 +74,7 @@ function formatBytes(b: number) {
     return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-type Tab = 'aprobar' | 'rechazar' | 'comentar';
+type Tab = 'aprobar' | 'rechazar';
 
 export default function Show({ incidencia }: Props) {
     const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
@@ -83,7 +82,7 @@ export default function Show({ incidencia }: Props) {
 
     const aprobarForm  = useForm({ comentario: '' });
     const rechazarForm = useForm({ motivo: '' });
-    const comentarForm = useForm({ comentario: '', es_interno: true });
+    // Comentarios deshabilitados para Capital Humano.
 
     const puedeAprobar  = incidencia.estado === 'pendiente_capital_humano';
     const puedeRechazar = incidencia.estado === 'pendiente_capital_humano';
@@ -171,7 +170,7 @@ export default function Show({ incidencia }: Props) {
                 </div>
 
                 {/* Acciones */}
-                {(puedeAprobar || puedeRechazar || !esFinal) && (
+                {(puedeAprobar || puedeRechazar) && (
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
                         <h3 className="font-semibold text-gray-900 mb-4">Acciones</h3>
                         <div className="flex flex-wrap gap-2 mb-4">
@@ -183,11 +182,6 @@ export default function Show({ incidencia }: Props) {
                             {puedeRechazar && (
                                 <Button size="sm" variant={tab === 'rechazar' ? 'destructive' : 'outline'} onClick={() => setTab(tab === 'rechazar' ? null : 'rechazar')}>
                                     Rechazar
-                                </Button>
-                            )}
-                            {!esFinal && (
-                                <Button size="sm" variant={tab === 'comentar' ? 'default' : 'outline'} onClick={() => setTab(tab === 'comentar' ? null : 'comentar')}>
-                                    Comentar
                                 </Button>
                             )}
                         </div>
@@ -242,41 +236,6 @@ export default function Show({ incidencia }: Props) {
                             </form>
                         )}
 
-                        {tab === 'comentar' && (
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    comentarForm.post(comentar.url(incidencia.id), {
-                                        preserveScroll: true,
-                                        onSuccess: () => { setTab(null); comentarForm.reset(); },
-                                    });
-                                }}
-                                className="border-t pt-4 space-y-3"
-                            >
-                                <div className="grid gap-1.5">
-                                    <Label>Comentario <span className="text-red-500">*</span></Label>
-                                    <textarea
-                                        value={comentarForm.data.comentario}
-                                        onChange={(e) => comentarForm.setData('comentario', e.target.value)}
-                                        rows={3} required minLength={5}
-                                        placeholder="Escribe tu comentario..."
-                                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    />
-                                    <InputError message={comentarForm.errors.comentario} />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" id="es_interno"
-                                        checked={comentarForm.data.es_interno}
-                                        onChange={(e) => comentarForm.setData('es_interno', e.target.checked)}
-                                        className="rounded border-gray-300"
-                                    />
-                                    <Label htmlFor="es_interno" className="cursor-pointer text-sm">Comentario interno</Label>
-                                </div>
-                                <Button type="submit" size="sm" disabled={comentarForm.processing}>
-                                    {comentarForm.processing && <Spinner />} Agregar comentario
-                                </Button>
-                            </form>
-                        )}
                     </div>
                 )}
 
@@ -315,9 +274,21 @@ export default function Show({ incidencia }: Props) {
                         <h3 className="font-semibold text-gray-900 mb-4">Archivos adjuntos</h3>
                         <ul className="divide-y divide-gray-100">
                             {incidencia.archivos.map((a) => (
-                                <li key={a.id} className="py-2 flex items-center justify-between text-sm">
-                                    <span className="text-gray-700">{a.nombre_original}</span>
-                                    <span className="text-gray-400 text-xs">{formatBytes(a.tamanio_bytes)}</span>
+                                <li key={a.id} className="py-2 flex items-center justify-between gap-3 text-sm">
+                                    <div className="min-w-0">
+                                        <p className="text-gray-700 truncate">{a.nombre_original}</p>
+                                        <p className="text-gray-400 text-xs">{a.tamanio_legible ?? formatBytes(a.tamanio_bytes)}</p>
+                                    </div>
+                                    {a.url && (
+                                        <a
+                                            href={a.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                            Ver / Descargar
+                                        </a>
+                                    )}
                                 </li>
                             ))}
                         </ul>

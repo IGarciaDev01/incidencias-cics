@@ -19,7 +19,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): RedirectResponse
     {
-        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             return back()->withErrors([
                 'email' => 'Las credenciales no coinciden con nuestros registros.',
             ])->onlyInput('email');
@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        if (!$user->activo) {
+        if (! $user->activo) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -39,7 +39,9 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->destino($user->rol));
+        // Avoid redirecting to stale "intended" URLs from previous sessions that
+        // may belong to another role group (which would cause a 403).
+        return redirect()->to($this->destino($user->rol));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -53,10 +55,10 @@ class AuthController extends Controller
 
     private function destino(RolUsuario $rol): string
     {
-        return match($rol) {
-            RolUsuario::Admin                => route('panel.dashboard'),
-            RolUsuario::JefeInmediato        => route('panel.jefe_inmediato.incidencias.index'),
-            RolUsuario::CapitalHumano        => route('panel.capital_humano.incidencias.index'),
+        return match ($rol) {
+            RolUsuario::Admin => route('panel.dashboard'),
+            RolUsuario::JefeInmediato => route('panel.jefe_inmediato.incidencias.index'),
+            RolUsuario::CapitalHumano => route('panel.capital_humano.incidencias.index'),
             RolUsuario::SubdireccionAcademica => route('panel.subdireccion.incidencias.index'),
         };
     }

@@ -19,7 +19,7 @@ export function UserMenuContent({ user }: Props) {
 
     const handleLogout = () => {
         cleanup();
-        router.flushAll();
+        router.cancelAll();
     };
 
     return (

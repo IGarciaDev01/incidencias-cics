@@ -12,6 +12,11 @@ class ArchivoAdjunto extends Model
 
     const UPDATED_AT = null;
 
+    protected $appends = [
+        'url',
+        'tamanio_legible',
+    ];
+
     protected $fillable = [
         'incidencia_id',
         'nombre_original',
@@ -25,7 +30,7 @@ class ArchivoAdjunto extends Model
     {
         return [
             'tamanio_bytes' => 'integer',
-            'created_at'    => 'datetime',
+            'created_at' => 'datetime',
         ];
     }
 
@@ -44,11 +49,26 @@ class ArchivoAdjunto extends Model
         return Storage::disk('public')->url($this->ruta_storage);
     }
 
+    public function getUrlAttribute(): string
+    {
+        return $this->url();
+    }
+
     public function tamanioLegible(): string
     {
         $bytes = $this->tamanio_bytes;
-        if ($bytes < 1024) return "{$bytes} B";
-        if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
-        return round($bytes / 1048576, 1) . ' MB';
+        if ($bytes < 1024) {
+            return "{$bytes} B";
+        }
+        if ($bytes < 1048576) {
+            return round($bytes / 1024, 1).' KB';
+        }
+
+        return round($bytes / 1048576, 1).' MB';
+    }
+
+    public function getTamanioLegibleAttribute(): string
+    {
+        return $this->tamanioLegible();
     }
 }

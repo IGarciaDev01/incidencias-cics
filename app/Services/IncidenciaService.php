@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoAccionHistorial;
+use App\Enums\TipoSolicitante;
+use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -24,20 +26,38 @@ class IncidenciaService
     public function crear(array $data): Incidencia
     {
         return DB::transaction(function () use ($data) {
+            $numeroEmpleado = (string) $data['numero_empleado'];
+
+            $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
+
+            $tipo = $empleadoExistente?->tipo
+                ?? (isset($data['tipo_empleado']) ? TipoSolicitante::from($data['tipo_empleado']) : null);
+
+            abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
+
             $incidencia = Incidencia::create([
-                'folio'             => $this->folioService->generar(),
-                'numero_empleado'   => $data['numero_empleado'],
+                'folio' => $this->folioService->generar(),
+                'numero_empleado' => $numeroEmpleado,
                 'reportante_nombre' => $data['reportante_nombre'],
-                'email_reportante'  => $data['email_reportante'] ?? null,
-                'tipo_solicitante'  => $data['tipo_solicitante'],
-                'area_id'           => $data['area_id'],
-                'fecha_incidencia'  => $data['fecha_incidencia'],
-                'tipo_incidencia'   => $data['tipo_incidencia'],
-                'minutos_retardo'   => $data['minutos_retardo'] ?? null,
-                'descripcion'       => $data['descripcion'] ?? null,
-                'estado'            => EstadoIncidencia::PendienteJefe,
+                'email_reportante' => $data['email_reportante'] ?? null,
+                'tipo_solicitante' => $tipo,
+                'area_id' => $data['area_id'],
+                'fecha_incidencia' => $data['fecha_incidencia'],
+                'tipo_incidencia' => $data['tipo_incidencia'],
+                'minutos_retardo' => $data['minutos_retardo'] ?? null,
+                'descripcion' => $data['descripcion'] ?? null,
+                'estado' => EstadoIncidencia::PendienteJefe,
                 'token_seguimiento' => Str::random(64),
             ]);
+
+            Empleado::updateOrCreate(
+                ['numero_empleado' => $numeroEmpleado],
+                [
+                    'nombre' => $data['reportante_nombre'],
+                    'email' => $data['email_reportante'] ?? null,
+                    'tipo' => $tipo,
+                ],
+            );
 
             $this->historialService->registrar(
                 incidencia: $incidencia,
@@ -62,7 +82,7 @@ class IncidenciaService
 
         DB::transaction(function () use ($incidencia, $jefe, $comentario) {
             $incidencia->update([
-                'estado'      => EstadoIncidencia::PendienteCapitalHumano,
+                'estado' => EstadoIncidencia::PendienteCapitalHumano,
                 'revisado_por' => $jefe->id,
             ]);
 
@@ -89,7 +109,7 @@ class IncidenciaService
 
         DB::transaction(function () use ($incidencia, $capitalHumano, $comentario) {
             $incidencia->update([
-                'estado'      => EstadoIncidencia::PendienteSubdireccion,
+                'estado' => EstadoIncidencia::PendienteSubdireccion,
                 'revisado_por' => $capitalHumano->id,
             ]);
 
@@ -116,7 +136,7 @@ class IncidenciaService
 
         DB::transaction(function () use ($incidencia, $subdirector, $comentario) {
             $incidencia->update([
-                'estado'      => EstadoIncidencia::Aprobada,
+                'estado' => EstadoIncidencia::Aprobada,
                 'revisado_por' => $subdirector->id,
             ]);
 
@@ -143,8 +163,8 @@ class IncidenciaService
 
         DB::transaction(function () use ($incidencia, $revisor, $motivo) {
             $incidencia->update([
-                'estado'         => EstadoIncidencia::Rechazada,
-                'revisado_por'   => $revisor->id,
+                'estado' => EstadoIncidencia::Rechazada,
+                'revisado_por' => $revisor->id,
                 'motivo_rechazo' => $motivo,
             ]);
 

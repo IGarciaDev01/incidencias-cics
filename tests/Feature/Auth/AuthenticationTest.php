@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Area;
 use App\Models\User;
 
 test('login screen can be rendered', function () {
@@ -20,6 +21,30 @@ test('users can authenticate using the login screen', function () {
     // Use the response redirect as the authentication indicator instead.
     $response->assertRedirect();
     $response->assertSessionHasNoErrors();
+});
+
+test('login ignores stale intended urls that could cause 403', function () {
+    $area = Area::create([
+        'nombre' => 'Area A',
+        'slug' => 'area-a',
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    $user = User::factory()->create([
+        'rol' => 'jefe_inmediato',
+        'area_id' => $area->id,
+        'activo' => true,
+    ]);
+
+    $response = $this
+        ->withSession(['url.intended' => '/panel/admin/usuarios'])
+        ->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+    $response->assertRedirect(route('panel.jefe_inmediato.incidencias.index'));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

@@ -3,17 +3,17 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncidenciaPublicaController;
-use App\Http\Controllers\SeguimientoController;
 use App\Http\Controllers\Panel\Admin\AreaController;
 use App\Http\Controllers\Panel\Admin\CategoriaController;
 use App\Http\Controllers\Panel\Admin\LogController;
 use App\Http\Controllers\Panel\Admin\SlaController;
 use App\Http\Controllers\Panel\Admin\UsuarioController;
-use App\Http\Controllers\Panel\JefeInmediato\IncidenciaController as JefeIncidenciaController;
 use App\Http\Controllers\Panel\CapitalHumano\IncidenciaController as CapitalHumanoIncidenciaController;
 use App\Http\Controllers\Panel\EmpleadoController;
+use App\Http\Controllers\Panel\JefeInmediato\IncidenciaController as JefeIncidenciaController;
 use App\Http\Controllers\Panel\Subdireccion\IncidenciaController as SubdirIncidenciaController;
 use App\Http\Controllers\Panel\Subdireccion\ReporteController as SubdirReporteController;
+use App\Http\Controllers\SeguimientoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -115,7 +115,6 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/{incidencia}', [CapitalHumanoIncidenciaController::class, 'show'])->name('show');
                 Route::post('/{incidencia}/aprobar', [CapitalHumanoIncidenciaController::class, 'aprobar'])->name('aprobar');
                 Route::post('/{incidencia}/rechazar', [CapitalHumanoIncidenciaController::class, 'rechazar'])->name('rechazar');
-                Route::post('/{incidencia}/comentar', [CapitalHumanoIncidenciaController::class, 'comentar'])->name('comentar');
             });
 
             Route::prefix('empleados')->name('empleados.')->group(function () {
@@ -139,7 +138,6 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/{incidencia}', [SubdirIncidenciaController::class, 'show'])->name('show');
                 Route::post('/{incidencia}/aprobar', [SubdirIncidenciaController::class, 'aprobar'])->name('aprobar');
                 Route::post('/{incidencia}/rechazar', [SubdirIncidenciaController::class, 'rechazar'])->name('rechazar');
-                Route::post('/{incidencia}/comentar', [SubdirIncidenciaController::class, 'comentar'])->name('comentar');
             });
 
             Route::prefix('reportes')->name('reportes.')->group(function () {
@@ -152,7 +150,6 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
             });
         });
-
 
     /*
     |----------------------------------------------------------------------

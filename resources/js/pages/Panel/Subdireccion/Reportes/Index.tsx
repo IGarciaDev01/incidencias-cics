@@ -93,7 +93,7 @@ export default function Index({ filtros, porEstado, porTipoIncidencia, porTipoSo
                         </p>
                     </div>
                     <a
-                        href={exportar.url({ desde: filtros.desde, hasta: filtros.hasta })}
+                        href={exportar.url({ query: { desde: filtros.desde, hasta: filtros.hasta } })}
                         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                     >
                         Exportar CSV
