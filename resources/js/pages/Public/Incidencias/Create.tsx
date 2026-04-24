@@ -39,6 +39,7 @@ export default function Create({ areas }: Props) {
         tipo_empleado:     '',
         area_id:           '',
         fecha_incidencia:  '',
+        hora_incidencia:   '',
         tipo_incidencia:   '',
         minutos_retardo:   '',
         descripcion:       '',
@@ -302,6 +303,7 @@ export default function Create({ areas }: Props) {
                         <h3 className="text-sm font-medium text-gray-700 mb-4">Datos de la incidencia</h3>
 
                         <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid md:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="fecha_incidencia">Fecha de la incidencia <span className="text-red-500">*</span></Label>
                                 <Input
@@ -315,6 +317,20 @@ export default function Create({ areas }: Props) {
                                 />
                                 <InputError message={errors.fecha_incidencia} />
                             </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="hora_incidencia">Hora de la incidencia (opcional)</Label>
+                                <Input
+                                    id="hora_incidencia"
+                                    name="hora_incidencia"
+                                    type="time"
+                                    value={data.hora_incidencia}
+                                    onChange={(e) => setData('hora_incidencia', e.target.value)}
+                                />
+                                <p className="text-xs text-gray-500">Si no se especifica, solo se registrará la fecha.</p>
+                                <InputError message={errors.hora_incidencia} />
+                            </div>
+                        </div>
 
                             <div className="grid gap-2">
                                 <Label>Tipo de incidencia <span className="text-red-500">*</span></Label>

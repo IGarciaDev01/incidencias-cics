@@ -37,6 +37,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             ],
             'area_id' => ['required', 'integer', 'exists:areas,id'],
             'fecha_incidencia' => ['required', 'date', 'before_or_equal:today'],
+            'hora_incidencia' => ['nullable', 'date_format:H:i'],
             'tipo_incidencia' => ['required', new Enum(TipoIncidencia::class)],
             'minutos_retardo' => [
                 Rule::when(

@@ -32,6 +32,7 @@ type Incidencia = {
     tipo_incidencia: string;
     minutos_retardo: number | null;
     fecha_incidencia: string;
+    hora_incidencia: string | null;
     descripcion: string | null;
     estado: string;
     motivo_rechazo: string | null;
@@ -157,7 +158,21 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                         <div>
                             <dt className="text-gray-500">Fecha incidencia</dt>
                             <dd className="font-medium text-gray-900 mt-0.5">
-                                {formatDate(incidencia.fecha_incidencia + 'T00:00:00')}
+                                {incidencia.fecha_incidencia
+                                    ? (() => {
+                                        const d = new Date(incidencia.fecha_incidencia);
+                                        return isNaN(d.getTime())
+                                            ? '—'
+                                            : d.toLocaleDateString('es-MX', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                              });
+                                      })()
+                                    : '—'}
+                                {incidencia.hora_incidencia && (
+                                    <span className="ml-1 text-gray-500">— {incidencia.hora_incidencia}</span>
+                                )}
                             </dd>
                         </div>
                         <div>

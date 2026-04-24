@@ -25,6 +25,7 @@ class Incidencia extends Model
         'tipo_solicitante',
         'area_id',
         'fecha_incidencia',
+        'hora_incidencia',
         'tipo_incidencia',
         'minutos_retardo',
         'descripcion',
@@ -33,6 +34,7 @@ class Incidencia extends Model
         'user_id',
         'revisado_por',
         'motivo_rechazo',
+        'resolucion',
     ];
 
     protected function casts(): array
@@ -118,6 +120,11 @@ class Incidencia extends Model
     public function nombreReportante(): string
     {
         return $this->reportante_nombre ?? 'Sin nombre';
+    }
+
+    public function getTituloAttribute(): string
+    {
+        return $this->tituloGenerado();
     }
 
     public function emailDestino(): ?string

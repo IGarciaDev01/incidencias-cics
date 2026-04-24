@@ -38,7 +38,7 @@ class IncidenciaService
         abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
 
         $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
-        $fechaIncidencia = Carbon::parse($data['fecha_incidencia']);
+        $fechaIncidencia = Carbon::parse($data['fecha_incidencia'])->startOfDay();
 
         $incidenciaRechazada = $this->validacionIncidenciaService->validarYRechazar(
             $numeroEmpleado,
@@ -60,6 +60,7 @@ class IncidenciaService
                 'tipo_solicitante' => $tipo,
                 'area_id' => $data['area_id'],
                 'fecha_incidencia' => $data['fecha_incidencia'],
+                'hora_incidencia' => $data['hora_incidencia'] ?? null,
                 'tipo_incidencia' => $data['tipo_incidencia'],
                 'minutos_retardo' => $data['minutos_retardo'] ?? null,
                 'descripcion' => $data['descripcion'] ?? null,
@@ -165,6 +166,7 @@ class IncidenciaService
             );
 
             $this->notificacionService->enviarCambioEstado($incidencia);
+            $this->notificacionService->enviarResolucionFinal($incidencia);
         });
     }
 
@@ -193,6 +195,7 @@ class IncidenciaService
             );
 
             $this->notificacionService->enviarCambioEstado($incidencia);
+            $this->notificacionService->enviarResolucionFinal($incidencia);
         });
     }
 

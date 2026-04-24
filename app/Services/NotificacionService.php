@@ -8,6 +8,7 @@ use App\Mail\IncidenciaAsignadaMail;
 use App\Mail\IncidenciaCambioEstadoMail;
 use App\Mail\IncidenciaConfirmadaMail;
 use App\Mail\IncidenciaSolicitudInfoMail;
+use App\Mail\ResolucionFinalMail;
 use App\Models\Incidencia;
 use App\Models\Notificacion;
 use App\Models\User;
@@ -93,6 +94,23 @@ class NotificacionService
             );
             $this->enviar($notificacion, new IncidenciaAlertaSLAMail($incidencia));
         }
+    }
+
+    public function enviarResolucionFinal(Incidencia $incidencia): void
+    {
+        $email = $incidencia->emailDestino();
+        if (! $email) {
+            return;
+        }
+
+        $notificacion = $this->registrar(
+            incidencia: $incidencia,
+            tipo: TipoNotificacion::ResolucionFinal,
+            email: $email,
+            userId: $incidencia->user_id,
+        );
+
+        $this->enviar($notificacion, new ResolucionFinalMail($incidencia));
     }
 
     private function registrar(
