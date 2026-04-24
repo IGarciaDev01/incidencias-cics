@@ -12,21 +12,16 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        static $counter = 1;
+        $counter++;
+
         return [
-            'nombre' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'nombre' => 'Usuario '.$counter,
+            'email' => 'usuario'.$counter.'@test.com',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'rol' => 'admin',
@@ -37,9 +32,6 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -47,9 +39,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
     public function withTwoFactor(): static
     {
         return $this->state(fn (array $attributes) => [

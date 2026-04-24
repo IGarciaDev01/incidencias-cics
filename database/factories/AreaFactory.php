@@ -15,10 +15,13 @@ class AreaFactory extends Factory
 
     public function definition(): array
     {
+        static $counter = 1;
+        $nombre = 'Área '.$counter++;
+
         return [
-            'nombre' => fake()->unique()->department(),
-            'slug' => fn (array $attributes) => Str::slug($attributes['nombre'] ?? fake()->words(2, true)),
-            'descripcion' => fake()->optional()->sentence(),
+            'nombre' => $nombre,
+            'slug' => Str::slug($nombre),
+            'descripcion' => null,
             'subdirector_id' => null,
             'activa' => true,
         ];

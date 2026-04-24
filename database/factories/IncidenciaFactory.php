@@ -20,20 +20,20 @@ class IncidenciaFactory extends Factory
 
     public function definition(): array
     {
-        $tipoIncidencia = fake()->randomElement(TipoIncidencia::cases());
-        $minutos = $tipoIncidencia === TipoIncidencia::Retardo ? fake()->numberBetween(5, 120) : null;
+        static $counter = 1;
+        $counter++;
 
         return [
-            'folio' => 'INC-'.now()->year.'-'.str_pad(fake()->unique()->numberBetween(1, 99999), 4, '0', STR_PAD_LEFT),
-            'numero_empleado' => (string) fake()->numerify('#####'),
-            'reportante_nombre' => fake()->name(),
-            'email_reportante' => fake()->safeEmail(),
-            'tipo_solicitante' => fake()->randomElement(TipoSolicitante::cases()),
+            'folio' => 'INC-'.now()->year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT),
+            'numero_empleado' => str_pad($counter, 5, '0', STR_PAD_LEFT),
+            'reportante_nombre' => 'Empleado '.$counter,
+            'email_reportante' => 'empleado'.$counter.'@test.com',
+            'tipo_solicitante' => TipoSolicitante::cases()[0],
             'area_id' => Area::factory(),
-            'fecha_incidencia' => fake()->dateTimeBetween('-3 months', 'now'),
-            'tipo_incidencia' => $tipoIncidencia,
-            'minutos_retardo' => $minutos,
-            'descripcion' => fake()->optional(0.7)->sentence(),
+            'fecha_incidencia' => now()->subDays(rand(1, 60))->format('Y-m-d'),
+            'tipo_incidencia' => TipoIncidencia::PermisoEconomico,
+            'minutos_retardo' => null,
+            'descripcion' => null,
             'estado' => EstadoIncidencia::PendienteJefe,
             'token_seguimiento' => Str::random(32),
             'user_id' => null,
@@ -76,13 +76,7 @@ class IncidenciaFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'estado' => EstadoIncidencia::Rechazada,
             'revisado_por' => User::factory(),
-            'motivo_rechazo' => fake()->randomElement([
-                'No cumple con los requisitos establecidos.',
-                'Falta documentación de soporte.',
-                'Ya se acercó el límite de permisos económicos del año.',
-                'El área no cuenta con presupuesto disponible.',
-                'El incidente ya prescribió.',
-            ]),
+            'motivo_rechazo' => 'No cumple con los requisitos establecidos.',
         ]);
     }
 }

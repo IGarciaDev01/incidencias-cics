@@ -14,11 +14,14 @@ class EmpleadoFactory extends Factory
 
     public function definition(): array
     {
+        static $counter = 1000;
+        $counter++;
+
         return [
-            'numero_empleado' => (string) $this->faker->numerify('#####'),
-            'nombre' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'tipo' => $this->faker->randomElement(['docente', 'administrativo', 'paae']),
+            'numero_empleado' => (string) str_pad($counter, 5, '0', STR_PAD_LEFT),
+            'nombre' => 'Empleado '.$counter,
+            'email' => 'empleado'.$counter.'@test.com',
+            'tipo' => 'administrativo',
         ];
     }
 }
