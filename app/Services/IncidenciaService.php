@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoAccionHistorial;
 use App\Enums\TipoSolicitante;
+use App\Exceptions\LimiteIncidenciaExcepcion;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,22 +21,37 @@ class IncidenciaService
         private readonly HistorialService $historialService,
         private readonly NotificacionService $notificacionService,
         private readonly ArchivoService $archivoService,
+        private readonly ValidacionIncidenciaService $validacionIncidenciaService,
     ) {}
 
     // ─── Creación pública ────────────────────────────────────────────────────
 
     public function crear(array $data): Incidencia
     {
-        return DB::transaction(function () use ($data) {
-            $numeroEmpleado = (string) $data['numero_empleado'];
+        $numeroEmpleado = (string) $data['numero_empleado'];
 
-            $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
+        $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
 
-            $tipo = $empleadoExistente?->tipo
-                ?? (isset($data['tipo_empleado']) ? TipoSolicitante::from($data['tipo_empleado']) : null);
+        $tipo = $empleadoExistente?->tipo
+            ?? (isset($data['tipo_empleado']) ? TipoSolicitante::from($data['tipo_empleado']) : null);
 
-            abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
+        abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
 
+        $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
+        $fechaIncidencia = Carbon::parse($data['fecha_incidencia']);
+
+        $incidenciaRechazada = $this->validacionIncidenciaService->validarYRechazar(
+            $numeroEmpleado,
+            $tipo,
+            $fechaIncidencia,
+            $minutosRetardo
+        );
+
+        if ($incidenciaRechazada !== null) {
+            throw new LimiteIncidenciaExcepcion($incidenciaRechazada->motivo_rechazo);
+        }
+
+        return DB::transaction(function () use ($data, $numeroEmpleado, $tipo) {
             $incidencia = Incidencia::create([
                 'folio' => $this->folioService->generar(),
                 'numero_empleado' => $numeroEmpleado,

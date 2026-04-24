@@ -5,13 +5,18 @@ namespace App\Models;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Enums\TipoSolicitante;
+use Database\Factories\IncidenciaFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Incidencia extends Model
 {
+    /** @use HasFactory<IncidenciaFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'folio',
         'numero_empleado',
@@ -34,8 +39,8 @@ class Incidencia extends Model
     {
         return [
             'tipo_solicitante' => TipoSolicitante::class,
-            'tipo_incidencia'  => TipoIncidencia::class,
-            'estado'           => EstadoIncidencia::class,
+            'tipo_incidencia' => TipoIncidencia::class,
+            'estado' => EstadoIncidencia::class,
             'fecha_incidencia' => 'date',
         ];
     }

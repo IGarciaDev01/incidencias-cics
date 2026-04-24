@@ -20,7 +20,9 @@ class NotificacionService
     public function enviarConfirmacion(Incidencia $incidencia): void
     {
         $email = $incidencia->emailDestino();
-        if (!$email) return;
+        if (! $email) {
+            return;
+        }
 
         $notificacion = $this->registrar(
             incidencia: $incidencia,
@@ -34,7 +36,9 @@ class NotificacionService
     public function enviarCambioEstado(Incidencia $incidencia): void
     {
         $email = $incidencia->emailDestino();
-        if (!$email) return;
+        if (! $email) {
+            return;
+        }
 
         $notificacion = $this->registrar(
             incidencia: $incidencia,
@@ -61,7 +65,9 @@ class NotificacionService
     public function enviarSolicitudInfo(Incidencia $incidencia, string $mensaje): void
     {
         $email = $incidencia->emailDestino();
-        if (!$email) return;
+        if (! $email) {
+            return;
+        }
 
         $notificacion = $this->registrar(
             incidencia: $incidencia,
@@ -76,7 +82,6 @@ class NotificacionService
     public function enviarAlertaSla(Incidencia $incidencia): void
     {
         $emails = array_filter([
-            $incidencia->asignadoA?->email,
             $incidencia->area?->subdirector?->email,
         ]);
 
@@ -97,11 +102,11 @@ class NotificacionService
         ?int $userId = null,
     ): Notificacion {
         return Notificacion::create([
-            'incidencia_id'      => $incidencia->id,
-            'user_id'            => $userId,
+            'incidencia_id' => $incidencia->id,
+            'user_id' => $userId,
             'destinatario_email' => $email,
-            'tipo'               => $tipo,
-            'asunto'             => $tipo->asunto($incidencia->folio),
+            'tipo' => $tipo,
+            'asunto' => $tipo->asunto($incidencia->folio),
         ]);
     }
 

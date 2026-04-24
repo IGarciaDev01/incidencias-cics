@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\LimiteIncidenciaExcepcion;
 use App\Http\Requests\StoreIncidenciaPublicaRequest;
 use App\Models\Area;
 use App\Models\Empleado;
@@ -10,6 +11,7 @@ use App\Services\IncidenciaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,13 +28,19 @@ class IncidenciaPublicaController extends Controller
 
     public function store(StoreIncidenciaPublicaRequest $request): RedirectResponse
     {
-        $incidencia = $this->incidenciaService->crear($request->validated());
+        try {
+            $incidencia = $this->incidenciaService->crear($request->validated());
+        } catch (LimiteIncidenciaExcepcion $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
 
         if ($request->hasFile('archivos')) {
             foreach ($request->file('archivos') as $archivo) {
                 $this->incidenciaService->adjuntarArchivo($incidencia, $archivo);
             }
         }
+
+        Session::put('seguimiento_verificado', $incidencia->folio);
 
         return redirect()->route('incidencias.confirmacion', $incidencia->folio);
     }
@@ -49,7 +57,6 @@ class IncidenciaPublicaController extends Controller
             ->limit(5)
             ->get(['numero_empleado', 'nombre', 'email', 'tipo'])
             ->map(fn (Empleado $e) => [
-                // Mantener compatibilidad con el frontend existente.
                 'numero_empleado' => $e->numero_empleado,
                 'reportante_nombre' => $e->nombre,
                 'email_reportante' => $e->email,
@@ -65,7 +72,6 @@ class IncidenciaPublicaController extends Controller
 
         return Inertia::render('Public/Incidencias/Confirmacion', [
             'folio' => $incidencia->folio,
-            'token' => $incidencia->token_seguimiento,
             'numero_empleado' => $incidencia->numero_empleado,
             'tipo_incidencia' => $incidencia->tipo_incidencia->label(),
             'fecha_incidencia' => $incidencia->fecha_incidencia->format('d/m/Y'),

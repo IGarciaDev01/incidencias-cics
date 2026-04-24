@@ -2,15 +2,20 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { index as seguimientoIndex } from '@/routes/seguimiento';
 import { create as nuevaIncidencia } from '@/routes/incidencias';
+import download from '@/routes/comprobante';
+
 type Props = {
     folio: string;
-    token: string;
     numero_empleado: string;
     tipo_incidencia: string;
     fecha_incidencia: string;
 };
 
-export default function Confirmacion({ folio, token, numero_empleado, tipo_incidencia, fecha_incidencia }: Props) {
+export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, fecha_incidencia }: Props) {
+    const handleDownloadPdf = () => {
+        window.location.href = download.descargar.url(folio);
+    };
+
     return (
         <>
             <Head title="Incidencia enviada" />
@@ -49,10 +54,6 @@ export default function Confirmacion({ folio, token, numero_empleado, tipo_incid
                             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Fecha</p>
                             <p className="text-sm font-medium text-gray-900 mt-0.5">{fecha_incidencia}</p>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Token</p>
-                            <p className="text-xs font-mono text-gray-600 mt-0.5 truncate">{token.slice(0, 16)}…</p>
-                        </div>
                     </div>
                 </div>
 
@@ -62,6 +63,12 @@ export default function Confirmacion({ folio, token, numero_empleado, tipo_incid
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button onClick={handleDownloadPdf} variant="outline">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Descargar comprobante PDF
+                    </Button>
                     <Button asChild>
                         <Link href={`${seguimientoIndex.url()}?folio=${folio}`}>
                             Dar seguimiento

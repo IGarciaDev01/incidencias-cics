@@ -3,6 +3,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { comentar, adjuntar, index as seguimientoIndex } from '@/routes/seguimiento';
+import download from '@/routes/comprobante';
 
 type HistorialItem = {
     id: number;
@@ -18,6 +19,7 @@ type Archivo = {
     nombre_original: string;
     mime_type: string;
     tamanio_bytes: number;
+    ruta_storage: string;
     created_at: string;
 };
 
@@ -82,7 +84,10 @@ function formatBytes(bytes: number): string {
 }
 
 function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('es-MX', {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('es-MX', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -114,9 +119,20 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Folio</p>
                             <p className="text-2xl font-mono font-bold text-gray-900">{incidencia.folio}</p>
                         </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[incidencia.estado] ?? 'bg-gray-100 text-gray-800'}`}>
-                            {ESTADO_LABELS[incidencia.estado] ?? incidencia.estado}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[incidencia.estado] ?? 'bg-gray-100 text-gray-800'}`}>
+                                {ESTADO_LABELS[incidencia.estado] ?? incidencia.estado}
+                            </span>
+                            <a
+                                href={download.descargar.url(incidencia.folio)}
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                PDF
+                            </a>
+                        </div>
                     </div>
 
                     <dl className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm pt-4 border-t border-gray-100">
@@ -140,7 +156,9 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                         )}
                         <div>
                             <dt className="text-gray-500">Fecha incidencia</dt>
-                            <dd className="font-medium text-gray-900 mt-0.5">{new Date(incidencia.fecha_incidencia).toLocaleDateString('es-MX')}</dd>
+                            <dd className="font-medium text-gray-900 mt-0.5">
+                                {formatDate(incidencia.fecha_incidencia + 'T00:00:00')}
+                            </dd>
                         </div>
                         <div>
                             <dt className="text-gray-500">Tipo</dt>
@@ -203,7 +221,17 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                             {incidencia.archivos.map((archivo) => (
                                 <li key={archivo.id} className="py-2 flex items-center justify-between text-sm">
                                     <span className="text-gray-700">{archivo.nombre_original}</span>
-                                    <span className="text-gray-400 text-xs">{formatBytes(archivo.tamanio_bytes)}</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-gray-400 text-xs">{formatBytes(archivo.tamanio_bytes)}</span>
+                            <a
+                                href={download.ver_archivo.url({ folio: incidencia.folio, archivoId: archivo.id })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80 text-xs font-medium"
+                            >
+                                            Ver
+                                        </a>
+                                    </div>
                                 </li>
                             ))}
                         </ul>

@@ -35,10 +35,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at'       => 'datetime',
-            'password'                => 'hashed',
-            'rol'                     => RolUsuario::class,
-            'activo'                  => 'boolean',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'rol' => RolUsuario::class,
+            'activo' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
@@ -77,9 +77,9 @@ class User extends Authenticatable
         return $this->rol === RolUsuario::CapitalHumano;
     }
 
-    public function esSubdireccionAcademica(): bool
+    public function esSubdirector(): bool
     {
-        return $this->rol === RolUsuario::SubdireccionAcademica;
+        return $this->rol === RolUsuario::Subdirector;
     }
 
     public function tieneRol(RolUsuario ...$roles): bool

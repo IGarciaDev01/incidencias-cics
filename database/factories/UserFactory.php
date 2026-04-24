@@ -27,10 +27,9 @@ class UserFactory extends Factory
         return [
             'nombre' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'rol'    => 'admin',
+            'rol' => 'admin',
             'activo' => true,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

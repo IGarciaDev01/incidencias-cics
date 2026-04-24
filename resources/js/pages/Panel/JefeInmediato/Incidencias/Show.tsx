@@ -67,7 +67,10 @@ const ACCION_LABELS: Record<string, string> = {
 };
 
 function formatDate(d: string) {
-    return new Date(d).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (!d) return '—';
+    const date = new Date(d.includes('T') ? d : d + 'T00:00:00');
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 function formatBytes(b: number) {
     if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
@@ -132,7 +135,7 @@ export default function Show({ incidencia }: Props) {
                         )}
                         <div>
                             <dt className="text-gray-500">Fecha de incidencia</dt>
-                            <dd className="font-medium mt-0.5">{new Date(incidencia.fecha_incidencia).toLocaleDateString('es-MX')}</dd>
+                            <dd className="font-medium mt-0.5">{formatDate(incidencia.fecha_incidencia)}</dd>
                         </div>
                         <div>
                             <dt className="text-gray-500">Tipo de incidencia</dt>

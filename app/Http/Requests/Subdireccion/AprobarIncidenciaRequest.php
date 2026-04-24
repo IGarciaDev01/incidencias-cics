@@ -2,14 +2,13 @@
 
 namespace App\Http\Requests\Subdireccion;
 
-use App\Enums\RolUsuario;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AprobarIncidenciaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->tieneRol(RolUsuario::SubdireccionAcademica, RolUsuario::Admin);
+        return $this->user()?->esSubdirector() || $this->user()?->esAdmin();
     }
 
     public function rules(): array

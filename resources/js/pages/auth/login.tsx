@@ -79,6 +79,6 @@ export default function Login({ status }: { status?: string }) {
 }
 
 Login.layout = {
-    title: 'Sistema de incidencias',
-    description: 'Ingresa con tu correo y contraseña',
+    title: 'CICS UST - Incidencias',
+    description: 'Sistema de Gestión de Incidencias',
 };

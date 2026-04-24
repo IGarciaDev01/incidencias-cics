@@ -42,6 +42,7 @@ const TIPO_COLORS: Record<string, string> = {
 const SOLICITANTE_COLORS: Record<string, string> = {
     docente:        'bg-teal-500',
     administrativo: 'bg-indigo-400',
+    paae:           'bg-rose-400',
 };
 
 function BarChart({ data, colorMap, labelMap }: {

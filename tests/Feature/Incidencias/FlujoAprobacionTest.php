@@ -86,7 +86,7 @@ test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function (
     ]);
 
     $subdireccion = User::factory()->create([
-        'rol' => 'subdireccion_academica',
+        'rol' => 'subdirector',
         'area_id' => null,
         'activo' => true,
     ]);

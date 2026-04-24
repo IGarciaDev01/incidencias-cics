@@ -1,11 +1,14 @@
 <?php
 
+use App\Exceptions\LimiteIncidenciaExcepcion;
+use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,9 +26,21 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role' => CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (LimiteIncidenciaExcepcion $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['error' => $e->getMessage(), 'tipo' => 'limite_incidencia'], 422);
+            }
+
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        });
+
+        $exceptions->render(function (HttpException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
+        });
     })->create();

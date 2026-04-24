@@ -59,7 +59,7 @@ class AuthController extends Controller
             RolUsuario::Admin => route('panel.dashboard'),
             RolUsuario::JefeInmediato => route('panel.jefe_inmediato.incidencias.index'),
             RolUsuario::CapitalHumano => route('panel.capital_humano.incidencias.index'),
-            RolUsuario::SubdireccionAcademica => route('panel.subdireccion.incidencias.index'),
+            RolUsuario::Subdirector => route('panel.subdireccion.incidencias.index'),
         };
     }
 }

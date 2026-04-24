@@ -15,17 +15,17 @@ class BuscarSeguimientoRequest extends FormRequest
     {
         return [
             'folio' => ['required', 'string', 'max:20'],
-            'token' => ['required_without:email', 'nullable', 'string', 'size:64'],
-            'email' => ['required_without:token', 'nullable', 'email'],
+            'numero_empleado' => ['required_without:email', 'nullable', 'string', 'max:20'],
+            'email' => ['required_without:numero_empleado', 'nullable', 'email'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'folio.required'            => 'El número de folio es obligatorio.',
-            'token.required_without'    => 'Debes ingresar el token de seguimiento o tu correo electrónico.',
-            'email.required_without'    => 'Debes ingresar tu correo electrónico o el token de seguimiento.',
+            'folio.required' => 'El número de folio es obligatorio.',
+            'numero_empleado.required_without' => 'Debes ingresar tu número de empleado o tu correo electrónico.',
+            'email.required_without' => 'Debes ingresar tu correo electrónico o tu número de empleado.',
         ];
     }
 }

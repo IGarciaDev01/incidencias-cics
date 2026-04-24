@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ComprobanteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncidenciaPublicaController;
 use App\Http\Controllers\Panel\Admin\AreaController;
@@ -50,6 +51,12 @@ Route::post('/seguimiento/{folio}/comentar', [SeguimientoController::class, 'com
 
 Route::post('/seguimiento/{folio}/adjuntar', [SeguimientoController::class, 'adjuntar'])
     ->name('seguimiento.adjuntar');
+
+Route::get('/comprobante/{folio}', [ComprobanteController::class, 'descargar'])
+    ->name('comprobante.descargar');
+
+Route::get('/comprobante/{folio}/archivo/{archivoId}', [ComprobanteController::class, 'verArchivo'])
+    ->name('comprobante.ver_archivo');
 
 /*
 |--------------------------------------------------------------------------
@@ -125,12 +132,12 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
 
     /*
     |----------------------------------------------------------------------
-    | Subdirección Académica
+    | Subdirección
     |----------------------------------------------------------------------
     */
     Route::prefix('subdireccion')
         ->name('subdireccion.')
-        ->middleware('role:subdireccion_academica')
+        ->middleware('role:subdirector')
         ->group(function () {
 
             Route::prefix('incidencias')->name('incidencias.')->group(function () {

@@ -23,16 +23,17 @@ class SeguimientoController extends Controller
     public function buscar(BuscarSeguimientoRequest $request): RedirectResponse
     {
         $incidencia = Incidencia::where('folio', $request->folio)
-            ->when($request->filled('token'), fn ($q) => $q->where('token_seguimiento', $request->token))
+            ->when($request->filled('numero_empleado'), fn ($q) => $q->where('numero_empleado', $request->numero_empleado))
+            ->when($request->filled('email'), fn ($q) => $q->where('email_reportante', $request->email))
             ->first();
 
-        if (!$incidencia) {
+        if (! $incidencia) {
             return back()->withErrors([
                 'folio' => 'No se encontró ninguna incidencia con los datos proporcionados.',
             ])->onlyInput('folio');
         }
 
-        $request->session()->put("seguimiento.{$incidencia->folio}", true);
+        $request->session()->put('seguimiento_verificado', $incidencia->folio);
 
         return redirect()->route('seguimiento.show', $incidencia->folio);
     }
@@ -47,17 +48,17 @@ class SeguimientoController extends Controller
             ])
             ->firstOrFail();
 
-        $esPropietario   = $request->user() && $request->user()->id === $incidencia->user_id;
-        $folioVerificado = $request->session()->has("seguimiento.{$folio}");
+        $esPropietario = $request->user() && $request->user()->id === $incidencia->user_id;
+        $folioVerificado = $request->session()->get('seguimiento_verificado') === $folio;
 
-        if (!$esPropietario && !$folioVerificado) {
+        if (! $esPropietario && ! $folioVerificado) {
             return redirect()->route('seguimiento.index')
                 ->withErrors(['folio' => 'Debes verificar el folio antes de ver los detalles.']);
         }
 
         return Inertia::render('Public/Seguimiento/Show', [
-            'incidencia'  => $incidencia,
-            'puedeActuar' => !$incidencia->estado->esFinal(),
+            'incidencia' => $incidencia,
+            'puedeActuar' => ! $incidencia->estado->esFinal(),
         ]);
     }
 
@@ -88,10 +89,10 @@ class SeguimientoController extends Controller
     {
         $incidencia = Incidencia::where('folio', $folio)->firstOrFail();
 
-        $esPropietario   = $request->user() && $request->user()->id === $incidencia->user_id;
-        $folioVerificado = $request->session()->has("seguimiento.{$folio}");
+        $esPropietario = $request->user() && $request->user()->id === $incidencia->user_id;
+        $folioVerificado = $request->session()->get('seguimiento_verificado') === $folio;
 
-        abort_if(!$esPropietario && !$folioVerificado, 403, 'No tienes acceso a esta incidencia.');
+        abort_if(! $esPropietario && ! $folioVerificado, 403, 'No tienes acceso a esta incidencia.');
 
         return $incidencia;
     }

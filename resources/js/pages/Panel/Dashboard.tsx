@@ -43,7 +43,7 @@ type SubdireccionStats = {
 
 type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
-    rol: 'admin' | 'jefe_inmediato' | 'capital_humano' | 'subdireccion_academica';
+    rol: 'admin' | 'jefe_inmediato' | 'capital_humano' | 'subdirector';
 };
 
 function StatCard({
@@ -243,10 +243,10 @@ function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
 }
 
 const ROL_LABEL: Record<string, string> = {
-    admin:                  'Administrador',
-    jefe_inmediato:         'Jefe Inmediato',
-    capital_humano:         'Capital Humano',
-    subdireccion_academica: 'Subdirección Académica',
+    admin:          'Administrador',
+    jefe_inmediato: 'Jefe Inmediato',
+    capital_humano: 'Capital Humano',
+    subdirector:    'Subdirector',
 };
 
 export default function Dashboard({ stats, rol }: Props) {
@@ -263,10 +263,10 @@ export default function Dashboard({ stats, rol }: Props) {
                     <p className="text-sm text-gray-500">{ROL_LABEL[rol] ?? rol}</p>
                 </div>
 
-                {rol === 'admin'                  && <AdminDashboard stats={stats as AdminStats} />}
-                {rol === 'jefe_inmediato'          && <JefeDashboard stats={stats as JefeStats} />}
-                {rol === 'capital_humano'          && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
-                {rol === 'subdireccion_academica'  && <SubdireccionDashboard stats={stats as SubdireccionStats} />}
+                {rol === 'admin'          && <AdminDashboard stats={stats as AdminStats} />}
+                {rol === 'jefe_inmediato'  && <JefeDashboard stats={stats as JefeStats} />}
+                {rol === 'capital_humano'   && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
+                {rol === 'subdirector'      && <SubdireccionDashboard stats={stats as SubdireccionStats} />}
             </div>
         </>
     );

@@ -14,7 +14,7 @@ export default function Index() {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Consultar estado de incidencia</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                        Ingresa tu folio y correo electrónico o token para ver el estado de tu reporte.
+                        Ingresa tu folio y número de empleado o correo electrónico para ver el estado de tu reporte.
                     </p>
                 </div>
 
@@ -41,6 +41,16 @@ export default function Index() {
 
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
+                                    <Label htmlFor="numero_empleado">Número de empleado</Label>
+                                    <Input
+                                        id="numero_empleado"
+                                        name="numero_empleado"
+                                        placeholder="Ej. 12345"
+                                        autoComplete="off"
+                                    />
+                                    <InputError message={errors.numero_empleado} />
+                                </div>
+                                <div className="grid gap-2">
                                     <Label htmlFor="email">Correo electrónico</Label>
                                     <Input
                                         id="email"
@@ -50,16 +60,6 @@ export default function Index() {
                                         autoComplete="email"
                                     />
                                     <InputError message={errors.email} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="token">Token de seguimiento</Label>
-                                    <Input
-                                        id="token"
-                                        name="token"
-                                        placeholder="Token recibido al registrar"
-                                        autoComplete="off"
-                                    />
-                                    <InputError message={errors.token} />
                                 </div>
                             </div>
 

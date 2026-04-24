@@ -16,7 +16,7 @@ class ReporteController extends Controller
         $desde = $request->filled('desde') ? $request->date('desde') : now()->startOfMonth();
         $hasta = $request->filled('hasta') ? $request->date('hasta') : now()->endOfMonth();
 
-        $base = Incidencia::whereBetween('created_at', [$desde->startOfDay(), $hasta->endOfDay()]);
+        $base = Incidencia::whereBetween('incidencias.created_at', [$desde->startOfDay(), $hasta->endOfDay()]);
 
         return Inertia::render('Panel/Subdireccion/Reportes/Index', [
             'filtros' => [
@@ -61,7 +61,7 @@ class ReporteController extends Controller
         $csv = $this->generarCsv($incidencias);
 
         return response($csv, 200, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"reporte-{$desde->toDateString()}-{$hasta->toDateString()}.csv\"",
         ]);
     }
@@ -96,15 +96,15 @@ class ReporteController extends Controller
             $i->created_at->format('d/m/Y H:i'),
         ]);
 
-        $output = implode(',', array_map(fn ($h) => '"' . $h . '"', $cabeceras)) . "\n";
+        $output = implode(',', array_map(fn ($h) => '"'.$h.'"', $cabeceras))."\n";
 
         foreach ($filas as $fila) {
             $output .= implode(',', array_map(
-                fn ($col) => '"' . str_replace('"', '""', (string) ($col ?? '')) . '"',
+                fn ($col) => '"'.str_replace('"', '""', (string) ($col ?? '')).'"',
                 $fila
-            )) . "\n";
+            ))."\n";
         }
 
-        return "\xEF\xBB\xBF" . $output;
+        return "\xEF\xBB\xBF".$output;
     }
 }

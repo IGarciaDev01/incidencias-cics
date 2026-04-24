@@ -33,33 +33,24 @@ class SlaService
 
     public function porcentajeTiempoTranscurrido(Incidencia $incidencia): ?int
     {
-        if (!$incidencia->fecha_limite || !$incidencia->created_at) {
-            return null;
-        }
-
-        $total = $incidencia->created_at->diffInSeconds($incidencia->fecha_limite);
-        if ($total === 0) return 100;
-
-        $transcurrido = $incidencia->created_at->diffInSeconds(now());
-
-        return min(100, (int) round(($transcurrido / $total) * 100));
+        return null;
     }
 
     private function horasPorDefecto(Prioridad $prioridad): int
     {
-        return match($prioridad) {
-            Prioridad::Alta  => 72,
+        return match ($prioridad) {
+            Prioridad::Alta => 72,
             Prioridad::Media => 168,
-            Prioridad::Baja  => 336,
+            Prioridad::Baja => 336,
         };
     }
 
     private function horasRespuestaPorDefecto(Prioridad $prioridad): int
     {
-        return match($prioridad) {
-            Prioridad::Alta  => 24,
+        return match ($prioridad) {
+            Prioridad::Alta => 24,
             Prioridad::Media => 72,
-            Prioridad::Baja  => 168,
+            Prioridad::Baja => 168,
         };
     }
 }

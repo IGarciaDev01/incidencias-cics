@@ -63,10 +63,10 @@ const subdirNavItems: NavItem[] = [
 ];
 
 const NAV_BY_ROL: Record<string, NavItem[]> = {
-    admin:                  adminNavItems,
-    jefe_inmediato:         jefeNavItems,
-    capital_humano:         capitalHumanoNavItems,
-    subdireccion_academica: subdirNavItems,
+    admin:          adminNavItems,
+    jefe_inmediato: jefeNavItems,
+    capital_humano: capitalHumanoNavItems,
+    subdirector:    subdirNavItems,
 };
 
 export function AppSidebar() {

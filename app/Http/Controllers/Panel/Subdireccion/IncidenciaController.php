@@ -21,8 +21,12 @@ class IncidenciaController extends Controller
     public function index(Request $request): Response
     {
         $query = Incidencia::with(['area:id,nombre'])
-            ->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->estado))
-            ->when($request->filled('tipo'), fn ($q) => $q->where('tipo_incidencia', $request->tipo))
+            ->when($request->string('estado')->isNotEmpty(), function ($q) use ($request) {
+                $q->where('estado', $request->estado);
+            })
+            ->when($request->string('tipo')->isNotEmpty(), function ($q) use ($request) {
+                $q->where('tipo_incidencia', $request->tipo);
+            })
             ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($q2) => $q2->where('folio', 'like', "%{$request->buscar}%")
                 ->orWhere('numero_empleado', 'like', "%{$request->buscar}%")
                 ->orWhere('reportante_nombre', 'like', "%{$request->buscar}%")
@@ -33,8 +37,8 @@ class IncidenciaController extends Controller
         return Inertia::render('Panel/Subdireccion/Incidencias/Index', [
             'incidencias' => $query->paginate(20)->withQueryString(),
             'filtros' => $request->only(['estado', 'tipo', 'buscar']),
-            'estados' => EstadoIncidencia::cases(),
-            'tipos' => TipoIncidencia::cases(),
+            'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
+            'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
         ]);
     }
 

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Panel;
 
+use App\Enums\EstadoIncidencia;
+use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
 use App\Models\Empleado;
 use App\Models\Incidencia;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,21 +59,35 @@ class EmpleadoController extends Controller
     {
         $user = $request->user();
         $empleadoModel = Empleado::where('numero_empleado', $numeroEmpleado)->firstOrFail();
-        $query = Incidencia::where('numero_empleado', $numeroEmpleado);
+
+        $query = Incidencia::where('numero_empleado', $numeroEmpleado)
+            ->with('area:id,nombre');
 
         if ($user->esJefeInmediato()) {
             abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
-
             $query->where('area_id', $user->area_id);
         }
 
-        $incidencias = $query
-            ->with('area:id,nombre')
-            ->orderByDesc('created_at')
-            ->get();
+        if ($request->filled('fecha')) {
+            $fecha = Carbon::parse($request->fecha);
+            $inicio = $fecha->copy()->startOfMonth();
+            $fin = $fecha->copy()->endOfMonth();
+            $query->where('fecha_incidencia', '>=', $inicio)
+                ->where('fecha_incidencia', '<=', $fin);
+        }
 
-        if ($user->esJefeInmediato()) {
-            abort_if($incidencias->isEmpty(), 404, 'Empleado no encontrado.');
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->filled('tipo')) {
+            $query->where('tipo_incidencia', $request->tipo);
+        }
+
+        $incidencias = $query->orderByDesc('created_at')->get();
+
+        if ($user->esJefeInmediato() && $incidencias->isEmpty()) {
+            abort(404, 'Empleado no encontrado.');
         }
 
         $empleado = [
@@ -82,6 +99,9 @@ class EmpleadoController extends Controller
         return Inertia::render('Panel/Empleados/Show', [
             'empleado' => $empleado,
             'incidencias' => $incidencias,
+            'filtros' => $request->only(['fecha', 'estado', 'tipo']),
+            'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
+            'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
         ]);
     }
 }
