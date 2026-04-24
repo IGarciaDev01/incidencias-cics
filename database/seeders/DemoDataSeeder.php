@@ -9,15 +9,12 @@ use App\Models\Empleado;
 use App\Models\HistorialIncidencia;
 use App\Models\Incidencia;
 use App\Models\User;
-use Faker\Factory as FakerFactory;
-use Faker\Generator;
+use DateTime;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
-    private Generator $faker;
-
     private const AREAS = [
         'Actividades Culturales',
         'Actividades Deportivas',
@@ -48,10 +45,62 @@ class DemoDataSeeder extends Seeder
         'UPIS',
     ];
 
+    // -------------------------------------------------------------------------
+    // Helpers nativos (reemplazo de Faker)
+    // -------------------------------------------------------------------------
+
+    private function randomElement(array $array): mixed
+    {
+        return $array[array_rand($array)];
+    }
+
+    private function numberBetween(int $min, int $max): int
+    {
+        return rand($min, $max);
+    }
+
+    private function boolean(int $percentChance = 50): bool
+    {
+        return rand(1, 100) <= $percentChance;
+    }
+
+    private function optional(float $probability, mixed $value): mixed
+    {
+        return rand(1, 100) <= ($probability * 100) ? $value : null;
+    }
+
+    private function sentence(): string
+    {
+        $oraciones = [
+            'El empleado llegó tarde por tráfico intenso en la zona.',
+            'Se solicitó permiso por cita médica urgente.',
+            'La comisión fue asignada por el área de coordinación.',
+            'El retardo se debió a un imprevisto de transporte público.',
+            'Se adjunta documentación de soporte para la solicitud.',
+            'El evento fue por causas de fuerza mayor.',
+            'La salida anticipada fue autorizada verbalmente.',
+            'Se presenta justificante médico como respaldo.',
+            'La incidencia fue notificada al jefe inmediato.',
+            'Se solicitó permiso con anticipación suficiente.',
+            'El empleado presentó comprobante de asistencia a evento oficial.',
+            'La situación fue comunicada oportunamente al área correspondiente.',
+        ];
+
+        return $this->randomElement($oraciones);
+    }
+
+    private function randomDateBetween(DateTime $start, DateTime $end): DateTime
+    {
+        $ts = rand($start->getTimestamp(), $end->getTimestamp());
+        return (new DateTime())->setTimestamp($ts);
+    }
+
+    // -------------------------------------------------------------------------
+    // Seeder principal
+    // -------------------------------------------------------------------------
+
     public function run(): void
     {
-        $this->faker = FakerFactory::create('es_MX');
-
         $this->crearAreas();
         $this->crearUsuarios();
         $this->crearEmpleados();
@@ -138,12 +187,16 @@ class DemoDataSeeder extends Seeder
 
         foreach ($nombres as $i => $nombre) {
             $numeroEmpleado = str_pad(1000 + $i, 5, '0', STR_PAD_LEFT);
-            $emailBase = strtolower(str_replace(' ', '.', $nombre)).$i;
+            $emailBase = strtolower(str_replace(
+                [' ', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+                ['.', 'a', 'e', 'i', 'o', 'u', 'u', 'n'],
+                $nombre
+            )).$i;
 
             Empleado::factory()->create([
                 'numero_empleado' => $numeroEmpleado,
                 'nombre' => $nombre,
-                'email' => $emailBase.'@'.$this->faker->randomElement($correos),
+                'email' => $emailBase.'@'.$this->randomElement($correos),
                 'tipo' => $tipos[$i % 3],
             ]);
         }
@@ -176,19 +229,22 @@ class DemoDataSeeder extends Seeder
         ];
 
         $folioBase = 1;
-        $fechaInicio = now()->subMonths(2);
+        $fechaInicio = new DateTime('-2 months');
+        $fechaHoy = new DateTime();
 
         foreach ($empleados as $empleado) {
-            $numIncidencias = $this->faker->randomElement([1, 2]);
+            $numIncidencias = $this->randomElement([1, 2]);
 
             for ($j = 0; $j < $numIncidencias; $j++) {
-                $fechaIncidencia = $this->faker->dateTimeBetween($fechaInicio, 'now');
-                $fechaCreacion = $this->faker->dateTimeBetween($fechaIncidencia, (clone $fechaIncidencia)->modify('+2 days'));
-                $estado = $this->faker->randomElement($estadosFinales);
+                $fechaIncidencia = $this->randomDateBetween($fechaInicio, $fechaHoy);
+                $fechaCreacionMax = (clone $fechaIncidencia)->modify('+2 days');
+                $fechaCreacion = $this->randomDateBetween($fechaIncidencia, $fechaCreacionMax);
+
+                $estado = $this->randomElement($estadosFinales);
                 $area = $areas->random();
 
-                $esRetardo = $this->faker->boolean(40);
-                $minutosRetardo = $esRetardo ? $this->faker->numberBetween(5, 29) : null;
+                $esRetardo = $this->boolean(40);
+                $minutosRetardo = $esRetardo ? $this->numberBetween(5, 29) : null;
 
                 $incidencia = Incidencia::factory()->create([
                     'folio' => 'INC-'.$fechaCreacion->format('Y').'-'.str_pad($folioBase++, 4, '0', STR_PAD_LEFT),
@@ -198,15 +254,15 @@ class DemoDataSeeder extends Seeder
                     'tipo_solicitante' => $empleado->tipo,
                     'area_id' => $area->id,
                     'fecha_incidencia' => $fechaIncidencia->format('Y-m-d'),
-                    'tipo_incidencia' => $esRetardo ? TipoIncidencia::Retardo : $this->faker->randomElement($tiposIncidencia),
+                    'tipo_incidencia' => $esRetardo ? TipoIncidencia::Retardo : $this->randomElement($tiposIncidencia),
                     'minutos_retardo' => $minutosRetardo,
-                    'descripcion' => $this->faker->optional(0.8)->sentence(),
+                    'descripcion' => $this->optional(0.8, $this->sentence()),
                     'estado' => $estado,
                     'token_seguimiento' => Str::random(32),
                     'user_id' => null,
                     'revisado_por' => $users->random()->id,
                     'motivo_rechazo' => $estado === EstadoIncidencia::Rechazada
-                        ? $this->faker->randomElement($motivosRechazo)
+                        ? $this->randomElement($motivosRechazo)
                         : null,
                     'created_at' => $fechaCreacion,
                     'updated_at' => $fechaCreacion,
@@ -232,37 +288,39 @@ class DemoDataSeeder extends Seeder
             'created_at' => $incidencia->created_at,
         ]);
 
-        $daysJefe = $this->faker->numberBetween(1, 3);
+        $daysJefe = $this->numberBetween(1, 3);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userJefe?->id,
             'tipo_accion' => 'aprobada',
-            'comentario' => $this->faker->optional(0.6)->sentence(),
+            'comentario' => $this->optional(0.6, $this->sentence()),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysJefe} days"),
         ]);
 
-        $daysCapital = $this->faker->numberBetween(4, 7);
+        $daysCapital = $this->numberBetween(4, 7);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userCapitalHumano?->id,
             'tipo_accion' => 'aprobada',
-            'comentario' => $this->faker->optional(0.6)->sentence(),
+            'comentario' => $this->optional(0.6, $this->sentence()),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysCapital} days"),
         ]);
 
-        $daysSubdireccion = $this->faker->numberBetween(8, 15);
+        $daysSubdireccion = $this->numberBetween(8, 15);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userSubdireccion?->id,
             'tipo_accion' => $incidencia->estado === EstadoIncidencia::Aprobada ? 'aprobada' : 'rechazada',
-            'comentario' => $incidencia->estado === EstadoIncidencia::Rechazada ? $incidencia->motivo_rechazo : $this->faker->optional(0.5)->sentence(),
+            'comentario' => $incidencia->estado === EstadoIncidencia::Rechazada
+                ? $incidencia->motivo_rechazo
+                : $this->optional(0.5, $this->sentence()),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysSubdireccion} days"),
         ]);
 
-        if ($this->faker->boolean(30)) {
+        if ($this->boolean(30)) {
             $comentarios = [
                 'Solicito amablemente se revise a la brevedad.',
                 'Ya son varios los retrasos este mes.',
@@ -274,9 +332,9 @@ class DemoDataSeeder extends Seeder
                 'incidencia_id' => $incidencia->id,
                 'user_id' => $userJefe?->id,
                 'tipo_accion' => 'comentario',
-                'comentario' => $this->faker->randomElement($comentarios),
-                'es_interno' => $this->faker->boolean(30),
-                'created_at' => (clone $incidencia->created_at)->modify('+'.$this->faker->numberBetween(2, 5).' days'),
+                'comentario' => $this->randomElement($comentarios),
+                'es_interno' => $this->boolean(30),
+                'created_at' => (clone $incidencia->created_at)->modify('+'.$this->numberBetween(2, 5).' days'),
             ]);
         }
     }
