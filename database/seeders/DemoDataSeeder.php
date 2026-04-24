@@ -9,13 +9,15 @@ use App\Models\Empleado;
 use App\Models\HistorialIncidencia;
 use App\Models\Incidencia;
 use App\Models\User;
+use Faker\Factory as FakerFactory;
+use Faker\Generator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-use function fake;
-
 class DemoDataSeeder extends Seeder
 {
+    private Generator $faker;
+
     private const AREAS = [
         'Actividades Culturales',
         'Actividades Deportivas',
@@ -48,6 +50,8 @@ class DemoDataSeeder extends Seeder
 
     public function run(): void
     {
+        $this->faker = FakerFactory::create('es_MX');
+
         $this->crearAreas();
         $this->crearUsuarios();
         $this->crearEmpleados();
@@ -139,7 +143,7 @@ class DemoDataSeeder extends Seeder
             Empleado::factory()->create([
                 'numero_empleado' => $numeroEmpleado,
                 'nombre' => $nombre,
-                'email' => $emailBase.'@'.fake()->randomElement($correos),
+                'email' => $emailBase.'@'.$this->faker->randomElement($correos),
                 'tipo' => $tipos[$i % 3],
             ]);
         }
@@ -175,16 +179,16 @@ class DemoDataSeeder extends Seeder
         $fechaInicio = now()->subMonths(2);
 
         foreach ($empleados as $empleado) {
-            $numIncidencias = fake()->randomElement([1, 2]);
+            $numIncidencias = $this->faker->randomElement([1, 2]);
 
             for ($j = 0; $j < $numIncidencias; $j++) {
-                $fechaIncidencia = fake()->dateTimeBetween($fechaInicio, 'now');
-                $fechaCreacion = fake()->dateTimeBetween($fechaIncidencia, (clone $fechaIncidencia)->modify('+2 days'));
-                $estado = fake()->randomElement($estadosFinales);
+                $fechaIncidencia = $this->faker->dateTimeBetween($fechaInicio, 'now');
+                $fechaCreacion = $this->faker->dateTimeBetween($fechaIncidencia, (clone $fechaIncidencia)->modify('+2 days'));
+                $estado = $this->faker->randomElement($estadosFinales);
                 $area = $areas->random();
 
-                $esRetardo = fake()->boolean(40);
-                $minutosRetardo = $esRetardo ? fake()->numberBetween(5, 29) : null;
+                $esRetardo = $this->faker->boolean(40);
+                $minutosRetardo = $esRetardo ? $this->faker->numberBetween(5, 29) : null;
 
                 $incidencia = Incidencia::factory()->create([
                     'folio' => 'INC-'.$fechaCreacion->format('Y').'-'.str_pad($folioBase++, 4, '0', STR_PAD_LEFT),
@@ -194,15 +198,15 @@ class DemoDataSeeder extends Seeder
                     'tipo_solicitante' => $empleado->tipo,
                     'area_id' => $area->id,
                     'fecha_incidencia' => $fechaIncidencia->format('Y-m-d'),
-                    'tipo_incidencia' => $esRetardo ? TipoIncidencia::Retardo : fake()->randomElement($tiposIncidencia),
+                    'tipo_incidencia' => $esRetardo ? TipoIncidencia::Retardo : $this->faker->randomElement($tiposIncidencia),
                     'minutos_retardo' => $minutosRetardo,
-                    'descripcion' => fake()->optional(0.8)->sentence(),
+                    'descripcion' => $this->faker->optional(0.8)->sentence(),
                     'estado' => $estado,
                     'token_seguimiento' => Str::random(32),
                     'user_id' => null,
                     'revisado_por' => $users->random()->id,
                     'motivo_rechazo' => $estado === EstadoIncidencia::Rechazada
-                        ? fake()->randomElement($motivosRechazo)
+                        ? $this->faker->randomElement($motivosRechazo)
                         : null,
                     'created_at' => $fechaCreacion,
                     'updated_at' => $fechaCreacion,
@@ -228,37 +232,37 @@ class DemoDataSeeder extends Seeder
             'created_at' => $incidencia->created_at,
         ]);
 
-        $daysJefe = fake()->numberBetween(1, 3);
+        $daysJefe = $this->faker->numberBetween(1, 3);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userJefe?->id,
             'tipo_accion' => 'aprobada',
-            'comentario' => fake()->optional(0.6)->sentence(),
+            'comentario' => $this->faker->optional(0.6)->sentence(),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysJefe} days"),
         ]);
 
-        $daysCapital = fake()->numberBetween(4, 7);
+        $daysCapital = $this->faker->numberBetween(4, 7);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userCapitalHumano?->id,
             'tipo_accion' => 'aprobada',
-            'comentario' => fake()->optional(0.6)->sentence(),
+            'comentario' => $this->faker->optional(0.6)->sentence(),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysCapital} days"),
         ]);
 
-        $daysSubdireccion = fake()->numberBetween(8, 15);
+        $daysSubdireccion = $this->faker->numberBetween(8, 15);
         HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
             'user_id' => $userSubdireccion?->id,
             'tipo_accion' => $incidencia->estado === EstadoIncidencia::Aprobada ? 'aprobada' : 'rechazada',
-            'comentario' => $incidencia->estado === EstadoIncidencia::Rechazada ? $incidencia->motivo_rechazo : fake()->optional(0.5)->sentence(),
+            'comentario' => $incidencia->estado === EstadoIncidencia::Rechazada ? $incidencia->motivo_rechazo : $this->faker->optional(0.5)->sentence(),
             'es_interno' => false,
             'created_at' => (clone $incidencia->created_at)->modify("+{$daysSubdireccion} days"),
         ]);
 
-        if (fake()->boolean(30)) {
+        if ($this->faker->boolean(30)) {
             $comentarios = [
                 'Solicito amablemente se revise a la brevedad.',
                 'Ya son varios los retrasos este mes.',
@@ -270,9 +274,9 @@ class DemoDataSeeder extends Seeder
                 'incidencia_id' => $incidencia->id,
                 'user_id' => $userJefe?->id,
                 'tipo_accion' => 'comentario',
-                'comentario' => fake()->randomElement($comentarios),
-                'es_interno' => fake()->boolean(30),
-                'created_at' => (clone $incidencia->created_at)->modify('+'.fake()->numberBetween(2, 5).' days'),
+                'comentario' => $this->faker->randomElement($comentarios),
+                'es_interno' => $this->faker->boolean(30),
+                'created_at' => (clone $incidencia->created_at)->modify('+'.$this->faker->numberBetween(2, 5).' days'),
             ]);
         }
     }
