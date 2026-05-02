@@ -1,1 +1,0 @@
-import{l as e,r as t,t as n}from"./jsx-runtime-Bq21oMAQ.js";import{J as r,l as i}from"./app-B9qIyn-i.js";var a=n();function o(){let{auth:n}=e().props;return n.user?(window.location.href=i.url(),null):(window.location.href=r.url(),(0,a.jsx)(t,{title:`Redirigiendo...`}))}export{o as default};

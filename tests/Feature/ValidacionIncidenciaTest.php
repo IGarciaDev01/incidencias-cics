@@ -79,13 +79,11 @@ function crearIncidencia(array $override = []): Incidencia
 dataset('tipos_solicitante', [
     'docente' => [TipoSolicitante::Docente],
     'administrativo' => [TipoSolicitante::Administrativo],
-    'paae' => [TipoSolicitante::Paae],
 ]);
 
 dataset('limites_mensuales', [
     'docente' => [TipoSolicitante::Docente, 12],
     'administrativo' => [TipoSolicitante::Administrativo, 12],
-    'paae' => [TipoSolicitante::Paae, 14],
 ]);
 
 // ─── Límite mensual ──────────────────────────────────────────────────────────
@@ -146,13 +144,13 @@ test('docente recibe rechazo automatico al alcanzar limite mensual de 12 inciden
     Carbon::setTestNow();
 });
 
-test('paae puede registrar hasta 14 incidencias mensuales', function () {
+test('administrativo puede registrar hasta 12 incidencias mensuales', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = Area::create([
-        'nombre' => 'Area paae',
-        'slug' => 'area-paae-'.uniqid(),
+        'nombre' => 'Area administrativo',
+        'slug' => 'area-administrativo-'.uniqid(),
         'descripcion' => null,
         'activa' => true,
     ]);
@@ -160,18 +158,18 @@ test('paae puede registrar hasta 14 incidencias mensuales', function () {
     $empleadoNum = '90102';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
-        'nombre' => 'PAAE Test',
-        'email' => 'paae@example.com',
-        'tipo' => TipoSolicitante::Paae->value,
+        'nombre' => 'Administrativo Test',
+        'email' => 'admin@example.com',
+        'tipo' => TipoSolicitante::Administrativo->value,
     ]);
 
-    for ($i = 0; $i < 14; $i++) {
+    for ($i = 0; $i < 12; $i++) {
         Incidencia::create([
             'folio' => 'FOLIO-'.uniqid(),
             'numero_empleado' => $empleadoNum,
-            'reportante_nombre' => 'PAAE Test',
-            'email_reportante' => 'paae@example.com',
-            'tipo_solicitante' => TipoSolicitante::Paae->value,
+            'reportante_nombre' => 'Administrativo Test',
+            'email_reportante' => 'admin@example.com',
+            'tipo_solicitante' => TipoSolicitante::Administrativo->value,
             'area_id' => $area->id,
             'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
             'tipo_incidencia' => TipoIncidencia::PermisoEconomico->value,
@@ -184,12 +182,12 @@ test('paae puede registrar hasta 14 incidencias mensuales', function () {
 
     $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'PAAE Test',
-        'email_reportante' => 'paae@example.com',
+        'reportante_nombre' => 'Administrativo Test',
+        'email_reportante' => 'admin@example.com',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'permiso_economico',
-        'descripcion' => 'Incidencia 15',
+        'descripcion' => 'Incidencia 13',
     ]);
 
     $rechazadasCount = Incidencia::where('numero_empleado', $empleadoNum)
@@ -330,7 +328,7 @@ test('incidencia rechazada por validacion queda registrada como Rechazada en la 
     Carbon::setTestNow();
 });
 
-test('ValidacionIncidenciaService excedeLimiteSemanalRetardos retorna true cuando se excede el limite', function () {
+test('ValidacionIncidenciaService excedeLimiteQuincenalRetardos retorna true cuando se excede el limite', function () {
     $service = app(ValidacionIncidenciaService::class);
 
     $area = Area::create([
@@ -345,7 +343,7 @@ test('ValidacionIncidenciaService excedeLimiteSemanalRetardos retorna true cuand
         'numero_empleado' => $empleadoNum,
         'nombre' => 'Sem Test',
         'email' => 'sem@example.com',
-        'tipo' => TipoSolicitante::Paae->value,
+        'tipo' => TipoSolicitante::Administrativo->value,
     ]);
 
     Incidencia::create([
@@ -353,7 +351,7 @@ test('ValidacionIncidenciaService excedeLimiteSemanalRetardos retorna true cuand
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Sem Test',
         'email_reportante' => 'sem@example.com',
-        'tipo_solicitante' => TipoSolicitante::Paae->value,
+        'tipo_solicitante' => TipoSolicitante::Administrativo->value,
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-13',
         'tipo_incidencia' => TipoIncidencia::Retardo->value,

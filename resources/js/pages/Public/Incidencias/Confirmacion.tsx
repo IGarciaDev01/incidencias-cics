@@ -52,7 +52,7 @@ export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, 
                             <p className="text-sm font-medium text-gray-900 mt-0.5">{tipo_incidencia}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Fecha</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Fecha de la Incidencia</p>
                             <p className="text-sm font-medium text-gray-900 mt-0.5">
                                 {fecha_incidencia}
                                 {hora_incidencia && <span className="text-gray-500 ml-1">— {hora_incidencia.substring(0, 5)}</span>}

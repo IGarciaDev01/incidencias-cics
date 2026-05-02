@@ -19,16 +19,19 @@ type EmpleadoSugerido = {
     numero_empleado: string;
     reportante_nombre: string;
     email_reportante: string | null;
-    tipo_empleado: 'docente' | 'administrativo' | 'paae' | null;
+    tipo_empleado: 'docente' | 'administrativo' | null;
 };
 
 type Props = { areas: Area[] };
 
 const TIPOS_INCIDENCIA = [
-    { value: 'retardo',           label: 'Retardo',           descripcion: 'Menor a 30 min, máximo 2 a la quincena', requiereMinutos: true },
-    { value: 'permiso_economico', label: 'Permiso Económico', descripcion: '',    requiereMinutos: false },
-    { value: 'comision_oficial',  label: 'Comisión Oficial',  descripcion: '',    requiereMinutos: false },
-    { value: 'salida_anticipada', label: 'Salida Anticipada', descripcion: 'Exclusivo personal PAAE', requiereMinutos: false },
+    { value: 'retardo',           label: 'Retardo',                   descripcion: 'Menor a 30 min, máximo 2 a la quincena', requiereMinutos: true },
+    { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: '',                                    requiereMinutos: false },
+    { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
+    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: '',                                    requiereMinutos: false },
+    { value: 'permiso_sindical',  label: 'Permiso Sindical',          descripcion: '',                                    requiereMinutos: false },
+    { value: 'incidencia_medica', label: 'Médica',         descripcion: '',                                    requiereMinutos: false },
+    { value: 'buena_conducta',   label: 'Buena Conducta', descripcion: '',                                  requiereMinutos: false },
 ];
 
 export default function Create({ areas }: Props) {
@@ -49,6 +52,7 @@ export default function Create({ areas }: Props) {
     const [buscando, setBuscando]           = useState(false);
     const [sugeridos, setSugeridos]         = useState<EmpleadoSugerido[]>([]);
     const [nombreManual, setNombreManual]   = useState(false);
+    const [emailManual, setEmailManual]     = useState(false);
     const [busquedaHecha, setBusquedaHecha] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -61,13 +65,20 @@ export default function Create({ areas }: Props) {
             tipo_empleado: sugerido.tipo_empleado ?? '',
         }));
         setNombreManual(false);
+        setEmailManual(false);
         setSugeridos([]);
     }, [setData]);
 
     const activarNombreManual = useCallback(() => {
         setNombreManual(true);
         setSugeridos([]);
-        setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '', tipo_empleado: '' }));
+        setData((prev) => ({ ...prev, reportante_nombre: '', tipo_empleado: '' }));
+    }, [setData]);
+
+    const activarEmailManual = useCallback(() => {
+        setEmailManual(true);
+        setSugeridos([]);
+        setData((prev) => ({ ...prev, email_reportante: '' }));
     }, [setData]);
 
     useEffect(() => {
@@ -245,15 +256,39 @@ export default function Create({ areas }: Props) {
                         <Label htmlFor="email_reportante">
                             Correo electrónico <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                            id="email_reportante"
-                            name="email_reportante"
-                            type="email"
-                            value={data.email_reportante}
-                            onChange={(e) => setData('email_reportante', e.target.value)}
-                            placeholder="correo@ejemplo.com"
-                            required
-                        />
+
+                        {/* Email ya seleccionado (chip) */}
+                        {data.email_reportante && !emailManual && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
+                                <span className="flex-1 text-gray-900">{data.email_reportante}</span>
+                                <button
+                                    type="button"
+                                    onClick={activarEmailManual}
+                                    className="text-xs text-gray-400 hover:text-gray-600"
+                                >
+                                    Cambiar
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Input manual o nuevo */}
+                        {(emailManual || !data.email_reportante) && (
+                            <Input
+                                id="email_reportante"
+                                name="email_reportante"
+                                type="email"
+                                value={data.email_reportante}
+                                onChange={(e) => setData('email_reportante', e.target.value)}
+                                placeholder="correo@ejemplo.com"
+                                required
+                            />
+                        )}
+
+                        {/* Input oculto cuando se seleccionó de sugeridos */}
+                        {data.email_reportante && !emailManual && (
+                            <input type="hidden" name="email_reportante" value={data.email_reportante} />
+                        )}
+
                         <p className="text-xs text-gray-500">Se usará para notificarte sobre el estado de tu incidencia.</p>
                         <InputError message={errors.email_reportante} />
                     </div>
@@ -272,7 +307,6 @@ export default function Create({ areas }: Props) {
                                 <SelectContent>
                                     <SelectItem value="docente">Docente</SelectItem>
                                     <SelectItem value="administrativo">Administrativo</SelectItem>
-                                    <SelectItem value="paae">PAAE</SelectItem>
                                 </SelectContent>
                             </Select>
                             <input type="hidden" name="tipo_empleado" value={data.tipo_empleado} />

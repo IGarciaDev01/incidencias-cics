@@ -29,7 +29,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                             href={IniciarSesion.url()}
                             className="text-sm text-white hover:text-gray-200 transition-colors bg-primary px-2 py-1 rounded-md"
                         >
-                            Administración
+                            Iniciar Sesión
                         </Link>
                     </nav>
                 </div>

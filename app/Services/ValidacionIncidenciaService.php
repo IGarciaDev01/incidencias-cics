@@ -12,11 +12,9 @@ use Illuminate\Support\Str;
 
 class ValidacionIncidenciaService
 {
-    public const LIMITE_MENSUAL_DOCente = 12;
+    public const LIMITE_MENSUAL_DOCENTE = 12;
 
     public const LIMITE_MENSUAL_ADMINISTRATIVO = 12;
-
-    public const LIMITE_MENSUAL_PAAE = 14;
 
     public const MAX_MINUTOS_QUINCENALES = 120;
 
@@ -102,9 +100,8 @@ class ValidacionIncidenciaService
     private function obtenerLimiteMensual(TipoSolicitante $tipo): int
     {
         return match ($tipo) {
-            TipoSolicitante::Docente => self::LIMITE_MENSUAL_DOCente,
+            TipoSolicitante::Docente => self::LIMITE_MENSUAL_DOCENTE,
             TipoSolicitante::Administrativo => self::LIMITE_MENSUAL_ADMINISTRATIVO,
-            TipoSolicitante::Paae => self::LIMITE_MENSUAL_PAAE,
         };
     }
 

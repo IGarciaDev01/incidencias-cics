@@ -40,7 +40,7 @@ test('tipo_empleado se guarda en empleado y se usa en la incidencia', function (
         'numero_empleado' => '90002',
         'reportante_nombre' => 'Persona Y',
         'email_reportante' => 'y@example.com',
-        'tipo_empleado' => 'paae',
+        'tipo_empleado' => 'administrativo',
         'area_id' => $area->id,
         'fecha_incidencia' => now()->toDateString(),
         'tipo_incidencia' => 'permiso_economico',
@@ -48,10 +48,10 @@ test('tipo_empleado se guarda en empleado y se usa en la incidencia', function (
     ])->assertRedirect();
 
     $empleado = Empleado::where('numero_empleado', '90002')->firstOrFail();
-    expect($empleado->tipo->value)->toBe('paae');
+    expect($empleado->tipo->value)->toBe('administrativo');
 
     $incidencia = Incidencia::where('numero_empleado', '90002')->latest('id')->firstOrFail();
-    expect($incidencia->tipo_solicitante->value)->toBe('paae');
+    expect($incidencia->tipo_solicitante->value)->toBe('administrativo');
 });
 
 test('si el empleado ya existe con tipo, no requiere tipo_empleado en el request', function () {
