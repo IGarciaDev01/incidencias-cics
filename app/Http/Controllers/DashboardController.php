@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\EstadoIncidencia;
 use App\Enums\RolUsuario;
-use App\Models\Area;
 use App\Models\Incidencia;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +18,6 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $stats = match ($user->rol) {
-            RolUsuario::Admin => $this->statsAdmin(),
             RolUsuario::JefeInmediato => $this->statsJefe($user),
             RolUsuario::CapitalHumano => $this->statsCapitalHumano(),
             RolUsuario::Subdirector => $this->statsSubdirector(),
@@ -30,57 +29,195 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function statsAdmin(): array
+    private function statsSubdirector(): array
     {
+        $total = Incidencia::count();
+        $aprobadas = Incidencia::where('estado', EstadoIncidencia::Aprobada)->count();
+
         return [
-            'total_incidencias' => Incidencia::count(),
-            'pendientes_jefe' => Incidencia::where('estado', EstadoIncidencia::PendienteJefe)->count(),
-            'pendientes_capital_humano' => Incidencia::where('estado', EstadoIncidencia::PendienteCapitalHumano)->count(),
-            'pendientes_subdireccion' => Incidencia::where('estado', EstadoIncidencia::PendienteSubdireccion)->count(),
-            'aprobadas' => Incidencia::where('estado', EstadoIncidencia::Aprobada)->count(),
+            'pendientes' => Incidencia::where('estado', EstadoIncidencia::PendienteSubdireccion)->count(),
+            'aprobadas' => $aprobadas,
             'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
-            'total_usuarios' => User::where('activo', true)->count(),
-            'total_areas' => Area::where('activa', true)->count(),
+            'total' => $total,
+            'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
+            'charts' => [
+                'por_estado' => $this->countPorEstado(),
+                'por_tipo' => $this->countPorTipo(),
+                'por_area' => $this->countPorArea(),
+                'por_solicitante' => $this->countPorSolicitante(),
+                'solicitudes_mes' => $this->solicitudesPorMes(),
+            ],
+        ];
+    }
+
+    private function statsCapitalHumano(): array
+    {
+        $total = Incidencia::whereIn('estado', [
+            EstadoIncidencia::PendienteCapitalHumano,
+            EstadoIncidencia::PendienteSubdireccion,
+            EstadoIncidencia::Aprobada,
+        ])->count();
+        $aprobadas = Incidencia::where('estado', EstadoIncidencia::Aprobada)->count();
+
+        return [
+            'pendientes' => Incidencia::where('estado', EstadoIncidencia::PendienteCapitalHumano)->count(),
+            'aprobadas' => $aprobadas,
+            'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
+            'total' => $total,
+            'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
+            'charts' => [
+                'por_estado' => $this->countPorEstado(),
+                'por_tipo' => $this->countPorTipo(),
+                'por_area' => $this->countPorArea(),
+                'solicitudes_mes' => $this->solicitudesPorMes(),
+            ],
         ];
     }
 
     private function statsJefe(User $jefe): array
     {
         $base = Incidencia::when($jefe->area_id, fn ($q) => $q->where('area_id', $jefe->area_id));
+        $total = (clone $base)->count();
+        $aprobadas = (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count();
 
         return [
             'pendientes' => (clone $base)->where('estado', EstadoIncidencia::PendienteJefe)->count(),
-            'aprobadas' => (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count(),
+            'aprobadas' => $aprobadas,
             'rechazadas' => (clone $base)->where('estado', EstadoIncidencia::Rechazada)->count(),
-            'total' => (clone $base)->count(),
+            'total' => $total,
+            'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
+            'charts' => [
+                'por_estado' => $this->countPorEstado($jefe->area_id),
+                'por_tipo' => $this->countPorTipo($jefe->area_id),
+                'por_solicitante' => $this->countPorSolicitante($jefe->area_id),
+                'solicitudes_mes' => $this->solicitudesPorMes($jefe->area_id),
+            ],
         ];
     }
 
-    private function statsCapitalHumano(): array
+    private function countPorEstado(?int $areaId = null): array
     {
-        return [
-            'pendientes' => Incidencia::where('estado', EstadoIncidencia::PendienteCapitalHumano)->count(),
-            'aprobadas' => Incidencia::where('estado', EstadoIncidencia::Aprobada)->count(),
-            'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
-            'total' => Incidencia::whereIn('estado', [
-                EstadoIncidencia::PendienteCapitalHumano,
-                EstadoIncidencia::PendienteSubdireccion,
-                EstadoIncidencia::Aprobada,
-            ])->count(),
+        $query = Incidencia::query();
+        if ($areaId) {
+            $query->where('area_id', $areaId);
+        }
+
+        $estados = [
+            'pendiente_jefe' => 0,
+            'pendiente_capital_humano' => 0,
+            'pendiente_subdireccion' => 0,
+            'aprobada' => 0,
+            'rechazada' => 0,
         ];
+
+        $result = (clone $query)
+            ->select('estado', DB::raw('count(*) as total'))
+            ->groupBy('estado')
+            ->pluck('total', 'estado')
+            ->toArray();
+
+        foreach ($result as $estado => $count) {
+            if (isset($estados[$estado])) {
+                $estados[$estado] = $count;
+            }
+        }
+
+        return $estados;
     }
 
-    private function statsSubdirector(): array
+    private function countPorTipo(?int $areaId = null): array
     {
-        return [
-            'pendientes' => Incidencia::where('estado', EstadoIncidencia::PendienteSubdireccion)->count(),
-            'aprobadas' => Incidencia::where('estado', EstadoIncidencia::Aprobada)->count(),
-            'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
-            'total' => Incidencia::whereIn('estado', [
-                EstadoIncidencia::PendienteSubdireccion,
-                EstadoIncidencia::Aprobada,
-                EstadoIncidencia::Rechazada,
-            ])->count(),
+        $query = Incidencia::query();
+        if ($areaId) {
+            $query->where('area_id', $areaId);
+        }
+
+        $tipos = [
+            'retardo' => 0,
+            'permiso_economico' => 0,
+            'comision_oficial' => 0,
+            'salida_anticipada' => 0,
         ];
+
+        $result = (clone $query)
+            ->select('tipo_incidencia', DB::raw('count(*) as total'))
+            ->groupBy('tipo_incidencia')
+            ->pluck('total', 'tipo_incidencia')
+            ->toArray();
+
+        foreach ($result as $tipo => $count) {
+            if (isset($tipos[$tipo])) {
+                $tipos[$tipo] = $count;
+            }
+        }
+
+        return $tipos;
+    }
+
+    private function countPorArea(?int $excludeAreaId = null): array
+    {
+        $query = Incidencia::query();
+        if ($excludeAreaId) {
+            $query->where('area_id', '!=', $excludeAreaId);
+        }
+
+        $result = (clone $query)
+            ->join('areas', 'incidencias.area_id', '=', 'areas.id')
+            ->select('areas.nombre', DB::raw('count(*) as total'))
+            ->groupBy('areas.id', 'areas.nombre')
+            ->orderByDesc('total')
+            ->limit(8)
+            ->pluck('total', 'nombre')
+            ->toArray();
+
+        return $result;
+    }
+
+    private function countPorSolicitante(?int $areaId = null): array
+    {
+        $query = Incidencia::query();
+        if ($areaId) {
+            $query->where('area_id', $areaId);
+        }
+
+        $result = (clone $query)
+            ->select('tipo_solicitante', DB::raw('count(*) as total'))
+            ->groupBy('tipo_solicitante')
+            ->pluck('total', 'tipo_solicitante')
+            ->toArray();
+
+        return $result;
+    }
+
+    private function solicitudesPorMes(?int $areaId = null, int $months = 6): array
+    {
+        $query = Incidencia::query()
+            ->select(
+                DB::raw("DATE_FORMAT(fecha_incidencia, '%Y-%m') as mes"),
+                DB::raw('count(*) as total')
+            )
+            ->where('fecha_incidencia', '>=', now()->subMonths($months)->startOfMonth()->timezone('America/Mexico_City'));
+
+        if ($areaId) {
+            $query->where('area_id', $areaId);
+        }
+
+        $result = $query->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes')
+            ->toArray();
+
+        $meses = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $fecha = now()->subMonths($i)->timezone('America/Mexico_City');
+            $mes = $fecha->format('Y-m');
+            $label = $fecha->format('M');
+            $meses[$mes] = [
+                'label' => ucfirst($label),
+                'total' => $result[$mes] ?? 0,
+            ];
+        }
+
+        return $meses;
     }
 }

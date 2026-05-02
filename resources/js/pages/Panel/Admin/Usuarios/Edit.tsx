@@ -12,7 +12,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, update } from '@/routes/panel/admin/usuarios';
+import { index, update } from '@/routes/panel/subdireccion/admin/usuarios';
 
 type Usuario = {
     id: number;

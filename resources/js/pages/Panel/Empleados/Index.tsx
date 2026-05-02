@@ -5,6 +5,7 @@ import { dashboard } from '@/routes/panel';
 import { index as jefeEmpleados, show as jefeShow }   from '@/routes/panel/jefe_inmediato/empleados';
 import { index as chEmpleados,   show as chShow }     from '@/routes/panel/capital_humano/empleados';
 import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
+import { formatDateOnly } from '@/utils/date';
 
 type Empleado = {
     numero_empleado: string;
@@ -112,16 +113,15 @@ export default function Index({ empleados, filtros }: Props) {
                                         </td>
                                         <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
                                             {emp.ultima_incidencia
-                                                ? new Date(emp.ultima_incidencia).toLocaleDateString('es-MX')
+                                                ? formatDateOnly(emp.ultima_incidencia)
                                                 : <span className="text-gray-300 italic">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <Link
-                                                href={showUrl(emp.numero_empleado)}
-                                                className="text-xs font-medium text-primary hover:underline"
-                                            >
-                                                Ver historial →
-                                            </Link>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={showUrl(emp.numero_empleado)}>
+                                                    Ver historial
+                                                </Link>
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}

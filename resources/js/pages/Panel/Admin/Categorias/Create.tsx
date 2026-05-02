@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, store, create } from '@/routes/panel/admin/categorias';
+import { index, store, create } from '@/routes/panel/subdireccion/admin/categorias';
 
 type Props = {
     prioridades: string[];

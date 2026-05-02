@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index } from '@/routes/panel/admin/logs';
+import { index } from '@/routes/panel/subdireccion/admin/logs';
 
 type LogItem = {
     id: number;

@@ -1,4 +1,13 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
 import { index as jefeEmpleados, show as jefeShow } from '@/routes/panel/jefe_inmediato/empleados';
 import { index as chEmpleados,   show as chShow }   from '@/routes/panel/capital_humano/empleados';
@@ -6,6 +15,7 @@ import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/sub
 import { show as jefeVerIncidencia } from '@/routes/panel/jefe_inmediato/incidencias';
 import { show as chVerIncidencia }   from '@/routes/panel/capital_humano/incidencias';
 import { show as subdirVerIncidencia } from '@/routes/panel/subdireccion/incidencias';
+import { formatDateOnly } from '@/utils/date';
 
 type Opcion = { value: string; name: string };
 type Incidencia = {
@@ -24,6 +34,7 @@ type Empleado = {
     numero_empleado: string;
     reportante_nombre: string;
     email_reportante: string | null;
+    tipo: string | null;
 };
 
 type Props = {
@@ -54,6 +65,11 @@ const TIPO_LABELS: Record<string, string> = {
     comision_oficial:  'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
 };
+const TIPO_SOLICITANTE_LABELS: Record<string, string> = {
+    docente:        'Docente',
+    administrativo: 'Administrativo',
+    paae:           'PAAE',
+};
 
 function useRolBackUrl() {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
@@ -61,21 +77,6 @@ function useRolBackUrl() {
     if (rol === 'jefe_inmediato') return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: jefeShow.url };
     if (rol === 'capital_humano') return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url };
     return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url };
-}
-
-function formatDate(d: string) {
-    if (!d) return '—';
-    const date = new Date(d);
-    if (isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('es-MX');
-}
-
-function formatDateFull(d: string) {
-    if (!d) return '—';
-    const dateStr = d.includes('T') ? d : d + 'T00:00:00';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('es-MX');
 }
 
 export default function Show({ empleado, incidencias, filtros, estados, tipos }: Props) {
@@ -102,35 +103,55 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
             <div className="p-4 md:p-6 space-y-6">
                 {/* Encabezado */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">
-                                No. Empleado: <span className="font-mono">{empleado.numero_empleado}</span>
-                            </p>
-                            <h2 className="text-2xl font-bold text-gray-900">{empleado.reportante_nombre}</h2>
-                            {empleado.email_reportante && (
-                                <p className="text-sm text-gray-500 mt-1">{empleado.email_reportante}</p>
-                            )}
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-xl font-bold text-primary">
+                                    {empleado.reportante_nombre.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                                    No. Empleado <span className="font-mono text-gray-700">{empleado.numero_empleado}</span>
+                                </p>
+                                <h2 className="text-xl font-bold text-gray-900">{empleado.reportante_nombre}</h2>
+                                {empleado.email_reportante && (
+                                    <p className="text-sm text-gray-500 mt-0.5">{empleado.email_reportante}</p>
+                                )}
+                            </div>
                         </div>
-                        <Link href={backUrl} className="text-sm text-gray-500 hover:text-gray-700">
+                        <Link href={backUrl} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
                             ← Volver a empleados
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 text-center">
-                        <div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <p className="text-2xl font-bold text-gray-900">{incidencias.length}</p>
                             <p className="text-xs text-gray-500 mt-0.5">Total</p>
                         </div>
-                        <div>
-                            <p className="text-2xl font-bold text-amber-600">{pendientes}</p>
+                        <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                            <p className="text-2xl font-bold text-yellow-600">{pendientes}</p>
                             <p className="text-xs text-gray-500 mt-0.5">En proceso</p>
                         </div>
-                        <div>
+                        <div className="text-center p-3 bg-green-50 rounded-lg">
                             <p className="text-2xl font-bold text-green-600">{aprobadas}</p>
                             <p className="text-xs text-gray-500 mt-0.5">Aprobadas</p>
                         </div>
+                        <div className="text-center p-3 bg-red-50 rounded-lg">
+                            <p className="text-2xl font-bold text-red-600">{rechazadas}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Rechazadas</p>
+                        </div>
                     </div>
+
+                    {empleado.tipo && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Tipo de empleado:</span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                {TIPO_SOLICITANTE_LABELS[empleado.tipo] ?? empleado.tipo}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Historial */}
@@ -139,77 +160,70 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
                         <h3 className="font-semibold text-gray-900">Historial de incidencias</h3>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 items-end px-5 py-3 bg-gray-50 border-b border-gray-100">
+                    <div className="flex flex-wrap gap-3 items-center px-5 py-3 bg-gray-50 border-b border-gray-100">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 font-medium">Filtrar por mes</label>
-                            <input
+                            <label className="text-xs text-gray-500 font-medium">Mes</label>
+                            <Input
                                 type="month"
-                                className="text-sm border-gray-200 rounded-lg"
+                                className="h-8 w-40 text-sm"
                                 value={filtros.fecha ?? ''}
                                 onChange={(e) => handleFiltro('fecha', e.target.value)}
                             />
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-xs text-gray-500 font-medium">Estado</label>
-                            <select
-                                className="text-sm border-gray-200 rounded-lg"
-                                value={filtros.estado ?? ''}
-                                onChange={(e) => handleFiltro('estado', e.target.value)}
-                            >
-                                <option value="">Todos</option>
-                                {estados.map((e) => (
-                                    <option key={e.value} value={e.value}>{e.name}</option>
-                                ))}
-                            </select>
+                            <Select value={filtros.estado || '_all_'} onValueChange={(v) => handleFiltro('estado', v === '_all_' ? '' : v)}>
+                                <SelectTrigger className="h-8 w-44 text-sm">
+                                    <SelectValue placeholder="Todos" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="_all_">Todos</SelectItem>
+                                    {estados.map((e) => (
+                                        <SelectItem key={e.value} value={e.value}>{ESTADO_LABELS[e.value] ?? e.value}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex flex-col gap-1">
                             <label className="text-xs text-gray-500 font-medium">Tipo</label>
-                            <select
-                                className="text-sm border-gray-200 rounded-lg"
-                                value={filtros.tipo ?? ''}
-                                onChange={(e) => handleFiltro('tipo', e.target.value)}
-                            >
-                                <option value="">Todos</option>
-                                {tipos.map((t) => (
-                                    <option key={t.value} value={t.value}>{t.name}</option>
-                                ))}
-                            </select>
+                            <Select value={filtros.tipo || '_all_'} onValueChange={(v) => handleFiltro('tipo', v === '_all_' ? '' : v)}>
+                                <SelectTrigger className="h-8 w-44 text-sm">
+                                    <SelectValue placeholder="Todos" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="_all_">Todos</SelectItem>
+                                    {tipos.map((t) => (
+                                        <SelectItem key={t.value} value={t.value}>{TIPO_LABELS[t.value] ?? t.value}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         {hayFiltros && (
-                            <button
-                                type="button"
-                                onClick={handleLimpiar}
-                                className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                            >
+                            <Button variant="ghost" size="sm" className="h-8 text-gray-500" onClick={handleLimpiar}>
                                 Limpiar
-                            </button>
+                            </Button>
                         )}
                     </div>
 
                     {incidencias.length === 0 ? (
-                        <p className="p-6 text-sm text-gray-500">Sin incidencias registradas.</p>
+                        <p className="p-6 text-sm text-gray-500 text-center">Sin incidencias registradas.</p>
                     ) : (
                         <table className="w-full text-sm">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Folio</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Área</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Fecha</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Estado</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Registrada</th>
+                                    <th className="px-4 py-3" />
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {incidencias.map((inc) => (
                                     <tr key={inc.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-4 py-3">
-                                            <Link
-                                                href={verIncidenciaRoute.url(inc.id)}
-                                                className="font-mono text-xs text-primary hover:underline"
-                                            >
-                                                {inc.folio}
-                                            </Link>
+                                            <span className="font-mono text-xs text-primary font-medium">{inc.folio}</span>
                                         </td>
                                         <td className="px-4 py-3 text-gray-900">
                                             {TIPO_LABELS[inc.tipo_incidencia] ?? inc.tipo_incidencia}
@@ -221,15 +235,19 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
                                             {inc.area?.nombre ?? <span className="text-gray-300 italic">Sin área</span>}
                                         </td>
                                         <td className="px-4 py-3 text-gray-500">
-                                            {formatDateFull(inc.fecha_incidencia)}
+                                            {formatDateOnly(inc.fecha_incidencia)}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[inc.estado] ?? 'bg-gray-100 text-gray-600'}`}>
                                                 {ESTADO_LABELS[inc.estado] ?? inc.estado}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-400 text-xs">
-                                            {formatDateFull(inc.created_at)}
+                                        <td className="px-4 py-3 text-right">
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={verIncidenciaRoute.url(inc.id)}>
+                                                    Ver detalle
+                                                </Link>
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}

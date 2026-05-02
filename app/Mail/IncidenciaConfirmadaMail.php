@@ -27,10 +27,9 @@ class IncidenciaConfirmadaMail extends Mailable
         return new Content(
             markdown: 'emails.incidencias.confirmada',
             with: [
-                'folio'           => $this->incidencia->folio,
-                'titulo'          => $this->incidencia->titulo,
-                'token'           => $this->incidencia->token_seguimiento,
-                'urlSeguimiento'  => route('seguimiento.show', $this->incidencia->folio),
+                'folio' => $this->incidencia->folio,
+                'titulo' => $this->incidencia->titulo,
+                'urlSeguimiento' => route('seguimiento.show', $this->incidencia->folio),
             ],
         );
     }

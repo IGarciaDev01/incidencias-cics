@@ -1,13 +1,8 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { AlertTriangle, BarChart2, Users } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
 import { dashboard } from '@/routes/panel';
 import { index as jefeIncidencias } from '@/routes/panel/jefe_inmediato/incidencias';
-import { index as jefeEmpleados }   from '@/routes/panel/jefe_inmediato/empleados';
-import { index as chIncidencias }   from '@/routes/panel/capital_humano/incidencias';
-import { index as chEmpleados }     from '@/routes/panel/capital_humano/empleados';
+import { index as chIncidencias } from '@/routes/panel/capital_humano/incidencias';
 import { index as subdirIncidencias } from '@/routes/panel/subdireccion/incidencias';
-import { index as subdirReportes }    from '@/routes/panel/subdireccion/reportes';
-import { index as subdirEmpleados }   from '@/routes/panel/subdireccion/empleados';
 
 type AdminStats = {
     total_incidencias: number;
@@ -25,6 +20,13 @@ type JefeStats = {
     aprobadas: number;
     rechazadas: number;
     total: number;
+    tasa_aprobacion: number;
+    charts: {
+        por_estado: Record<string, number>;
+        por_tipo: Record<string, number>;
+        por_solicitante: Record<string, number>;
+        solicitudes_mes: Record<string, { label: string; total: number }>;
+    };
 };
 
 type CapitalHumanoStats = {
@@ -32,6 +34,13 @@ type CapitalHumanoStats = {
     aprobadas: number;
     rechazadas: number;
     total: number;
+    tasa_aprobacion: number;
+    charts: {
+        por_estado: Record<string, number>;
+        por_tipo: Record<string, number>;
+        por_area: Record<string, number>;
+        solicitudes_mes: Record<string, { label: string; total: number }>;
+    };
 };
 
 type SubdireccionStats = {
@@ -39,11 +48,67 @@ type SubdireccionStats = {
     aprobadas: number;
     rechazadas: number;
     total: number;
+    tasa_aprobacion: number;
+    charts: {
+        por_estado: Record<string, number>;
+        por_tipo: Record<string, number>;
+        por_area: Record<string, number>;
+        por_solicitante: Record<string, number>;
+        solicitudes_mes: Record<string, { label: string; total: number }>;
+    };
 };
 
 type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
     rol: 'admin' | 'jefe_inmediato' | 'capital_humano' | 'subdirector';
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+    pendiente_jefe: 'Pendiente — Jefe',
+    pendiente_capital_humano: 'Pendiente — C.H.',
+    pendiente_subdireccion: 'Pendiente — Subdir.',
+    aprobada: 'Aprobada',
+    rechazada: 'Rechazada',
+};
+
+const ESTADO_COLORS: Record<string, string> = {
+    pendiente_jefe: 'bg-yellow-400',
+    pendiente_capital_humano: 'bg-orange-400',
+    pendiente_subdireccion: 'bg-sky-500',
+    aprobada: 'bg-emerald-500',
+    rechazada: 'bg-red-500',
+};
+
+const TIPO_LABELS: Record<string, string> = {
+    retardo: 'Retardo',
+    permiso_economico: 'Permiso Económico',
+    comision_oficial: 'Comisión Oficial',
+    salida_anticipada: 'Salida Anticipada',
+};
+
+const TIPO_COLORS: Record<string, string> = {
+    retardo: 'bg-amber-400',
+    permiso_economico: 'bg-blue-400',
+    comision_oficial: 'bg-violet-400',
+    salida_anticipada: 'bg-rose-400',
+};
+
+const SOLICITANTE_LABELS: Record<string, string> = {
+    docente: 'Docente',
+    administrativo: 'Administrativo',
+    paae: 'PAAE',
+};
+
+const SOLICITANTE_COLORS: Record<string, string> = {
+    docente: 'bg-teal-500',
+    administrativo: 'bg-indigo-400',
+    paae: 'bg-rose-400',
+};
+
+const SOLICITANTE_BG: Record<string, string> = {
+    docente: 'bg-teal-50 text-teal-700',
+    administrativo: 'bg-indigo-50 text-indigo-700',
+    paae: 'bg-rose-50 text-rose-700',
 };
 
 function StatCard({
@@ -76,34 +141,118 @@ function StatCard({
     );
 }
 
-function QuickLink({ href, icon: Icon, label, description, badge }: {
-    href: string;
-    icon: React.ElementType;
-    label: string;
-    description: string;
-    badge?: number;
+function BarChart({ data, colorMap, labelMap }: {
+    data: Record<string, number>;
+    colorMap?: Record<string, string>;
+    labelMap?: Record<string, string>;
 }) {
+    const max = Math.max(...Object.values(data), 1);
     return (
-        <Link
-            href={href}
-            className="flex items-center gap-4 bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-sm transition-all"
-        >
-            <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Icon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 text-sm">{label}</p>
-                    {badge !== undefined && badge > 0 && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
-                            {badge}
-                        </span>
-                    )}
+        <div className="space-y-2.5">
+            {Object.entries(data).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-36 truncate">{labelMap?.[key] ?? key}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                        <div
+                            className={`h-full rounded-full ${colorMap?.[key] ?? 'bg-blue-400'}`}
+                            style={{ width: `${Math.max((value / max) * 100, value > 0 ? 4 : 0)}%` }}
+                        />
+                    </div>
+                    <span className="text-xs font-medium text-gray-900 w-8 text-right">{value}</span>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{description}</p>
+            ))}
+        </div>
+    );
+}
+
+function DonutChart({ data, colorMap, labelMap }: {
+    data: Record<string, number>;
+    colorMap?: Record<string, string>;
+    labelMap?: Record<string, string>;
+}) {
+    const total = Object.values(data).reduce((a, b) => a + b, 0);
+    if (total === 0) {
+        return <p className="text-sm text-gray-400 text-center py-4">Sin datos</p>;
+    }
+
+    let cumulative = 0;
+    const segments = Object.entries(data)
+        .filter(([, v]) => v > 0)
+        .map(([key, value]) => {
+            const pct = value / total;
+            const start = cumulative;
+            cumulative += pct;
+            return { key, value, pct, start, end: cumulative };
+        });
+
+    return (
+        <div className="flex items-center gap-4">
+            <div className="relative w-20 h-20 flex-shrink-0">
+                <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
+                    {segments.map(({ key, start, end }) => (
+                        <circle
+                            key={key}
+                            r="14"
+                            cx="18"
+                            cy="18"
+                            fill="none"
+                            stroke={colorMap?.[key] ?? '#94a3b8'}
+                            strokeWidth="6"
+                            strokeDasharray={`${(end - start) * 87.96} ${87.96 - (end - start) * 87.96}`}
+                            strokeDashoffset={`${-start * 87.96}`}
+                        />
+                    ))}
+                </svg>
             </div>
-            <span className="text-gray-300 text-lg">→</span>
-        </Link>
+            <div className="flex-1 space-y-1.5">
+                {segments.map(({ key, value }) => (
+                    <div key={key} className="flex items-center gap-2 text-xs">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${colorMap?.[key] ?? 'bg-gray-400'}`} />
+                        <span className="text-gray-600">{labelMap?.[key] ?? key}</span>
+                        <span className="ml-auto font-medium text-gray-900">{value}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function TrendChart({ data }: { data: Record<string, { label: string; total: number }> }) {
+    const values = Object.values(data).map(d => d.total);
+    const max = Math.max(...values, 1);
+
+    return (
+        <div className="space-y-1">
+            <div className="flex items-end gap-1 h-24">
+                {Object.entries(data).map(([key, { label, total }]) => {
+                    const height = Math.max((total / max) * 100, total > 0 ? 8 : 0);
+                    return (
+                        <div key={key} className="flex-1 flex flex-col items-center gap-1">
+                            <div
+                                className="w-full bg-sky-400 rounded-t-sm transition-all"
+                                style={{ height: `${height}%` }}
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="flex gap-1">
+                {Object.entries(data).map(([key, { label, total }]) => (
+                    <div key={key} className="flex-1 text-center">
+                        <span className="text-xs text-gray-400">{label}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">{title}</h4>
+            {children}
+        </div>
     );
 }
 
@@ -146,23 +295,49 @@ function JefeDashboard({ stats }: { stats: JefeStats }) {
                     <StatCard label="Total en tu área" value={stats.total} color="gray" />
                 </div>
             </div>
-            <div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Accesos rápidos</h3>
-                <div className="grid md:grid-cols-2 gap-3">
-                    <QuickLink
-                        href={jefeIncidencias.url()}
-                        icon={AlertTriangle}
-                        label="Ver incidencias"
-                        description="Revisa y aprueba las incidencias de tu área"
-                        badge={stats.pendientes}
-                    />
-                    <QuickLink
-                        href={jefeEmpleados.url()}
-                        icon={Users}
-                        label="Consultar empleados"
-                        description="Busca empleados y revisa su historial"
-                    />
-                </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+                <ChartCard title="Por estado">
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Por tipo">
+                    <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Solicitudes por mes">
+                    <TrendChart data={stats.charts.solicitudes_mes} />
+                </ChartCard>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+                <ChartCard title="Por tipo de solicitante">
+                    <DonutChart data={stats.charts.por_solicitante} colorMap={SOLICITANTE_COLORS} labelMap={SOLICITANTE_LABELS} />
+                </ChartCard>
+                <ChartCard title="Tasa de aprobación">
+                    <div className="flex flex-col items-center justify-center py-2">
+                        <div className="relative w-28 h-28">
+                            <svg viewBox="0 0 36 36" className="w-28 h-28 -rotate-90">
+                                <circle r="14" cx="18" cy="18" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                                <circle
+                                    r="14"
+                                    cx="18"
+                                    cy="18"
+                                    fill="none"
+                                    stroke="#10b981"
+                                    strokeWidth="6"
+                                    strokeDasharray={`${(stats.tasa_aprobacion / 100) * 87.96} ${87.96 - (stats.tasa_aprobacion / 100) * 87.96}`}
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-2xl font-bold text-gray-900">{stats.tasa_aprobacion}%</span>
+                                <span className="text-xs text-gray-400">aprobadas</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-4 text-xs text-gray-500">
+                            <span>Total: <strong className="text-gray-900">{stats.total}</strong></span>
+                            <span>Aprobadas: <strong className="text-emerald-600">{stats.aprobadas}</strong></span>
+                        </div>
+                    </div>
+                </ChartCard>
             </div>
         </div>
     );
@@ -180,23 +355,49 @@ function CapitalHumanoDashboard({ stats }: { stats: CapitalHumanoStats }) {
                     <StatCard label="Total revisadas" value={stats.total} color="gray" />
                 </div>
             </div>
-            <div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Accesos rápidos</h3>
-                <div className="grid md:grid-cols-2 gap-3">
-                    <QuickLink
-                        href={chIncidencias.url()}
-                        icon={AlertTriangle}
-                        label="Ver incidencias"
-                        description="Revisa las incidencias pendientes de tu validación"
-                        badge={stats.pendientes}
-                    />
-                    <QuickLink
-                        href={chEmpleados.url()}
-                        icon={Users}
-                        label="Consultar empleados"
-                        description="Busca empleados y revisa su historial de incidencias"
-                    />
-                </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+                <ChartCard title="Por estado">
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Por tipo">
+                    <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Solicitudes por mes">
+                    <TrendChart data={stats.charts.solicitudes_mes} />
+                </ChartCard>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+                <ChartCard title="Top áreas con más solicitudes">
+                    <BarChart data={stats.charts.por_area} labelMap={{}} />
+                </ChartCard>
+                <ChartCard title="Tasa de aprobación global">
+                    <div className="flex flex-col items-center justify-center py-2">
+                        <div className="relative w-28 h-28">
+                            <svg viewBox="0 0 36 36" className="w-28 h-28 -rotate-90">
+                                <circle r="14" cx="18" cy="18" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                                <circle
+                                    r="14"
+                                    cx="18"
+                                    cy="18"
+                                    fill="none"
+                                    stroke="#f59e0b"
+                                    strokeWidth="6"
+                                    strokeDasharray={`${(stats.tasa_aprobacion / 100) * 87.96} ${87.96 - (stats.tasa_aprobacion / 100) * 87.96}`}
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-2xl font-bold text-gray-900">{stats.tasa_aprobacion}%</span>
+                                <span className="text-xs text-gray-400">aprobadas</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-4 text-xs text-gray-500">
+                            <span>Total: <strong className="text-gray-900">{stats.total}</strong></span>
+                            <span>Aprobadas: <strong className="text-emerald-600">{stats.aprobadas}</strong></span>
+                        </div>
+                    </div>
+                </ChartCard>
             </div>
         </div>
     );
@@ -214,29 +415,49 @@ function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
                     <StatCard label="Total en el sistema" value={stats.total} color="gray" />
                 </div>
             </div>
-            <div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Accesos rápidos</h3>
-                <div className="grid md:grid-cols-3 gap-3">
-                    <QuickLink
-                        href={subdirIncidencias.url()}
-                        icon={AlertTriangle}
-                        label="Ver incidencias"
-                        description="Aprueba o rechaza definitivamente"
-                        badge={stats.pendientes}
-                    />
-                    <QuickLink
-                        href={subdirEmpleados.url()}
-                        icon={Users}
-                        label="Consultar empleados"
-                        description="Historial de incidencias por empleado"
-                    />
-                    <QuickLink
-                        href={subdirReportes.url()}
-                        icon={BarChart2}
-                        label="Reportes"
-                        description="Estadísticas y exportación de datos"
-                    />
-                </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+                <ChartCard title="Por estado">
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Por tipo">
+                    <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Solicitudes por mes">
+                    <TrendChart data={stats.charts.solicitudes_mes} />
+                </ChartCard>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+                <ChartCard title="Top áreas con más solicitudes">
+                    <BarChart data={stats.charts.por_area} labelMap={{}} />
+                </ChartCard>
+                <ChartCard title="Tasa de aprobación global">
+                    <div className="flex flex-col items-center justify-center py-2">
+                        <div className="relative w-28 h-28">
+                            <svg viewBox="0 0 36 36" className="w-28 h-28 -rotate-90">
+                                <circle r="14" cx="18" cy="18" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                                <circle
+                                    r="14"
+                                    cx="18"
+                                    cy="18"
+                                    fill="none"
+                                    stroke="#0ea5e9"
+                                    strokeWidth="6"
+                                    strokeDasharray={`${(stats.tasa_aprobacion / 100) * 87.96} ${87.96 - (stats.tasa_aprobacion / 100) * 87.96}`}
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-2xl font-bold text-gray-900">{stats.tasa_aprobacion}%</span>
+                                <span className="text-xs text-gray-400">aprobadas</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-4 text-xs text-gray-500">
+                            <span>Total: <strong className="text-gray-900">{stats.total}</strong></span>
+                            <span>Aprobadas: <strong className="text-emerald-600">{stats.aprobadas}</strong></span>
+                        </div>
+                    </div>
+                </ChartCard>
             </div>
         </div>
     );

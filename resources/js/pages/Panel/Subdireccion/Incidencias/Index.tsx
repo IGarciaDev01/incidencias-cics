@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
 import { index, show } from '@/routes/panel/subdireccion/incidencias';
+import { formatDateOnly } from '@/utils/date';
 
 type Incidencia = {
     id: number;
@@ -38,9 +39,10 @@ type EnumItem = { value: string; name: string };
 
 type Props = {
     incidencias: Paginado<Incidencia>;
-    filtros: { estado?: string; tipo?: string; buscar?: string };
+    filtros: { estado?: string; tipo?: string; buscar?: string; area_id?: string };
     estados: EnumItem[];
     tipos: EnumItem[];
+    areas: { id: number; nombre: string }[];
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -64,11 +66,11 @@ const TIPO_LABELS: Record<string, string> = {
     salida_anticipada: 'Salida Anticipada',
 };
 
-function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('es-MX');
+export function formatDate(d: string) {
+    return formatDateOnly(d);
 }
 
-export default function Index({ incidencias, filtros, estados, tipos }: Props) {
+export default function Index({ incidencias, filtros, estados, tipos, areas }: Props) {
     function handleFiltro(key: string, value: string) {
         router.get(index.url(), { ...filtros, [key]: value || undefined }, { preserveState: true, replace: true });
     }
@@ -97,6 +99,18 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
                         <Input name="buscar" defaultValue={filtros.buscar} placeholder="Folio, empleado o nombre..." className="w-64" />
                         <Button type="submit" variant="outline" size="sm">Buscar</Button>
                     </form>
+
+                    <Select value={filtros.area_id || '_all_'} onValueChange={(v) => handleFiltro('area_id', v === '_all_' ? '' : v)}>
+                        <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Todas las áreas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="_all_">Todas las áreas</SelectItem>
+                            {areas.map((a) => (
+                                <SelectItem key={a.id} value={String(a.id)}>{a.nombre}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
 
                     <Select value={filtros.estado || '_all_'} onValueChange={(v) => handleFiltro('estado', v === '_all_' ? '' : v)}>
                         <SelectTrigger className="w-52">

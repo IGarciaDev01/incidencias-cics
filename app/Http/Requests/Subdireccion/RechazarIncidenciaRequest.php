@@ -8,7 +8,7 @@ class RechazarIncidenciaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->esSubdirector() || $this->user()?->esAdmin();
+        return $this->user()?->esSubdirector();
     }
 
     public function rules(): array

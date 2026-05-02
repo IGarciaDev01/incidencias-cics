@@ -17,7 +17,7 @@ class Area extends Model
         'nombre',
         'slug',
         'descripcion',
-        'subdirector_id',
+        'jefe_id',
         'activa',
     ];
 
@@ -28,11 +28,9 @@ class Area extends Model
         ];
     }
 
-    // ─── Relaciones ──────────────────────────────────────────────────────────
-
-    public function subdirector(): BelongsTo
+    public function jefe(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'subdirector_id');
+        return $this->belongsTo(User::class, 'jefe_id');
     }
 
     public function usuarios(): HasMany

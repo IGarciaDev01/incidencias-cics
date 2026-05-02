@@ -15,10 +15,6 @@ class RechazarIncidenciaRequest extends FormRequest
             return false;
         }
 
-        if ($user->tieneRol(RolUsuario::Admin)) {
-            return true;
-        }
-
         if (! $user->tieneRol(RolUsuario::JefeInmediato)) {
             return false;
         }

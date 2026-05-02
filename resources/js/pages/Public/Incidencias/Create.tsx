@@ -137,11 +137,11 @@ export default function Create({ areas }: Props) {
 
     return (
         <>
-            <Head title="Registrar incidencia" />
+            <Head title="Registrar Nueva Incidencia" />
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Registrar incidencia</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Registrar Nueva Incidencia</h2>
                     <p className="text-sm text-gray-500 mt-1">
                         Completa el formulario con los datos de la incidencia. Recibirás un número de folio para dar seguimiento.
                     </p>

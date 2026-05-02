@@ -12,22 +12,22 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, store, create } from '@/routes/panel/admin/areas';
+import { index, store, create } from '@/routes/panel/subdireccion/admin/areas';
 
 type Props = {
-    subdirectores: { id: number; nombre: string }[];
+    jefes: { id: number; nombre: string }[];
 };
 
 function toSlug(text: string) {
     return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-export default function Create({ subdirectores }: Props) {
+export default function Create({ jefes }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         nombre: '',
         slug: '',
         descripcion: '',
-        subdirector_id: '',
+        jefe_id: '',
         activa: true,
     });
 
@@ -90,19 +90,19 @@ export default function Create({ subdirectores }: Props) {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label>Subdirector responsable</Label>
-                        <Select value={data.subdirector_id || '_none_'} onValueChange={(v) => setData('subdirector_id', v === '_none_' ? '' : v)}>
+                        <Label>Jefe responsable</Label>
+                        <Select value={data.jefe_id || '_none_'} onValueChange={(v) => setData('jefe_id', v === '_none_' ? '' : v)}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Sin subdirector asignado" />
+                                <SelectValue placeholder="Sin jefe asignado" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="_none_">Sin subdirector</SelectItem>
-                                {subdirectores.map((s) => (
-                                    <SelectItem key={s.id} value={String(s.id)}>{s.nombre}</SelectItem>
+                                <SelectItem value="_none_">Sin jefe</SelectItem>
+                                {jefes.map((j) => (
+                                    <SelectItem key={j.id} value={String(j.id)}>{j.nombre}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <InputError message={errors.subdirector_id} />
+                        <InputError message={errors.jefe_id} />
                     </div>
 
                     <div className="flex items-center gap-3 pt-2">

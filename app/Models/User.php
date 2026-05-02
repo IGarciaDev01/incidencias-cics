@@ -52,7 +52,7 @@ class User extends Authenticatable
 
     public function areasJefatura(): HasMany
     {
-        return $this->hasMany(Area::class, 'subdirector_id');
+        return $this->hasMany(Area::class, 'jefe_id');
     }
 
     public function incidenciasRevisadas(): HasMany
@@ -61,11 +61,6 @@ class User extends Authenticatable
     }
 
     // ─── Helpers de rol ──────────────────────────────────────────────────────
-
-    public function esAdmin(): bool
-    {
-        return $this->rol === RolUsuario::Admin;
-    }
 
     public function esJefeInmediato(): bool
     {

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\TipoNotificacion;
-use App\Mail\IncidenciaAlertaSLAMail;
 use App\Mail\IncidenciaAsignadaMail;
 use App\Mail\IncidenciaCambioEstadoMail;
 use App\Mail\IncidenciaConfirmadaMail;
@@ -78,22 +77,6 @@ class NotificacionService
         );
 
         $this->enviar($notificacion, new IncidenciaSolicitudInfoMail($incidencia, $mensaje));
-    }
-
-    public function enviarAlertaSla(Incidencia $incidencia): void
-    {
-        $emails = array_filter([
-            $incidencia->area?->subdirector?->email,
-        ]);
-
-        foreach ($emails as $email) {
-            $notificacion = $this->registrar(
-                incidencia: $incidencia,
-                tipo: TipoNotificacion::AlertaSla,
-                email: $email,
-            );
-            $this->enviar($notificacion, new IncidenciaAlertaSLAMail($incidencia));
-        }
     }
 
     public function enviarResolucionFinal(Incidencia $incidencia): void

@@ -7,7 +7,6 @@ use App\Http\Controllers\IncidenciaPublicaController;
 use App\Http\Controllers\Panel\Admin\AreaController;
 use App\Http\Controllers\Panel\Admin\CategoriaController;
 use App\Http\Controllers\Panel\Admin\LogController;
-use App\Http\Controllers\Panel\Admin\SlaController;
 use App\Http\Controllers\Panel\Admin\UsuarioController;
 use App\Http\Controllers\Panel\CapitalHumano\IncidenciaController as CapitalHumanoIncidenciaController;
 use App\Http\Controllers\Panel\EmpleadoController;
@@ -156,29 +155,17 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
             });
-        });
 
-    /*
-    |----------------------------------------------------------------------
-    | Admin
-    |----------------------------------------------------------------------
-    */
-    Route::prefix('admin')
-        ->name('admin.')
-        ->middleware('role:admin')
-        ->group(function () {
+            Route::prefix('admin')->name('admin.')->group(function () {
+                Route::resource('usuarios', UsuarioController::class)->except(['show']);
+                Route::patch('usuarios/{usuario}/toggle-activo', [UsuarioController::class, 'toggleActivo'])
+                    ->name('usuarios.toggleActivo');
 
-            Route::resource('usuarios', UsuarioController::class)->except(['show']);
-            Route::patch('usuarios/{usuario}/toggle-activo', [UsuarioController::class, 'toggleActivo'])
-                ->name('usuarios.toggleActivo');
+                Route::resource('categorias', CategoriaController::class)->except(['show']);
 
-            Route::resource('categorias', CategoriaController::class)->except(['show']);
+                Route::resource('areas', AreaController::class)->except(['show']);
 
-            Route::resource('areas', AreaController::class)->except(['show']);
-
-            Route::get('/sla', [SlaController::class, 'index'])->name('sla.index');
-            Route::put('/sla', [SlaController::class, 'update'])->name('sla.update');
-
-            Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+                Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+            });
         });
 });

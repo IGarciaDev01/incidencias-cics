@@ -9,7 +9,7 @@ class RechazarIncidenciaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->tieneRol(RolUsuario::CapitalHumano, RolUsuario::Admin);
+        return $this->user()?->tieneRol(RolUsuario::CapitalHumano);
     }
 
     public function rules(): array
@@ -23,7 +23,7 @@ class RechazarIncidenciaRequest extends FormRequest
     {
         return [
             'motivo.required' => 'El motivo de rechazo es obligatorio.',
-            'motivo.min'      => 'El motivo debe tener al menos 10 caracteres.',
+            'motivo.min' => 'El motivo debe tener al menos 10 caracteres.',
         ];
     }
 }

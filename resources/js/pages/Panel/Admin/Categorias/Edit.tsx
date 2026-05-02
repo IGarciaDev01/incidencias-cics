@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, update } from '@/routes/panel/admin/categorias';
+import { index, update } from '@/routes/panel/subdireccion/admin/categorias';
 
 type Categoria = {
     id: number;

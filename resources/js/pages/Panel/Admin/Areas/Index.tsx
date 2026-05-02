@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
-import { index, create, destroy } from '@/routes/panel/admin/areas';
+import { index as subdirIndex, create, destroy, edit } from '@/routes/panel/subdireccion/admin/areas';
 
 type Area = {
     id: number;
@@ -10,7 +10,7 @@ type Area = {
     activa: boolean;
     incidencias_count: number;
     usuarios_count: number;
-    subdirector: { id: number; nombre: string } | null;
+    jefe: { id: number; nombre: string } | null;
 };
 
 type Paginado<T> = {
@@ -61,14 +61,14 @@ export default function Index({ areas, filtros }: Props) {
                     onSubmit={(e) => {
                         e.preventDefault();
                         const fd = new FormData(e.currentTarget);
-                        router.get(index.url(), { buscar: fd.get('buscar') as string || undefined }, { replace: true });
+                        router.get(subdirIndex.url(), { buscar: fd.get('buscar') as string || undefined }, { replace: true });
                     }}
                     className="flex gap-2"
                 >
                     <Input name="buscar" defaultValue={filtros.buscar} placeholder="Buscar área..." className="w-64" />
                     <Button type="submit" variant="outline" size="sm">Buscar</Button>
                     {filtros.buscar && (
-                        <Button variant="ghost" size="sm" onClick={() => router.get(index.url())}>Limpiar</Button>
+                        <Button variant="ghost" size="sm" onClick={() => router.get(subdirIndex.url())}>Limpiar</Button>
                     )}
                 </form>
 
@@ -77,9 +77,9 @@ export default function Index({ areas, filtros }: Props) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subdirector</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuarios</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jefe</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Incidencias</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuarios</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                                 <th className="px-4 py-3" />
                             </tr>
@@ -95,9 +95,13 @@ export default function Index({ areas, filtros }: Props) {
                                 areas.data.map((area) => (
                                     <tr key={area.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">{area.nombre}</td>
-                                        <td className="px-4 py-3 text-gray-600">{area.subdirector?.nombre ?? '—'}</td>
+                                        <td className="px-4 py-3 text-gray-600">{area.jefe?.nombre ?? '—'}</td>
+                                        <td className="px-4 py-3 text-gray-600">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                                {area.incidencias_count}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-3 text-gray-600">{area.usuarios_count}</td>
-                                        <td className="px-4 py-3 text-gray-600">{area.incidencias_count}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${area.activa ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                                                 {area.activa ? 'Activa' : 'Inactiva'}
@@ -106,7 +110,7 @@ export default function Index({ areas, filtros }: Props) {
                                         <td className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button variant="outline" size="sm" asChild>
-                                                    <Link href={`/panel/admin/areas/${area.id}/edit`}>Editar</Link>
+                                                    <Link href={edit.url(area.id)}>Editar</Link>
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -150,6 +154,6 @@ export default function Index({ areas, filtros }: Props) {
 Index.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: dashboard.url() },
-        { title: 'Áreas', href: index.url() },
+        { title: 'Áreas', href: subdirIndex.url() },
     ],
 };

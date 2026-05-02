@@ -9,7 +9,7 @@ class AprobarIncidenciaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->tieneRol(RolUsuario::CapitalHumano, RolUsuario::Admin);
+        return $this->user()?->tieneRol(RolUsuario::CapitalHumano);
     }
 
     public function rules(): array

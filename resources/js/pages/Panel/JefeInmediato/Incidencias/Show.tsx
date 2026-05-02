@@ -10,6 +10,7 @@ import {
     aprobar,
     rechazar,
 } from '@/routes/panel/jefe_inmediato/incidencias';
+import { formatDateOnly, formatTime } from '@/utils/date';
 
 type HistorialItem = {
     id: number;
@@ -29,6 +30,7 @@ type Incidencia = {
     tipo_incidencia: string;
     minutos_retardo: number | null;
     fecha_incidencia: string;
+    hora_incidencia: string | null;
     descripcion: string | null;
     estado: string;
     motivo_rechazo: string | null;
@@ -68,9 +70,8 @@ const ACCION_LABELS: Record<string, string> = {
 
 function formatDate(d: string) {
     if (!d) return '—';
-    const date = new Date(d.includes('T') ? d : d + 'T00:00:00');
-    if (isNaN(date.getTime())) return '—';
-    return date.toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (isNaN(new Date(d).getTime())) return '—';
+    return formatDateOnly(d);
 }
 function formatBytes(b: number) {
     if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
@@ -135,7 +136,12 @@ export default function Show({ incidencia }: Props) {
                         )}
                         <div>
                             <dt className="text-gray-500">Fecha de incidencia</dt>
-                            <dd className="font-medium mt-0.5">{formatDate(incidencia.fecha_incidencia)}</dd>
+                            <dd className="font-medium mt-0.5">
+                                {formatDate(incidencia.fecha_incidencia)}
+                                {incidencia.hora_incidencia && (
+                                    <span className="text-gray-500 ml-1">— {formatTime(incidencia.hora_incidencia)}</span>
+                                )}
+                            </dd>
                         </div>
                         <div>
                             <dt className="text-gray-500">Tipo de incidencia</dt>
@@ -292,7 +298,7 @@ export default function Show({ incidencia }: Props) {
 
                 <div>
                     <Button variant="outline" asChild>
-                        <Link href={index.url()}>← Volver al listado</Link>
+                        <Link href={index.url()}>Volver al listado</Link>
                     </Button>
                 </div>
             </div>

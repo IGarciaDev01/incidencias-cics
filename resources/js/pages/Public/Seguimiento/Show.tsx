@@ -2,6 +2,7 @@ import { Form, Head, Link, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { formatDateOnly, formatDateTime, formatTime } from '@/utils/date';
 import { comentar, adjuntar, index as seguimientoIndex } from '@/routes/seguimiento';
 import download from '@/routes/comprobante';
 
@@ -88,13 +89,7 @@ function formatDate(dateStr: string): string {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('es-MX', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    return formatDateTime(dateStr);
 }
 
 export default function Show({ incidencia, puedeActuar }: Props) {
@@ -159,19 +154,10 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                             <dt className="text-gray-500">Fecha incidencia</dt>
                             <dd className="font-medium text-gray-900 mt-0.5">
                                 {incidencia.fecha_incidencia
-                                    ? (() => {
-                                        const d = new Date(incidencia.fecha_incidencia);
-                                        return isNaN(d.getTime())
-                                            ? '—'
-                                            : d.toLocaleDateString('es-MX', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                              });
-                                      })()
+                                    ? formatDateOnly(incidencia.fecha_incidencia)
                                     : '—'}
                                 {incidencia.hora_incidencia && (
-                                    <span className="ml-1 text-gray-500">— {incidencia.hora_incidencia}</span>
+                                    <span className="ml-1 text-gray-500">— {formatTime(incidencia.hora_incidencia)}</span>
                                 )}
                             </dd>
                         </div>
@@ -318,7 +304,7 @@ export default function Show({ incidencia, puedeActuar }: Props) {
 
                 <div className="text-center">
                     <Link href={seguimientoIndex.url()} className="text-sm text-gray-500 hover:text-gray-700">
-                        ← Consultar otra incidencia
+                        Consultar otra incidencia
                     </Link>
                 </div>
             </div>

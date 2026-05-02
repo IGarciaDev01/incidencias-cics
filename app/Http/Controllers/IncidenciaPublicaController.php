@@ -75,6 +75,7 @@ class IncidenciaPublicaController extends Controller
             'numero_empleado' => $incidencia->numero_empleado,
             'tipo_incidencia' => $incidencia->tipo_incidencia->label(),
             'fecha_incidencia' => $incidencia->fecha_incidencia->format('d/m/Y'),
+            'hora_incidencia' => $incidencia->hora_incidencia,
         ]);
     }
 }

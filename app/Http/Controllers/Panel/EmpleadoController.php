@@ -94,6 +94,7 @@ class EmpleadoController extends Controller
             'numero_empleado' => $numeroEmpleado,
             'reportante_nombre' => $empleadoModel->nombre,
             'email_reportante' => $empleadoModel->email,
+            'tipo' => $empleadoModel->tipo?->value,
         ];
 
         return Inertia::render('Panel/Empleados/Show', [

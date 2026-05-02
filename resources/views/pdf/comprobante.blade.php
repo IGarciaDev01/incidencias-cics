@@ -178,7 +178,7 @@
                     </td>
                     <td>
                         <div class="field-label">Fecha de incidencia</div>
-                        <div class="field-value">{{ \Carbon\Carbon::parse($incidencia->fecha_incidencia)->timezone('America/Mexico_City')->format('d/m/Y') }}</div>
+                        <div class="field-value">{{ $incidencia->fecha_incidencia->format('d/m/Y') }}</div>
                     </td>
                 </tr>
                 <tr>

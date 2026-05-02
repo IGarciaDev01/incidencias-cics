@@ -12,7 +12,7 @@ class UpdateUsuarioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->esAdmin();
+        return $this->user()?->esSubdirector();
     }
 
     public function rules(): array
@@ -20,12 +20,12 @@ class UpdateUsuarioRequest extends FormRequest
         $userId = $this->route('usuario')->id ?? $this->route('usuario');
 
         return [
-            'nombre'   => ['required', 'string', 'max:150'],
-            'email'    => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'nombre' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'rol'      => ['required', new Enum(RolUsuario::class)],
-            'area_id'  => ['nullable', 'integer', 'exists:areas,id'],
-            'activo'   => ['boolean'],
+            'rol' => ['required', new Enum(RolUsuario::class)],
+            'area_id' => ['nullable', 'integer', 'exists:areas,id'],
+            'activo' => ['boolean'],
         ];
     }
 
@@ -33,9 +33,9 @@ class UpdateUsuarioRequest extends FormRequest
     {
         return [
             'nombre.required' => 'El nombre es obligatorio.',
-            'email.required'  => 'El correo electrónico es obligatorio.',
-            'email.unique'    => 'Este correo ya está registrado por otro usuario.',
-            'rol.required'    => 'Debes asignar un rol.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.unique' => 'Este correo ya está registrado por otro usuario.',
+            'rol.required' => 'Debes asignar un rol.',
         ];
     }
 }

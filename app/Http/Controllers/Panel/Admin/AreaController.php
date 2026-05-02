@@ -18,7 +18,7 @@ class AreaController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Panel/Admin/Areas/Index', [
-            'areas' => Area::with('subdirector:id,nombre')
+            'areas' => Area::with('jefe:id,nombre')
                 ->withCount('incidencias', 'usuarios')
                 ->when($request->filled('buscar'), fn ($q) => $q->where('nombre', 'like', "%{$request->buscar}%"))
                 ->orderBy('nombre')
@@ -31,7 +31,7 @@ class AreaController extends Controller
     public function create(): Response
     {
         return Inertia::render('Panel/Admin/Areas/Create', [
-            'subdirectores' => User::where('rol', RolUsuario::Subdirector)
+            'jefes' => User::where('rol', RolUsuario::JefeInmediato)
                 ->where('activo', true)
                 ->get(['id', 'nombre']),
         ]);
@@ -41,15 +41,15 @@ class AreaController extends Controller
     {
         Area::create($request->validated());
 
-        return redirect()->route('panel.admin.areas.index')
+        return redirect()->route('panel.subdireccion.admin.areas.index')
             ->with('success', 'Área creada correctamente.');
     }
 
     public function edit(Area $area): Response
     {
         return Inertia::render('Panel/Admin/Areas/Edit', [
-            'area' => $area->load('subdirector:id,nombre'),
-            'subdirectores' => User::where('rol', RolUsuario::Subdirector)
+            'area' => $area->load('jefe:id,nombre'),
+            'jefes' => User::where('rol', RolUsuario::JefeInmediato)
                 ->where('activo', true)
                 ->get(['id', 'nombre']),
         ]);
@@ -59,7 +59,7 @@ class AreaController extends Controller
     {
         $area->update($request->validated());
 
-        return redirect()->route('panel.admin.areas.index')
+        return redirect()->route('panel.subdireccion.admin.areas.index')
             ->with('success', 'Área actualizada correctamente.');
     }
 
@@ -73,7 +73,7 @@ class AreaController extends Controller
 
         $area->delete();
 
-        return redirect()->route('panel.admin.areas.index')
+        return redirect()->route('panel.subdireccion.admin.areas.index')
             ->with('success', 'Área eliminada.');
     }
 }

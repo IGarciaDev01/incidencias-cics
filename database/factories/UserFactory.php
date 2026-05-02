@@ -24,7 +24,7 @@ class UserFactory extends Factory
             'email' => 'usuario'.$counter.'@test.com',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'rol' => 'admin',
+            'rol' => 'subdirector',
             'activo' => true,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
-import { index, create, destroy } from '@/routes/panel/admin/categorias';
+import { index, create, destroy } from '@/routes/panel/subdireccion/admin/categorias';
 
 type Categoria = {
     id: number;

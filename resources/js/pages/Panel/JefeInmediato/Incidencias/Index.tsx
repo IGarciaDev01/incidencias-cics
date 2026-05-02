@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
 import { index, show } from '@/routes/panel/jefe_inmediato/incidencias';
+import { formatDateOnly } from '@/utils/date';
 
 type Incidencia = {
     id: number;
@@ -66,8 +67,8 @@ const TIPO_LABELS: Record<string, string> = {
     salida_anticipada: 'Salida Anticipada',
 };
 
-function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('es-MX');
+export function formatDate(d: string) {
+    return formatDateOnly(d);
 }
 
 export default function Index({ incidencias, filtros, estados, tipos }: Props) {

@@ -22,7 +22,7 @@ class AreaFactory extends Factory
             'nombre' => $nombre,
             'slug' => Str::slug($nombre),
             'descripcion' => null,
-            'subdirector_id' => null,
+            'jefe_id' => null,
             'activa' => true,
         ];
     }

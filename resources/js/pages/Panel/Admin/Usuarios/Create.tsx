@@ -12,7 +12,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, store, create } from '@/routes/panel/admin/usuarios';
+import { index, store, create } from '@/routes/panel/subdireccion/admin/usuarios';
 
 type Props = {
     roles: string[];

@@ -13,19 +13,31 @@ class LoginRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'email'    => ['required', 'email'],
+        $rol = $this->input('rol');
+
+        $rules = [
+            'rol' => ['required', 'string', 'in:jefe_inmediato,capital_humano,subdirector'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ];
+
+        if ($rol === 'jefe_inmediato') {
+            $rules['area_id'] = ['required', 'integer', 'exists:areas,id'];
+        } else {
+            $rules['area_id'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
     public function messages(): array
     {
         return [
-            'email.required'    => 'El correo electrónico es obligatorio.',
-            'email.email'       => 'Ingresa un correo electrónico válido.',
+            'rol.required' => 'Selecciona un rol.',
+            'rol.in' => 'Rol inválido.',
             'password.required' => 'La contraseña es obligatoria.',
+            'area_id.required' => 'Selecciona tu área.',
+            'area_id.exists' => 'El área seleccionada no es válida.',
         ];
     }
 }

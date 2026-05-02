@@ -7,6 +7,7 @@ use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CapitalHumano\AprobarIncidenciaRequest;
 use App\Http\Requests\CapitalHumano\RechazarIncidenciaRequest;
+use App\Models\Area;
 use App\Models\Incidencia;
 use App\Services\IncidenciaService;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,7 @@ class IncidenciaController extends Controller
             ->when($request->string('tipo')->isNotEmpty(), function ($q) use ($request) {
                 $q->where('tipo_incidencia', $request->tipo);
             })
+            ->when($request->filled('area_id'), fn ($q) => $q->where('area_id', $request->area_id))
             ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($q2) => $q2->where('folio', 'like', "%{$request->buscar}%")
                 ->orWhere('numero_empleado', 'like', "%{$request->buscar}%")
                 ->orWhere('reportante_nombre', 'like', "%{$request->buscar}%")
@@ -36,9 +38,10 @@ class IncidenciaController extends Controller
 
         return Inertia::render('Panel/CapitalHumano/Incidencias/Index', [
             'incidencias' => $query->paginate(20)->withQueryString(),
-            'filtros' => $request->only(['estado', 'tipo', 'buscar']),
+            'filtros' => $request->only(['estado', 'tipo', 'buscar', 'area_id']),
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
+            'areas' => Area::orderBy('nombre')->get(['id', 'nombre']),
         ]);
     }
 

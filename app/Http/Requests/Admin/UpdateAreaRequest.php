@@ -10,7 +10,7 @@ class UpdateAreaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->esAdmin();
+        return $this->user()?->esSubdirector();
     }
 
     public function rules(): array
@@ -18,13 +18,13 @@ class UpdateAreaRequest extends FormRequest
         $areaId = $this->route('area')->id ?? $this->route('area');
 
         return [
-            'nombre'         => ['required', 'string', 'max:150'],
-            'slug'           => ['required', 'string', 'max:150', Rule::unique('areas', 'slug')->ignore($areaId), 'regex:/^[a-z0-9-]+$/'],
-            'descripcion'    => ['nullable', 'string', 'max:1000'],
-            'subdirector_id' => [
+            'nombre' => ['required', 'string', 'max:150'],
+            'slug' => ['required', 'string', 'max:150', Rule::unique('areas', 'slug')->ignore($areaId), 'regex:/^[a-z0-9-]+$/'],
+            'descripcion' => ['nullable', 'string', 'max:1000'],
+            'jefe_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where('rol', RolUsuario::Subdirector->value)->where('activo', true),
+                Rule::exists('users', 'id')->where('rol', RolUsuario::JefeInmediato->value)->where('activo', true),
             ],
             'activa' => ['boolean'],
         ];
