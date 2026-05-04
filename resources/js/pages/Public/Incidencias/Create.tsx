@@ -28,7 +28,7 @@ const TIPOS_INCIDENCIA = [
     { value: 'retardo',           label: 'Retardo',                   descripcion: 'Menor a 30 min, máximo 2 a la quincena', requiereMinutos: true },
     { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: '',                                    requiereMinutos: false },
     { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
-    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: '',                                    requiereMinutos: false },
+    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                                    requiereMinutos: false },
     { value: 'permiso_sindical',  label: 'Permiso Sindical',          descripcion: '',                                    requiereMinutos: false },
     { value: 'incidencia_medica', label: 'Médica',         descripcion: '',                                    requiereMinutos: false },
     { value: 'buena_conducta',   label: 'Buena Conducta', descripcion: '',                                  requiereMinutos: false },
@@ -53,6 +53,7 @@ export default function Create({ areas }: Props) {
     const [sugeridos, setSugeridos]         = useState<EmpleadoSugerido[]>([]);
     const [nombreManual, setNombreManual]   = useState(false);
     const [emailManual, setEmailManual]     = useState(false);
+    const [tipoManual, setTipoManual]       = useState(false);
     const [busquedaHecha, setBusquedaHecha] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,11 +67,13 @@ export default function Create({ areas }: Props) {
         }));
         setNombreManual(false);
         setEmailManual(false);
+        setTipoManual(false);
         setSugeridos([]);
     }, [setData]);
 
     const activarNombreManual = useCallback(() => {
         setNombreManual(true);
+        setTipoManual(true);
         setSugeridos([]);
         setData((prev) => ({ ...prev, reportante_nombre: '', tipo_empleado: '' }));
     }, [setData]);
@@ -81,6 +84,11 @@ export default function Create({ areas }: Props) {
         setData((prev) => ({ ...prev, email_reportante: '' }));
     }, [setData]);
 
+    const activarTipoManual = useCallback(() => {
+        setTipoManual(true);
+        setData((prev) => ({ ...prev, tipo_empleado: '' }));
+    }, [setData]);
+
     useEffect(() => {
         const numero = data.numero_empleado.trim();
 
@@ -88,6 +96,7 @@ export default function Create({ areas }: Props) {
             setSugeridos([]);
             setBusquedaHecha(false);
             setNombreManual(false);
+            setEmailManual(false);
             return;
         }
 
@@ -120,6 +129,8 @@ export default function Create({ areas }: Props) {
 
                 if (json.length === 0) {
                     setNombreManual(true);
+                    setEmailManual(true);
+                    setTipoManual(true);
                     setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '', tipo_empleado: '' }));
                 } else {
                     setNombreManual(false);
@@ -127,6 +138,8 @@ export default function Create({ areas }: Props) {
             } catch {
                 setBusquedaHecha(true);
                 setNombreManual(true);
+                setEmailManual(true);
+                setTipoManual(true);
             } finally {
                 setBuscando(false);
             }
@@ -257,8 +270,8 @@ export default function Create({ areas }: Props) {
                             Correo electrónico <span className="text-red-500">*</span>
                         </Label>
 
-                        {/* Email ya seleccionado (chip) */}
-                        {data.email_reportante && !emailManual && (
+                        {/* Email ya seleccionado de sugerencias (chip) */}
+                        {data.email_reportante && !emailManual ? (
                             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
                                 <span className="flex-1 text-gray-900">{data.email_reportante}</span>
                                 <button
@@ -269,10 +282,7 @@ export default function Create({ areas }: Props) {
                                     Cambiar
                                 </button>
                             </div>
-                        )}
-
-                        {/* Input manual o nuevo */}
-                        {(emailManual || !data.email_reportante) && (
+                        ) : (
                             <Input
                                 id="email_reportante"
                                 name="email_reportante"
@@ -284,11 +294,6 @@ export default function Create({ areas }: Props) {
                             />
                         )}
 
-                        {/* Input oculto cuando se seleccionó de sugeridos */}
-                        {data.email_reportante && !emailManual && (
-                            <input type="hidden" name="email_reportante" value={data.email_reportante} />
-                        )}
-
                         <p className="text-xs text-gray-500">Se usará para notificarte sobre el estado de tu incidencia.</p>
                         <InputError message={errors.email_reportante} />
                     </div>
@@ -296,19 +301,34 @@ export default function Create({ areas }: Props) {
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label>Tipo de empleado <span className="text-red-500">*</span></Label>
-                            <Select
-                                value={data.tipo_empleado}
-                                onValueChange={(v) => setData('tipo_empleado', v)}
-                                required={nombreManual || !data.tipo_empleado}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecciona..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="docente">Docente</SelectItem>
-                                    <SelectItem value="administrativo">Administrativo</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+                            {/* Tipo ya seleccionado de sugerencias (chip) */}
+                            {data.tipo_empleado && !tipoManual ? (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
+                                    <span className="flex-1 text-gray-900 capitalize">{data.tipo_empleado}</span>
+                                    <button
+                                        type="button"
+                                        onClick={activarTipoManual}
+                                        className="text-xs text-gray-400 hover:text-gray-600"
+                                    >
+                                        Cambiar
+                                    </button>
+                                </div>
+                            ) : (
+                                <Select
+                                    value={data.tipo_empleado}
+                                    onValueChange={(v) => setData('tipo_empleado', v)}
+                                    required={nombreManual || !data.tipo_empleado}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecciona..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="docente">Docente</SelectItem>
+                                        <SelectItem value="administrativo">Administrativo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
                             <input type="hidden" name="tipo_empleado" value={data.tipo_empleado} />
                             <InputError message={errors.tipo_empleado} />
                         </div>

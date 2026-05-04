@@ -28,6 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => CheckRole::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'nueva-incidencia',
+            'login',
+            '/login',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (LimiteIncidenciaExcepcion $e) {

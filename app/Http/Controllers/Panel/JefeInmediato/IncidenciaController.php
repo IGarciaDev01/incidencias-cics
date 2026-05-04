@@ -23,10 +23,14 @@ class IncidenciaController extends Controller
     {
         $user = $request->user();
 
-        abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
+        abort_if(! $user->tieneArea(), 403, 'No tienes un área asignada.');
+
+        $areaId = $user->area_id;
 
         $query = Incidencia::with(['area:id,nombre'])
-            ->where('area_id', $user->area_id)
+            ->where('area_id', $areaId)
+            ->when($request->filled('fecha_inicio'), fn ($q) => $q->whereDate('fecha_incidencia', '>=', $request->fecha_inicio))
+            ->when($request->filled('fecha_fin'), fn ($q) => $q->whereDate('fecha_incidencia', '<=', $request->fecha_fin))
             ->when($request->string('estado')->isNotEmpty(), function ($q) use ($request) {
                 $q->where('estado', $request->estado);
             })
@@ -42,7 +46,7 @@ class IncidenciaController extends Controller
 
         return Inertia::render('Panel/JefeInmediato/Incidencias/Index', [
             'incidencias' => $query->paginate(20)->withQueryString(),
-            'filtros' => $request->only(['estado', 'tipo', 'buscar']),
+            'filtros' => $request->only(['estado', 'tipo', 'buscar', 'fecha_inicio', 'fecha_fin']),
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
         ]);
@@ -104,7 +108,7 @@ class IncidenciaController extends Controller
     {
         $user = $request->user();
 
-        abort_if(! $user || ! $user->area_id, 403, 'No tienes un área asignada.');
+        abort_if(! $user || ! $user->tieneArea(), 403, 'No tienes un área asignada.');
         abort_if((int) $incidencia->area_id !== (int) $user->area_id, 403, 'No tienes permiso para acceder a esta incidencia.');
     }
 }

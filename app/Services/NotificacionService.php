@@ -7,6 +7,7 @@ use App\Mail\IncidenciaAsignadaMail;
 use App\Mail\IncidenciaCambioEstadoMail;
 use App\Mail\IncidenciaConfirmadaMail;
 use App\Mail\IncidenciaSolicitudInfoMail;
+use App\Mail\RechazoPorLimiteMail;
 use App\Mail\ResolucionFinalMail;
 use App\Models\Incidencia;
 use App\Models\Notificacion;
@@ -94,6 +95,23 @@ class NotificacionService
         );
 
         $this->enviar($notificacion, new ResolucionFinalMail($incidencia));
+    }
+
+    public function enviarRechazoPorLimite(Incidencia $incidencia, string $razon): void
+    {
+        $email = $incidencia->emailDestino();
+        if (! $email) {
+            return;
+        }
+
+        $notificacion = $this->registrar(
+            incidencia: $incidencia,
+            tipo: TipoNotificacion::Rechazada,
+            email: $email,
+            userId: $incidencia->user_id,
+        );
+
+        $this->enviar($notificacion, new RechazoPorLimiteMail($incidencia, $razon));
     }
 
     private function registrar(

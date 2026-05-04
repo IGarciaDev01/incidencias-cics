@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Enums\RolUsuario;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,7 +21,6 @@ class User extends Authenticatable
         'email',
         'password',
         'rol',
-        'area_id',
         'activo',
     ];
 
@@ -45,14 +44,21 @@ class User extends Authenticatable
 
     // ─── Relaciones ──────────────────────────────────────────────────────────
 
-    public function area(): BelongsTo
+    public function areas(): BelongsToMany
     {
-        return $this->belongsTo(Area::class);
+        return $this->belongsToMany(Area::class, 'area_user')
+            ->withPivot('es_jefe')
+            ->withTimestamps();
     }
 
-    public function areasJefatura(): HasMany
+    public function areasJefatura(): BelongsToMany
     {
-        return $this->hasMany(Area::class, 'jefe_id');
+        return $this->areas()->wherePivot('es_jefe', true);
+    }
+
+    public function getAreaAttribute(): ?Area
+    {
+        return $this->areas()->first();
     }
 
     public function incidenciasRevisadas(): HasMany
@@ -80,5 +86,30 @@ class User extends Authenticatable
     public function tieneRol(RolUsuario ...$roles): bool
     {
         return in_array($this->rol, $roles, true);
+    }
+
+    public function getAreaIdAttribute(): ?int
+    {
+        if (! $this->esJefeInmediato()) {
+            return null;
+        }
+
+        $jefatura = $this->areasJefatura()->first();
+
+        return $jefatura?->id;
+    }
+
+    public function tieneArea(): bool
+    {
+        return $this->esJefeInmediato() && $this->areasJefatura()->exists();
+    }
+
+    public function isJefeOfArea(int $areaId): bool
+    {
+        if (! $this->esJefeInmediato()) {
+            return false;
+        }
+
+        return $this->areas()->wherePivot('es_jefe', true)->where('areas.id', $areaId)->exists();
     }
 }

@@ -42,16 +42,16 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $user ? [
-                    'id'     => $user->id,
+                    'id' => $user->id,
                     'nombre' => $user->nombre,
-                    'email'  => $user->email,
-                    'rol'    => $user->rol?->value,
-                    'area'   => $user->area_id ? ['id' => $user->area_id] : null,
+                    'email' => $user->email,
+                    'rol' => $user->rol?->value,
+                    'area' => $user->tieneArea() ? ['id' => $user->area_id] : null,
                 ] : null,
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
-                'error'   => $request->session()->get('error'),
+                'error' => $request->session()->get('error'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

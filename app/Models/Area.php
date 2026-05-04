@@ -6,6 +6,7 @@ use Database\Factories\AreaFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Area extends Model
@@ -33,9 +34,16 @@ class Area extends Model
         return $this->belongsTo(User::class, 'jefe_id');
     }
 
-    public function usuarios(): HasMany
+    public function usuarios(): BelongsToMany
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(User::class, 'area_user')
+            ->withPivot('es_jefe')
+            ->withTimestamps();
+    }
+
+    public function jefes(): BelongsToMany
+    {
+        return $this->usuarios()->wherePivot('es_jefe', true);
     }
 
     public function incidencias(): HasMany

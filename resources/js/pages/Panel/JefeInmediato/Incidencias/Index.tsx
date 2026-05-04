@@ -39,13 +39,13 @@ type EnumItem = { value: string; name: string };
 
 type Props = {
     incidencias: Paginado<Incidencia>;
-    filtros: { estado?: string; tipo?: string; buscar?: string };
+    filtros: { estado?: string; tipo?: string; buscar?: string; fecha_inicio?: string; fecha_fin?: string };
     estados: EnumItem[];
     tipos: EnumItem[];
 };
 
 const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente (Jefe)',
+    pendiente_jefe: 'Pendiente de aprobación',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
     pendiente_subdireccion: 'Pendiente (Subdirección)',
     aprobada: 'Aprobada',
@@ -65,10 +65,15 @@ const TIPO_LABELS: Record<string, string> = {
     permiso_economico: 'Permiso Económico',
     comision_oficial: 'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
+    permiso_sindical: 'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta: 'Buena Conducta',
 };
 
-export function formatDate(d: string) {
-    return formatDateOnly(d);
+export function formatDate(d: string, forcedHour: boolean) {
+    if (!d) return '—';
+    if (isNaN(new Date(d).getTime())) return '—';
+    return formatDateOnly(d, forcedHour);
 }
 
 export default function Index({ incidencias, filtros, estados, tipos }: Props) {
@@ -82,6 +87,10 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
         router.get(index.url(), { ...filtros, buscar: fd.get('buscar') as string || undefined }, { preserveState: true, replace: true });
     }
 
+    function handleLimpiarFechas() {
+        router.get(index.url(), { ...filtros, fecha_inicio: undefined, fecha_fin: undefined }, { preserveState: true, replace: true });
+    }
+
     const hayFiltros = Object.values(filtros).some(Boolean);
 
     return (
@@ -90,7 +99,7 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
 
             <div className="p-4 md:p-6 space-y-5">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Incidencias de mi área</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Registro de Incidencias</h2>
                     <p className="text-sm text-gray-500">{incidencias.total} registros</p>
                 </div>
 
@@ -124,6 +133,32 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 font-medium">Desde</label>
+                        <Input
+                            type="date"
+                            className="h-9 w-36"
+                            value={filtros.fecha_inicio ?? ''}
+                            onChange={(e) => handleFiltro('fecha_inicio', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 font-medium">Hasta</label>
+                        <Input
+                            type="date"
+                            className="h-9 w-36"
+                            value={filtros.fecha_fin ?? ''}
+                            onChange={(e) => handleFiltro('fecha_fin', e.target.value)}
+                        />
+                    </div>
+
+                    {(filtros.fecha_inicio || filtros.fecha_fin) && (
+                        <Button variant="ghost" size="sm" className="h-9 self-end" onClick={handleLimpiarFechas}>
+                            Limpiar fechas
+                        </Button>
+                    )}
 
                     {hayFiltros && (
                         <Button variant="ghost" size="sm" onClick={() => router.get(index.url())}>
@@ -162,8 +197,8 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
                                             <p className="text-xs text-gray-500">#{inc.numero_empleado} · {inc.tipo_solicitante}</p>
                                         </td>
                                         <td className="px-4 py-3 text-gray-700">{TIPO_LABELS[inc.tipo_incidencia] ?? inc.tipo_incidencia}</td>
-                                        <td className="px-4 py-3 text-gray-600">{formatDate(inc.fecha_incidencia)}</td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(inc.created_at)}</td>
+                                        <td className="px-4 py-3 text-gray-600">{formatDate(inc.fecha_incidencia, false)}</td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(inc.created_at, true)}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[inc.estado] ?? 'bg-gray-100 text-gray-800'}`}>
                                                 {ESTADO_LABELS[inc.estado] ?? inc.estado}
@@ -204,7 +239,7 @@ export default function Index({ incidencias, filtros, estados, tipos }: Props) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Incidencias', href: index.url() },
     ],
 };

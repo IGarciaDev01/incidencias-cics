@@ -9,6 +9,7 @@ enum TipoNotificacion: string
     case CambioEstado = 'cambio_estado';
     case SolicitudInfo = 'solicitud_info';
     case ResolucionFinal = 'resolucion_final';
+    case Rechazada = 'rechazada';
 
     public function asunto(string $folio): string
     {
@@ -18,6 +19,7 @@ enum TipoNotificacion: string
             self::CambioEstado => "Actualización en tu incidencia {$folio}",
             self::SolicitudInfo => "Solicitud de información adicional – incidencia {$folio}",
             self::ResolucionFinal => "Resolución final – incidencia {$folio}",
+            self::Rechazada => "Incidencia {$folio} rechazada por límite excedido",
         };
     }
 }

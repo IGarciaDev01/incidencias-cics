@@ -24,8 +24,7 @@ class EmpleadoController extends Controller
             ->whereColumn('incidencias.numero_empleado', 'empleados.numero_empleado');
 
         if ($user->esJefeInmediato()) {
-            abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
-
+            abort_if(! $user->tieneArea(), 403, 'No tienes un área asignada.');
             $incidenciasBase->where('area_id', $user->area_id);
         }
 
@@ -64,7 +63,7 @@ class EmpleadoController extends Controller
             ->with('area:id,nombre');
 
         if ($user->esJefeInmediato()) {
-            abort_if(! $user->area_id, 403, 'No tienes un área asignada.');
+            abort_if(! $user->tieneArea(), 403, 'No tienes un área asignada.');
             $query->where('area_id', $user->area_id);
         }
 
@@ -86,8 +85,39 @@ class EmpleadoController extends Controller
 
         $incidencias = $query->orderByDesc('created_at')->get();
 
-        if ($user->esJefeInmediato() && $incidencias->isEmpty()) {
-            abort(404, 'Empleado no encontrado.');
+        if ($user->esJefeInmediato()) {
+            $existeEnArea = Incidencia::where('numero_empleado', $numeroEmpleado)
+                ->where('area_id', $user->area_id)
+                ->exists();
+
+            if (! $existeEnArea) {
+                abort(403, 'No tienes permiso para acceder a este empleado.');
+            }
+        }
+
+        $permisoEconomicoStats = null;
+
+        if (! $user->esJefeInmediato()) {
+            if ($request->filled('fecha')) {
+                $fecha = Carbon::parse($request->fecha);
+            } else {
+                $fecha = Carbon::now();
+            }
+
+            $inicioMes = $fecha->copy()->startOfMonth();
+            $finMes = $fecha->copy()->endOfMonth();
+
+            $permisoEconomicoUsados = Incidencia::where('numero_empleado', $numeroEmpleado)
+                ->whereBetween('fecha_incidencia', [$inicioMes, $finMes])
+                ->where('tipo_incidencia', TipoIncidencia::PermisoEconomico->value)
+                ->whereNotIn('estado', [EstadoIncidencia::Rechazada->value])
+                ->count();
+
+            $permisoEconomicoStats = [
+                'usados' => $permisoEconomicoUsados,
+                'disponibles' => max(0, 12 - $permisoEconomicoUsados),
+                'total' => 12,
+            ];
         }
 
         $empleado = [
@@ -103,6 +133,7 @@ class EmpleadoController extends Controller
             'filtros' => $request->only(['fecha', 'estado', 'tipo']),
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
+            'permiso_economico_stats' => $permisoEconomicoStats,
         ]);
     }
 }

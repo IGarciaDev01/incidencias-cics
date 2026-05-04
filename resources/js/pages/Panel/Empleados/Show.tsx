@@ -43,6 +43,11 @@ type Props = {
     filtros: { fecha?: string; estado?: string; tipo?: string };
     estados: Opcion[];
     tipos: Opcion[];
+    permiso_economico_stats: {
+        usados: number;
+        disponibles: number;
+        total: number;
+    };
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -64,11 +69,13 @@ const TIPO_LABELS: Record<string, string> = {
     permiso_economico: 'Permiso Económico',
     comision_oficial:  'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
+    permiso_sindical:  'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta:    'Incidencia de Buena Conducta',
 };
 const TIPO_SOLICITANTE_LABELS: Record<string, string> = {
     docente:        'Docente',
     administrativo: 'Administrativo',
-    paae:           'PAAE',
 };
 
 function useRolBackUrl() {
@@ -79,7 +86,7 @@ function useRolBackUrl() {
     return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url };
 }
 
-export default function Show({ empleado, incidencias, filtros, estados, tipos }: Props) {
+export default function Show({ empleado, incidencias, filtros, estados, tipos, permiso_economico_stats }: Props) {
     const { back: backUrl, verIncidencia: verIncidenciaRoute, showUrl } = useRolBackUrl();
 
     function handleFiltro(key: string, value: string) {
@@ -121,7 +128,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
                             </div>
                         </div>
                         <Link href={backUrl} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                            ← Volver a empleados
+                            Volver a empleados
                         </Link>
                     </div>
 
@@ -150,6 +157,27 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                                 {TIPO_SOLICITANTE_LABELS[empleado.tipo] ?? empleado.tipo}
                             </span>
+                        </div>
+                    )}
+
+                    {/* Permiso Económico stats */}
+                    {permiso_economico_stats && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs text-gray-500">Permisos Económicos del mes</span>
+                                <span className="text-xs font-medium text-gray-700">
+                                    {permiso_economico_stats.disponibles} de {permiso_economico_stats.total} disponibles
+                                </span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                <div
+                                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+                                    style={{ width: `${(permiso_economico_stats.disponibles / permiso_economico_stats.total) * 100}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1">
+                                {permiso_economico_stats.usados} utilizados este mes
+                            </p>
                         </div>
                     )}
                 </div>
@@ -235,7 +263,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
                                             {inc.area?.nombre ?? <span className="text-gray-300 italic">Sin área</span>}
                                         </td>
                                         <td className="px-4 py-3 text-gray-500">
-                                            {formatDateOnly(inc.fecha_incidencia)}
+                                            {formatDateOnly(inc.fecha_incidencia, false)}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[inc.estado] ?? 'bg-gray-100 text-gray-600'}`}>
@@ -262,7 +290,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos }:
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Dashboard',  href: dashboard.url() },
+        { title: 'Panel Principal',  href: dashboard.url() },
         { title: 'Empleados' },
     ],
 };

@@ -34,6 +34,12 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        console.log('Submitting with data:', {
+            rol: data.rol,
+            area_id: data.rol === 'jefe_inmediato' ? selectedAreaRef.current : null,
+            password: data.password,
+            remember: data.remember,
+        });
         router.post('/login', {
             rol: data.rol,
             area_id: data.rol === 'jefe_inmediato' ? selectedAreaRef.current : null,
@@ -83,7 +89,9 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
                                 <button
                                     key={area.id}
                                     type="button"
-                                    onClick={() => handleAreaClick(area.id)}
+                                    onClick={() => {
+                                        handleAreaClick(area.id);
+                                    }}
                                     className={`p-2.5 rounded-lg border-2 text-sm text-left transition-all ${
                                         selectedArea === area.id
                                             ? 'border-primary bg-primary/5 text-primary'

@@ -26,6 +26,7 @@ class DashboardController extends Controller
         return Inertia::render('Panel/Dashboard', [
             'stats' => $stats,
             'rol' => $user->rol->value,
+            'areaNombre' => $user->esJefeInmediato() ? $user->area?->nombre : null,
         ]);
     }
 
@@ -76,7 +77,8 @@ class DashboardController extends Controller
 
     private function statsJefe(User $jefe): array
     {
-        $base = Incidencia::when($jefe->area_id, fn ($q) => $q->where('area_id', $jefe->area_id));
+        $areaId = $jefe->area_id;
+        $base = Incidencia::when($areaId, fn ($q) => $q->where('area_id', $areaId));
         $total = (clone $base)->count();
         $aprobadas = (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count();
 
@@ -87,10 +89,10 @@ class DashboardController extends Controller
             'total' => $total,
             'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
             'charts' => [
-                'por_estado' => $this->countPorEstado($jefe->area_id),
-                'por_tipo' => $this->countPorTipo($jefe->area_id),
-                'por_solicitante' => $this->countPorSolicitante($jefe->area_id),
-                'solicitudes_mes' => $this->solicitudesPorMes($jefe->area_id),
+                'por_estado' => $this->countPorEstado($areaId),
+                'por_tipo' => $this->countPorTipo($areaId),
+                'por_solicitante' => $this->countPorSolicitante($areaId),
+                'solicitudes_mes' => $this->solicitudesPorMes($areaId),
             ],
         ];
     }
@@ -137,6 +139,9 @@ class DashboardController extends Controller
             'permiso_economico' => 0,
             'comision_oficial' => 0,
             'salida_anticipada' => 0,
+            'permiso_sindical' => 0,
+            'incidencia_medica' => 0,
+            'buena_conducta' => 0,
         ];
 
         $result = (clone $query)

@@ -27,7 +27,7 @@ return new class extends Migration
             Schema::rename('notificaciones_new', 'notificaciones');
         } else {
             Schema::table('notificaciones', function (Blueprint $table) {
-                DB::statement("ALTER TABLE notificaciones MODIFY COLUMN tipo ENUM('confirmacion_registro', 'asignacion', 'cambio_estado', 'alerta_sla', 'solicitud_info', 'resolucion_final') NOT NULL");
+                DB::statement("ALTER TABLE notificaciones MODIFY COLUMN tipo ENUM('confirmacion_registro', 'asignacion', 'cambio_estado', 'alerta_sla', 'solicitud_info', 'resolucion_final', 'rechazada') NOT NULL");
             });
         }
     }

@@ -38,14 +38,11 @@ class DemoDataSeeder extends Seeder
         'UPIS',
     ];
 
-    // -------------------------------------------------------------------------
-    // Seeder principal
-    // -------------------------------------------------------------------------
-
     public function run(): void
     {
         $this->crearAreas();
         $this->crearUsuarios();
+        $this->vincularJefesConAreas();
     }
 
     private function crearAreas(): void
@@ -62,48 +59,32 @@ class DemoDataSeeder extends Seeder
             'Dr. Ricardo Molina',
         ];
 
-        $jefesACrear = [];
         foreach (self::AREAS as $i => $nombre) {
             $slug = Str::slug($nombre);
-            $existingArea = Area::where('slug', $slug)->first();
 
-            if ($existingArea) {
-                if (! $existingArea->jefe_id) {
-                    $jefe = User::firstOrCreate(
-                        ['email' => 'jefe.'.$slug.'@test.com'],
-                        [
-                            'nombre' => $jefesNombres[$i] ?? 'Jefe del área',
-                            'password' => bcrypt('password'),
-                            'rol' => 'jefe_inmediato',
-                            'area_id' => null,
-                            'activo' => true,
-                        ]
-                    );
-                    $existingArea->update(['jefe_id' => $jefe->id]);
-                }
-            } else {
-                $jefesACrear[] = ['nombre' => $jefesNombres[$i] ?? 'Jefe del área', 'slug' => $slug, 'areaNombre' => $nombre, 'index' => $i];
-            }
-        }
-
-        foreach ($jefesACrear as $data) {
             $jefe = User::firstOrCreate(
-                ['email' => 'jefe.'.$data['slug'].'@test.com'],
+                ['email' => 'jefe.'.$slug.'@test.com'],
                 [
-                    'nombre' => $data['nombre'],
+                    'nombre' => $jefesNombres[$i] ?? 'Jefe del área',
                     'password' => bcrypt('password'),
                     'rol' => 'jefe_inmediato',
-                    'area_id' => null,
                     'activo' => true,
                 ]
             );
 
-            Area::create([
-                'nombre' => $data['areaNombre'],
-                'activa' => true,
-                'slug' => $data['slug'],
-                'jefe_id' => $jefe->id,
-            ]);
+            $area = Area::updateOrCreate(
+                ['slug' => $slug],
+                [
+                    'nombre' => $nombre,
+                    'jefe_id' => $jefe->id,
+                    'activa' => true,
+                ]
+            );
+
+            // Create pivot entry with es_jefe = true
+            if (! $area->usuarios()->where('user_id', $jefe->id)->exists()) {
+                $area->usuarios()->attach($jefe->id, ['es_jefe' => true]);
+            }
         }
     }
 
@@ -128,5 +109,17 @@ class DemoDataSeeder extends Seeder
                 'activo' => true,
             ]
         );
+    }
+
+    private function vincularJefesConAreas(): void
+    {
+        // Ensure all areas have their jefe linked via pivot
+        $areas = Area::whereNotNull('jefe_id')->with('jefe')->get();
+
+        foreach ($areas as $area) {
+            if ($area->jefe && ! $area->usuarios()->where('user_id', $area->jefe_id)->exists()) {
+                $area->usuarios()->attach($area->jefe_id, ['es_jefe' => true]);
+            }
+        }
     }
 }

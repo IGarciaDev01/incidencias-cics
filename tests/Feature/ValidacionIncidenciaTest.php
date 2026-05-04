@@ -76,160 +76,113 @@ function crearIncidencia(array $override = []): Incidencia
     ]);
 }
 
-dataset('tipos_solicitante', [
-    'docente' => [TipoSolicitante::Docente],
-    'administrativo' => [TipoSolicitante::Administrativo],
-]);
+// ─── Retardo: menos de 30 minutos ─────────────────────────────────────────────
 
-dataset('limites_mensuales', [
-    'docente' => [TipoSolicitante::Docente, 12],
-    'administrativo' => [TipoSolicitante::Administrativo, 12],
-]);
-
-// ─── Límite mensual ──────────────────────────────────────────────────────────
-
-test('docente recibe rechazo automatico al alcanzar limite mensual de 12 incidencias', function () {
+test('se rechaza retardo de 30 o más minutos', function () {
     Mail::fake();
-    Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = Area::create([
-        'nombre' => 'Area docente',
-        'slug' => 'area-docente-'.uniqid(),
+        'nombre' => 'Area retardo30',
+        'slug' => 'area-retardo30-'.uniqid(),
         'descripcion' => null,
         'activa' => true,
     ]);
 
-    $empleadoNum = '90101';
+    $empleadoNum = '90110';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
-        'nombre' => 'Docente Test',
-        'email' => 'docente@example.com',
-        'tipo' => TipoSolicitante::Docente->value,
-    ]);
-
-    for ($i = 0; $i < 12; $i++) {
-        Incidencia::create([
-            'folio' => 'FOLIO-'.uniqid(),
-            'numero_empleado' => $empleadoNum,
-            'reportante_nombre' => 'Docente Test',
-            'email_reportante' => 'docente@example.com',
-            'tipo_solicitante' => TipoSolicitante::Docente->value,
-            'area_id' => $area->id,
-            'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
-            'tipo_incidencia' => TipoIncidencia::PermisoEconomico->value,
-            'minutos_retardo' => null,
-            'descripcion' => 'Incidencia '.$i,
-            'estado' => EstadoIncidencia::PendienteJefe->value,
-            'token_seguimiento' => Str::random(64),
-        ]);
-    }
-
-    $this->post(route('incidencias.store'), [
-        'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Docente Test',
-        'email_reportante' => 'docente@example.com',
-        'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-15',
-        'tipo_incidencia' => 'permiso_economico',
-        'descripcion' => 'Incidencia 13',
-    ]);
-
-    $rechazadasCount = Incidencia::where('numero_empleado', $empleadoNum)
-        ->where('estado', EstadoIncidencia::Rechazada->value)
-        ->count();
-
-    expect($rechazadasCount)->toBeGreaterThan(0);
-    expect($this->app['session.store']->get('error'))->toContain('límite mensual');
-
-    Carbon::setTestNow();
-});
-
-test('administrativo puede registrar hasta 12 incidencias mensuales', function () {
-    Mail::fake();
-    Carbon::setTestNow(Carbon::parse('2026-04-15'));
-
-    $area = Area::create([
-        'nombre' => 'Area administrativo',
-        'slug' => 'area-administrativo-'.uniqid(),
-        'descripcion' => null,
-        'activa' => true,
-    ]);
-
-    $empleadoNum = '90102';
-    Empleado::create([
-        'numero_empleado' => $empleadoNum,
-        'nombre' => 'Administrativo Test',
-        'email' => 'admin@example.com',
+        'nombre' => 'Retardo 30',
+        'email' => 'retardo30@example.com',
         'tipo' => TipoSolicitante::Administrativo->value,
     ]);
 
-    for ($i = 0; $i < 12; $i++) {
-        Incidencia::create([
-            'folio' => 'FOLIO-'.uniqid(),
-            'numero_empleado' => $empleadoNum,
-            'reportante_nombre' => 'Administrativo Test',
-            'email_reportante' => 'admin@example.com',
-            'tipo_solicitante' => TipoSolicitante::Administrativo->value,
-            'area_id' => $area->id,
-            'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
-            'tipo_incidencia' => TipoIncidencia::PermisoEconomico->value,
-            'minutos_retardo' => null,
-            'descripcion' => 'Incidencia '.$i,
-            'estado' => EstadoIncidencia::PendienteJefe->value,
-            'token_seguimiento' => Str::random(64),
-        ]);
-    }
-
-    $this->post(route('incidencias.store'), [
+    $response = $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Administrativo Test',
-        'email_reportante' => 'admin@example.com',
+        'reportante_nombre' => 'Retardo 30',
+        'email_reportante' => 'retardo30@example.com',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
-        'tipo_incidencia' => 'permiso_economico',
-        'descripcion' => 'Incidencia 13',
+        'tipo_incidencia' => 'retardo',
+        'minutos_retardo' => 30,
+        'descripcion' => 'Retardo de 30 min',
     ]);
 
-    $rechazadasCount = Incidencia::where('numero_empleado', $empleadoNum)
-        ->where('estado', EstadoIncidencia::Rechazada->value)
-        ->count();
-
-    expect($rechazadasCount)->toBeGreaterThan(0);
-
-    Carbon::setTestNow();
+    $response->assertSessionHasErrors('minutos_retardo');
 });
 
-// ─── Límite semanal de retardos ───────────────────────────────────────────────
-
-test('se rechaza creacion si minutos de retardo exceden 2 horas semanales', function () {
+test('se permite retardo de 29 minutos', function () {
     Mail::fake();
-    Carbon::setTestNow(Carbon::parse('2026-04-15 Tuesday'));
 
     $area = Area::create([
-        'nombre' => 'Area retardo',
-        'slug' => 'area-retardo-'.uniqid(),
+        'nombre' => 'Area retardo29',
+        'slug' => 'area-retardo29-'.uniqid(),
         'descripcion' => null,
         'activa' => true,
     ]);
 
-    $empleadoNum = '90103';
+    $empleadoNum = '90111';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
-        'nombre' => 'Empleado Retardo',
-        'email' => 'retardo@example.com',
+        'nombre' => 'Retardo 29',
+        'email' => 'retardo29@example.com',
+        'tipo' => TipoSolicitante::Administrativo->value,
+    ]);
+
+    $this->post(route('incidencias.store'), [
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'Retardo 29',
+        'email_reportante' => 'retardo29@example.com',
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-15',
+        'tipo_incidencia' => 'retardo',
+        'minutos_retardo' => 29,
+        'descripcion' => 'Retardo de 29 min',
+    ]);
+
+    $aprobadas = Incidencia::where('numero_empleado', $empleadoNum)
+        ->whereIn('estado', [
+            EstadoIncidencia::PendienteJefe->value,
+            EstadoIncidencia::PendienteCapitalHumano->value,
+            EstadoIncidencia::PendienteSubdireccion->value,
+            EstadoIncidencia::Aprobada->value,
+        ])
+        ->where('tipo_incidencia', TipoIncidencia::Retardo->value)
+        ->count();
+
+    expect($aprobadas)->toBeGreaterThan(0);
+});
+
+// ─── Retardo: máximo 2 por quincena ──────────────────────────────────────────
+
+test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
+    Mail::fake();
+    Carbon::setTestNow(Carbon::parse('2026-04-15'));
+
+    $area = Area::create([
+        'nombre' => 'Area retardo2',
+        'slug' => 'area-retardo2-'.uniqid(),
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    $empleadoNum = '90112';
+    Empleado::create([
+        'numero_empleado' => $empleadoNum,
+        'nombre' => 'Retardo Many',
+        'email' => 'retardomany@example.com',
         'tipo' => TipoSolicitante::Administrativo->value,
     ]);
 
     Incidencia::create([
         'folio' => 'FOLIO-'.uniqid(),
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Empleado Retardo',
-        'email_reportante' => 'retardo@example.com',
+        'reportante_nombre' => 'Retardo Many',
+        'email_reportante' => 'retardomany@example.com',
         'tipo_solicitante' => TipoSolicitante::Administrativo->value,
         'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-14',
+        'fecha_incidencia' => '2026-04-10',
         'tipo_incidencia' => TipoIncidencia::Retardo->value,
-        'minutos_retardo' => 90,
+        'minutos_retardo' => 15,
         'descripcion' => 'Retardo 1',
         'estado' => EstadoIncidencia::PendienteJefe->value,
         'token_seguimiento' => Str::random(64),
@@ -238,55 +191,129 @@ test('se rechaza creacion si minutos de retardo exceden 2 horas semanales', func
     Incidencia::create([
         'folio' => 'FOLIO-'.uniqid(),
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Empleado Retardo',
-        'email_reportante' => 'retardo@example.com',
+        'reportante_nombre' => 'Retardo Many',
+        'email_reportante' => 'retardomany@example.com',
         'tipo_solicitante' => TipoSolicitante::Administrativo->value,
         'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-15',
+        'fecha_incidencia' => '2026-04-12',
         'tipo_incidencia' => TipoIncidencia::Retardo->value,
-        'minutos_retardo' => 40,
+        'minutos_retardo' => 20,
         'descripcion' => 'Retardo 2',
+        'estado' => EstadoIncidencia::Aprobada->value,
+        'token_seguimiento' => Str::random(64),
+    ]);
+
+    $response = $this->post(route('incidencias.store'), [
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'Retardo Many',
+        'email_reportante' => 'retardomany@example.com',
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-15',
+        'tipo_incidencia' => 'retardo',
+        'minutos_retardo' => 10,
+        'descripcion' => 'Retardo 3',
+    ]);
+
+    $response->assertRedirect();
+    expect(session('error'))->toContain('2 retardos por quincena');
+
+    Carbon::setTestNow();
+});
+
+test('se permite un tercer retardo en la siguiente quincena', function () {
+    Mail::fake();
+    Carbon::setTestNow(Carbon::parse('2026-04-20'));
+
+    $area = Area::create([
+        'nombre' => 'Area retardoq2',
+        'slug' => 'area-retardoq2-'.uniqid(),
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    $empleadoNum = '90113';
+    Empleado::create([
+        'numero_empleado' => $empleadoNum,
+        'nombre' => 'Retardo Quincena 2',
+        'email' => 'retardoq2@example.com',
+        'tipo' => TipoSolicitante::Administrativo->value,
+    ]);
+
+    Incidencia::create([
+        'folio' => 'FOLIO-'.uniqid(),
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'Retardo Quincena 2',
+        'email_reportante' => 'retardoq2@example.com',
+        'tipo_solicitante' => TipoSolicitante::Administrativo->value,
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-10',
+        'tipo_incidencia' => TipoIncidencia::Retardo->value,
+        'minutos_retardo' => 10,
+        'descripcion' => 'Retardo 1',
         'estado' => EstadoIncidencia::PendienteJefe->value,
+        'token_seguimiento' => Str::random(64),
+    ]);
+
+    Incidencia::create([
+        'folio' => 'FOLIO-'.uniqid(),
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'Retardo Quincena 2',
+        'email_reportante' => 'retardoq2@example.com',
+        'tipo_solicitante' => TipoSolicitante::Administrativo->value,
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-12',
+        'tipo_incidencia' => TipoIncidencia::Retardo->value,
+        'minutos_retardo' => 15,
+        'descripcion' => 'Retardo 2',
+        'estado' => EstadoIncidencia::Aprobada->value,
         'token_seguimiento' => Str::random(64),
     ]);
 
     $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Empleado Retardo',
-        'email_reportante' => 'retardo@example.com',
+        'reportante_nombre' => 'Retardo Quincena 2',
+        'email_reportante' => 'retardoq2@example.com',
         'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-15',
+        'fecha_incidencia' => '2026-04-20',
         'tipo_incidencia' => 'retardo',
-        'minutos_retardo' => 30,
-        'descripcion' => 'Retardo 3',
+        'minutos_retardo' => 5,
+        'descripcion' => 'Retardo 3 en segunda quincena',
     ]);
 
-    $rechazadas = Incidencia::where('numero_empleado', $empleadoNum)
-        ->where('estado', EstadoIncidencia::Rechazada->value)
-        ->get();
+    $aprobadas = Incidencia::where('numero_empleado', $empleadoNum)
+        ->whereIn('estado', [
+            EstadoIncidencia::PendienteJefe->value,
+            EstadoIncidencia::PendienteCapitalHumano->value,
+            EstadoIncidencia::PendienteSubdireccion->value,
+            EstadoIncidencia::Aprobada->value,
+        ])
+        ->where('tipo_incidencia', TipoIncidencia::Retardo->value)
+        ->where('fecha_incidencia', '>=', '2026-04-16')
+        ->count();
 
-    expect($rechazadas->count())->toBeGreaterThan(0);
-    expect($rechazadas->first()->motivo_rechazo)->toContain('quincena');
+    expect($aprobadas)->toBeGreaterThan(0);
 
     Carbon::setTestNow();
 });
 
-test('incidencia rechazada por validacion queda registrada como Rechazada en la base de datos', function () {
+// ─── Permiso Económico: máximo 12 por mes ─────────────────────────────────────
+
+test('se rechaza permiso economico cuando ya hay 12 en el mes', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = Area::create([
-        'nombre' => 'Area limite',
-        'slug' => 'area-limite-'.uniqid(),
+        'nombre' => 'Area pe12',
+        'slug' => 'area-pe12-'.uniqid(),
         'descripcion' => null,
         'activa' => true,
     ]);
 
-    $empleadoNum = '90104';
+    $empleadoNum = '90114';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
-        'nombre' => 'Empleado Limite',
-        'email' => 'limite@example.com',
+        'nombre' => 'PermisoEconomico 12',
+        'email' => 'pe12@example.com',
         'tipo' => TipoSolicitante::Docente->value,
     ]);
 
@@ -294,14 +321,68 @@ test('incidencia rechazada por validacion queda registrada como Rechazada en la 
         Incidencia::create([
             'folio' => 'FOLIO-'.uniqid(),
             'numero_empleado' => $empleadoNum,
-            'reportante_nombre' => 'Empleado Limite',
-            'email_reportante' => 'limite@example.com',
+            'reportante_nombre' => 'PermisoEconomico 12',
+            'email_reportante' => 'pe12@example.com',
             'tipo_solicitante' => TipoSolicitante::Docente->value,
             'area_id' => $area->id,
             'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
             'tipo_incidencia' => TipoIncidencia::PermisoEconomico->value,
             'minutos_retardo' => null,
-            'descripcion' => 'Incidencia '.$i,
+            'descripcion' => 'Permiso '.$i,
+            'estado' => EstadoIncidencia::PendienteJefe->value,
+            'token_seguimiento' => Str::random(64),
+        ]);
+    }
+
+    $response = $this->post(route('incidencias.store'), [
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'PermisoEconomico 12',
+        'email_reportante' => 'pe12@example.com',
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-15',
+        'tipo_incidencia' => 'permiso_economico',
+        'descripcion' => 'Permiso 13',
+    ]);
+
+    $response->assertRedirect();
+    expect(session('error'))->toContain('12 permisos económicos');
+
+    Carbon::setTestNow();
+});
+
+// ─── Otros tipos de incidencia sin límite ───────────────────────────────────
+
+test('puede registrar muchos permisos sindicales sin limite', function () {
+    Mail::fake();
+    Carbon::setTestNow(Carbon::parse('2026-04-15'));
+
+    $area = Area::create([
+        'nombre' => 'Area ps',
+        'slug' => 'area-ps-'.uniqid(),
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    $empleadoNum = '90115';
+    Empleado::create([
+        'numero_empleado' => $empleadoNum,
+        'nombre' => 'Permiso Sindical',
+        'email' => 'ps@example.com',
+        'tipo' => TipoSolicitante::Docente->value,
+    ]);
+
+    for ($i = 0; $i < 20; $i++) {
+        Incidencia::create([
+            'folio' => 'FOLIO-'.uniqid(),
+            'numero_empleado' => $empleadoNum,
+            'reportante_nombre' => 'Permiso Sindical',
+            'email_reportante' => 'ps@example.com',
+            'tipo_solicitante' => TipoSolicitante::Docente->value,
+            'area_id' => $area->id,
+            'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
+            'tipo_incidencia' => TipoIncidencia::PermisoSindical->value,
+            'minutos_retardo' => null,
+            'descripcion' => 'Permiso Sindical '.$i,
             'estado' => EstadoIncidencia::PendienteJefe->value,
             'token_seguimiento' => Str::random(64),
         ]);
@@ -309,64 +390,27 @@ test('incidencia rechazada por validacion queda registrada como Rechazada en la 
 
     $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Empleado Limite',
-        'email_reportante' => 'limite@example.com',
+        'reportante_nombre' => 'Permiso Sindical',
+        'email_reportante' => 'ps@example.com',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
-        'tipo_incidencia' => 'permiso_economico',
-        'descripcion' => 'Incidencia 13',
+        'tipo_incidencia' => 'permiso_sindical',
+        'descripcion' => 'Permiso Sindical 21',
     ]);
 
-    $incidenciaRechazada = Incidencia::where('numero_empleado', $empleadoNum)
+    $rechazadasCount = Incidencia::where('numero_empleado', $empleadoNum)
         ->where('estado', EstadoIncidencia::Rechazada->value)
-        ->whereNotNull('motivo_rechazo')
-        ->first();
+        ->where('tipo_incidencia', TipoIncidencia::PermisoSindical->value)
+        ->count();
 
-    expect($incidenciaRechazada)->not->toBeNull();
-    expect($incidenciaRechazada->motivo_rechazo)->toContain('límite mensual');
+    expect($rechazadasCount)->toBe(0);
 
     Carbon::setTestNow();
 });
 
-test('ValidacionIncidenciaService excedeLimiteQuincenalRetardos retorna true cuando se excede el limite', function () {
-    $service = app(ValidacionIncidenciaService::class);
+// ─── Incidencias rechazadas no cuentan para el límite ────────────────────────
 
-    $area = Area::create([
-        'nombre' => 'Area semtest',
-        'slug' => 'area-semtest-'.uniqid(),
-        'descripcion' => null,
-        'activa' => true,
-    ]);
-
-    $empleadoNum = '90105';
-    Empleado::create([
-        'numero_empleado' => $empleadoNum,
-        'nombre' => 'Sem Test',
-        'email' => 'sem@example.com',
-        'tipo' => TipoSolicitante::Administrativo->value,
-    ]);
-
-    Incidencia::create([
-        'folio' => 'FOLIO-'.uniqid(),
-        'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Sem Test',
-        'email_reportante' => 'sem@example.com',
-        'tipo_solicitante' => TipoSolicitante::Administrativo->value,
-        'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-13',
-        'tipo_incidencia' => TipoIncidencia::Retardo->value,
-        'minutos_retardo' => 60,
-        'descripcion' => 'Retardo',
-        'estado' => EstadoIncidencia::Aprobada->value,
-        'token_seguimiento' => Str::random(64),
-    ]);
-
-    $fecha = Carbon::parse('2026-04-15');
-    expect($service->excedeLimiteQuincenalRetardos($empleadoNum, $fecha, 70))->toBeTrue();
-    expect($service->excedeLimiteQuincenalRetardos($empleadoNum, $fecha, 60))->toBeFalse();
-});
-
-test('incidencias rechazadas no se cuentan para el limite mensual', function () {
+test('incidencias rechazadas no cuentan para el limite de permiso economico', function () {
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = Area::create([
@@ -376,7 +420,7 @@ test('incidencias rechazadas no se cuentan para el limite mensual', function () 
         'activa' => true,
     ]);
 
-    $empleadoNum = '90106';
+    $empleadoNum = '90116';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
         'nombre' => 'No Rech',
@@ -404,7 +448,7 @@ test('incidencias rechazadas no se cuentan para el limite mensual', function () 
     $service = app(ValidacionIncidenciaService::class);
     $fecha = Carbon::parse('2026-04-15');
 
-    expect($service->excedeLimiteMensual($empleadoNum, TipoSolicitante::Docente, $fecha))->toBeFalse();
+    expect($service->excedeLimitePermisoEconomicoMensual($empleadoNum, $fecha))->toBeFalse();
 
     Carbon::setTestNow();
 });

@@ -22,6 +22,10 @@ return new class extends Migration
                 'permiso_economico',
                 'comision_oficial',
                 'salida_anticipada',
+                'permiso_sindical',
+                'incidencia_medica',
+                'buena_conducta',
+
             ]);
             $table->unsignedSmallInteger('minutos_retardo')->nullable();
             $table->text('descripcion')->nullable();

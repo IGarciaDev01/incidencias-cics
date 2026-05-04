@@ -39,19 +39,19 @@ class IncidenciaService
 
         $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
         $fechaIncidencia = Carbon::parse($data['fecha_incidencia'])->startOfDay();
+        $tipoIncidencia = (string) $data['tipo_incidencia'];
 
-        $incidenciaRechazada = $this->validacionIncidenciaService->validarYRechazar(
+        $razon = $this->validacionIncidenciaService->obtenerRazonRechazo(
             $numeroEmpleado,
             $tipo,
             $fechaIncidencia,
-            $minutosRetardo
+            $minutosRetardo,
+            $tipoIncidencia
         );
 
-        if ($incidenciaRechazada !== null) {
-            throw new LimiteIncidenciaExcepcion($incidenciaRechazada->motivo_rechazo);
-        }
+        $esLimitExcedido = $razon !== null;
 
-        return DB::transaction(function () use ($data, $numeroEmpleado, $tipo) {
+        $incidencia = DB::transaction(function () use ($data, $numeroEmpleado, $tipo, $esLimitExcedido, $razon) {
             $incidencia = Incidencia::create([
                 'folio' => $this->folioService->generar(),
                 'numero_empleado' => $numeroEmpleado,
@@ -64,8 +64,9 @@ class IncidenciaService
                 'tipo_incidencia' => $data['tipo_incidencia'],
                 'minutos_retardo' => $data['minutos_retardo'] ?? null,
                 'descripcion' => $data['descripcion'] ?? null,
-                'estado' => EstadoIncidencia::PendienteJefe,
+                'estado' => $esLimitExcedido ? EstadoIncidencia::Rechazada : EstadoIncidencia::PendienteJefe,
                 'token_seguimiento' => Str::random(64),
+                'motivo_rechazo' => $esLimitExcedido ? $razon : null,
             ]);
 
             Empleado::updateOrCreate(
@@ -86,6 +87,13 @@ class IncidenciaService
 
             return $incidencia;
         });
+
+        if ($esLimitExcedido) {
+            $this->notificacionService->enviarRechazoPorLimite($incidencia, $razon);
+            throw new LimiteIncidenciaExcepcion($razon);
+        }
+
+        return $incidencia;
     }
 
     // ─── Flujo de aprobación — Jefe Inmediato ────────────────────────────────

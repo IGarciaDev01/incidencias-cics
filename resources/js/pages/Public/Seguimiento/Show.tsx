@@ -69,6 +69,9 @@ const TIPO_LABELS: Record<string, string> = {
     permiso_economico: 'Permiso Económico',
     comision_oficial: 'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
+    permiso_sindical: 'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta: 'Buena Conducta',
 };
 
 const ACCION_LABELS: Record<string, string> = {
@@ -87,8 +90,6 @@ function formatBytes(bytes: number): string {
 
 function formatDate(dateStr: string): string {
     if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '—';
     return formatDateTime(dateStr);
 }
 
@@ -154,7 +155,7 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                             <dt className="text-gray-500">Fecha incidencia</dt>
                             <dd className="font-medium text-gray-900 mt-0.5">
                                 {incidencia.fecha_incidencia
-                                    ? formatDateOnly(incidencia.fecha_incidencia)
+                                    ? formatDateOnly(incidencia.fecha_incidencia, false)
                                     : '—'}
                                 {incidencia.hora_incidencia && (
                                     <span className="ml-1 text-gray-500">— {formatTime(incidencia.hora_incidencia)}</span>
@@ -170,7 +171,7 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                         </div>
                         <div>
                             <dt className="text-gray-500">Registrada</dt>
-                            <dd className="font-medium text-gray-900 mt-0.5">{formatDate(incidencia.created_at)}</dd>
+                            <dd className="font-medium text-gray-900 mt-0.5">{formatDateOnly(incidencia.created_at, true)}</dd>
                         </div>
                     </dl>
 
@@ -248,6 +249,7 @@ export default function Show({ incidencia, puedeActuar }: Props) {
                             action={comentar.url(incidencia.folio)}
                             method="post"
                             className="space-y-3"
+                            resetOnSuccess
                         >
                             {({ processing, errors }) => (
                                 <>

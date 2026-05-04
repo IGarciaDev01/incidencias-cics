@@ -1,8 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
 import { dashboard } from '@/routes/panel';
-import { index as jefeIncidencias } from '@/routes/panel/jefe_inmediato/incidencias';
-import { index as chIncidencias } from '@/routes/panel/capital_humano/incidencias';
-import { index as subdirIncidencias } from '@/routes/panel/subdireccion/incidencias';
 
 type AdminStats = {
     total_incidencias: number;
@@ -61,6 +58,7 @@ type SubdireccionStats = {
 type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
     rol: 'admin' | 'jefe_inmediato' | 'capital_humano' | 'subdirector';
+    areaNombre?: string;
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -81,9 +79,12 @@ const ESTADO_COLORS: Record<string, string> = {
 
 const TIPO_LABELS: Record<string, string> = {
     retardo: 'Retardo',
+    salida_anticipada: 'Salida Anticipada',
     permiso_economico: 'Permiso Económico',
     comision_oficial: 'Comisión Oficial',
-    salida_anticipada: 'Salida Anticipada',
+    permiso_sindical: 'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta: 'Buena Conducta',
 };
 
 const TIPO_COLORS: Record<string, string> = {
@@ -91,6 +92,9 @@ const TIPO_COLORS: Record<string, string> = {
     permiso_economico: 'bg-blue-400',
     comision_oficial: 'bg-violet-400',
     salida_anticipada: 'bg-rose-400',
+    permiso_sindical: 'bg-green-400',
+    incidencia_medica: 'bg-yellow-400',
+    buena_conducta: 'bg-sky-400',
 };
 
 const SOLICITANTE_LABELS: Record<string, string> = {
@@ -256,38 +260,11 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
     );
 }
 
-function AdminDashboard({ stats }: { stats: AdminStats }) {
+function JefeDashboard({ stats, areaNombre }: { stats: JefeStats; areaNombre?: string }) {
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Flujo de aprobación</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Pendientes — Jefe" value={stats.pendientes_jefe} color="yellow" description="Esperando jefe inmediato" />
-                    <StatCard label="Pendientes — Capital Humano" value={stats.pendientes_capital_humano} color="orange" description="Aprobadas por jefe" />
-                    <StatCard label="Pendientes — Subdirección" value={stats.pendientes_subdireccion} color="blue" description="Aprobación final" />
-                    <StatCard label="Total incidencias" value={stats.total_incidencias} color="gray" />
-                </div>
-            </div>
-            <div>
-                <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Resultados</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Aprobadas" value={stats.aprobadas} color="green" />
-                    <StatCard label="Rechazadas" value={stats.rechazadas} color="red" />
-                    <StatCard label="Usuarios activos" value={stats.total_usuarios} color="purple" />
-                    <StatCard label="Áreas activas" value={stats.total_areas} color="gray" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function JefeDashboard({ stats }: { stats: JefeStats }) {
-    const { auth } = usePage().props as { auth: { user?: { nombre?: string } } };
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <p className="text-sm text-gray-500 mb-4">Incidencias registradas en tu área de adscripción.</p>
+                <p className="text-sm text-gray-500 mb-4">Incidencias registradas en el área: <b>{areaNombre ?? 'No asignada'}</b>.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <StatCard label="Requieren tu revisión" value={stats.pendientes} color="yellow" description="Pendientes de aprobación" />
                     <StatCard label="Aprobadas" value={stats.aprobadas} color="green" />
@@ -349,7 +326,7 @@ function CapitalHumanoDashboard({ stats }: { stats: CapitalHumanoStats }) {
             <div>
                 <p className="text-sm text-gray-500 mb-4">Incidencias aprobadas por jefes inmediatos que requieren tu revisión.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Requieren tu revisión" value={stats.pendientes} color="orange" description="Aprobadas por jefe" />
+                    <StatCard label="Requieren tu revisión" value={stats.pendientes} color="orange" description="Aprobadas por jefes inmediatos" />
                     <StatCard label="Aprobadas" value={stats.aprobadas} color="green" />
                     <StatCard label="Rechazadas" value={stats.rechazadas} color="red" />
                     <StatCard label="Total revisadas" value={stats.total} color="gray" />
@@ -464,13 +441,12 @@ function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
 }
 
 const ROL_LABEL: Record<string, string> = {
-    admin:          'Administrador',
     jefe_inmediato: 'Jefe Inmediato',
     capital_humano: 'Capital Humano',
-    subdirector:    'Subdirector',
+    subdirector:    'Subdirección Administrativa',
 };
 
-export default function Dashboard({ stats, rol }: Props) {
+export default function Dashboard({ stats, rol, areaNombre }: Props) {
     const { auth } = usePage().props as { auth: { user?: { nombre?: string } } };
 
     return (
@@ -479,13 +455,12 @@ export default function Dashboard({ stats, rol }: Props) {
             <div className="p-4 md:p-6 space-y-6">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                        Bienvenido{auth.user?.nombre ? `, ${auth.user.nombre.split(' ')[0]}` : ''}
+                        Panel Principal de {ROL_LABEL[rol] || 'usuario'}
                     </h2>
-                    <p className="text-sm text-gray-500">{ROL_LABEL[rol] ?? rol}</p>
+                    <p className="text-sm text-gray-500">{auth.user?.nombre ? `${auth.user.nombre}` : ''}</p>
                 </div>
 
-                {rol === 'admin'          && <AdminDashboard stats={stats as AdminStats} />}
-                {rol === 'jefe_inmediato'  && <JefeDashboard stats={stats as JefeStats} />}
+                {rol === 'jefe_inmediato'  && <JefeDashboard stats={stats as JefeStats} areaNombre={areaNombre} />}
                 {rol === 'capital_humano'   && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
                 {rol === 'subdirector'      && <SubdireccionDashboard stats={stats as SubdireccionStats} />}
             </div>
@@ -494,5 +469,5 @@ export default function Dashboard({ stats, rol }: Props) {
 }
 
 Dashboard.layout = {
-    breadcrumbs: [{ title: 'Dashboard', href: dashboard.url() }],
+    breadcrumbs: [{ title: 'Panel Principal', href: dashboard.url() }],
 };

@@ -73,9 +73,9 @@ export default function Index() {
             </div>
 
             <div className="mt-4 text-center text-sm text-gray-500">
-                ¿Aún no tienes una incidencia registrada?{' '}
+                ¿Necesitas reportar una incidencia?{' '}
                 <a href="/nueva-incidencia" className="text-primary hover:underline font-medium">
-                    Reportar incidencia
+                    Haz clic aquí para reportarla
                 </a>
             </div>
         </>

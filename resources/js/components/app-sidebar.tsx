@@ -34,7 +34,7 @@ import { index as adminLogs }         from '@/routes/panel/subdireccion/admin/lo
 import type { NavItem } from '@/types';
 
 const subdirNavItems: NavItem[] = [
-    { title: 'Dashboard',   href: dashboard.url(),         icon: LayoutGrid },
+    { title: 'Panel Principal',   href: dashboard.url(),         icon: LayoutGrid },
     { title: 'Incidencias', href: subdirIncidencias.url(), icon: AlertTriangle },
     { title: 'Reportes',    href: subdirReportes.url(),    icon: BarChart2 },
     { title: 'Empleados',   href: subdirEmpleados.url(),   icon: UserSearch },

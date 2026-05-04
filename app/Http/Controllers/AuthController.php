@@ -40,12 +40,27 @@ class AuthController extends Controller
             if (! $areaId) {
                 return back()->withErrors(['area_id' => 'Selecciona tu área.'])->onlyInput('rol');
             }
-            $query->where('area_id', $areaId);
+            $query->whereHas('areas', fn ($q) => $q->where('areas.id', $areaId));
         }
 
         $user = $query->first();
 
-        if (! $user || ! Hash::check($password, $user->password)) {
+        if (! $user) {
+            return back()->withErrors(['rol' => 'No se encontró un usuario activo con ese rol y área.'])->onlyInput('rol');
+        }
+
+        if ($rolEnum === RolUsuario::JefeInmediato) {
+            $isJefeOfArea = $user->areas()
+                ->wherePivot('es_jefe', true)
+                ->where('areas.id', $areaId)
+                ->exists();
+
+            if (! $isJefeOfArea) {
+                return back()->withErrors(['rol' => 'No se encontró un usuario activo con ese rol y área.'])->onlyInput('rol');
+            }
+        }
+
+        if (! Hash::check($password, $user->password)) {
             return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->onlyInput('rol');
         }
 

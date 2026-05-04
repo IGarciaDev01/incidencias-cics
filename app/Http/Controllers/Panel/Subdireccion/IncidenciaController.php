@@ -22,6 +22,8 @@ class IncidenciaController extends Controller
     public function index(Request $request): Response
     {
         $query = Incidencia::with(['area:id,nombre'])
+            ->when($request->filled('fecha_inicio'), fn ($q) => $q->whereDate('fecha_incidencia', '>=', $request->fecha_inicio))
+            ->when($request->filled('fecha_fin'), fn ($q) => $q->whereDate('fecha_incidencia', '<=', $request->fecha_fin))
             ->when($request->string('estado')->isNotEmpty(), function ($q) use ($request) {
                 $q->where('estado', $request->estado);
             })
@@ -38,7 +40,7 @@ class IncidenciaController extends Controller
 
         return Inertia::render('Panel/Subdireccion/Incidencias/Index', [
             'incidencias' => $query->paginate(20)->withQueryString(),
-            'filtros' => $request->only(['estado', 'tipo', 'buscar', 'area_id']),
+            'filtros' => $request->only(['estado', 'tipo', 'buscar', 'area_id', 'fecha_inicio', 'fecha_fin']),
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
             'areas' => Area::orderBy('nombre')->get(['id', 'nombre']),

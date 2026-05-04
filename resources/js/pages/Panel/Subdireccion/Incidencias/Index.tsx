@@ -39,14 +39,14 @@ type EnumItem = { value: string; name: string };
 
 type Props = {
     incidencias: Paginado<Incidencia>;
-    filtros: { estado?: string; tipo?: string; buscar?: string; area_id?: string };
+    filtros: { estado?: string; tipo?: string; buscar?: string; area_id?: string; fecha_inicio?: string; fecha_fin?: string };
     estados: EnumItem[];
     tipos: EnumItem[];
     areas: { id: number; nombre: string }[];
 };
 
 const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente (Jefe)',
+    pendiente_jefe: 'Pendiente (Jefe Directo)',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
     pendiente_subdireccion: 'Pendiente (Subdirección)',
     aprobada: 'Aprobada',
@@ -64,6 +64,9 @@ const TIPO_LABELS: Record<string, string> = {
     permiso_economico: 'Permiso Económico',
     comision_oficial: 'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
+    permiso_sindical: 'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta: 'Buena Conducta',
 };
 
 export function formatDate(d: string) {
@@ -79,6 +82,10 @@ export default function Index({ incidencias, filtros, estados, tipos, areas }: P
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         router.get(index.url(), { ...filtros, buscar: fd.get('buscar') as string || undefined }, { preserveState: true, replace: true });
+    }
+
+    function handleLimpiarFechas() {
+        router.get(index.url(), { ...filtros, fecha_inicio: undefined, fecha_fin: undefined }, { preserveState: true, replace: true });
     }
 
     const hayFiltros = Object.values(filtros).some(Boolean);
@@ -135,6 +142,32 @@ export default function Index({ incidencias, filtros, estados, tipos, areas }: P
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 font-medium">Desde</label>
+                        <Input
+                            type="date"
+                            className="h-9 w-36"
+                            value={filtros.fecha_inicio ?? ''}
+                            onChange={(e) => handleFiltro('fecha_inicio', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 font-medium">Hasta</label>
+                        <Input
+                            type="date"
+                            className="h-9 w-36"
+                            value={filtros.fecha_fin ?? ''}
+                            onChange={(e) => handleFiltro('fecha_fin', e.target.value)}
+                        />
+                    </div>
+
+                    {(filtros.fecha_inicio || filtros.fecha_fin) && (
+                        <Button variant="ghost" size="sm" className="h-9 self-end" onClick={handleLimpiarFechas}>
+                            Limpiar fechas
+                        </Button>
+                    )}
 
                     {hayFiltros && (
                         <Button variant="ghost" size="sm" onClick={() => router.get(index.url())}>

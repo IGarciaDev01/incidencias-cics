@@ -24,7 +24,24 @@ class StoreIncidenciaPublicaRequest extends FormRequest
         return [
             'numero_empleado' => ['required', 'string', 'max:20'],
             'reportante_nombre' => ['required', 'string', 'max:150'],
-            'email_reportante' => ['required', 'email', 'max:150'],
+            'email_reportante' => ['required', 'email', 'max:150', function ($attribute, $value, $fail) {
+                $email = strtolower(trim((string) $value));
+                $numeroEmpleado = (string) $this->input('numero_empleado');
+
+                $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
+
+                if ($empleadoExistente && strtolower($empleadoExistente->email ?? '') === $email) {
+                    return;
+                }
+
+                $existeConOtroEmpleado = Empleado::whereRaw('LOWER(email) = ?', [$email])
+                    ->where('numero_empleado', '!=', $numeroEmpleado)
+                    ->exists();
+
+                if ($existeConOtroEmpleado) {
+                    $fail('Este correo electrónico ya está registrado en el sistema con otro número de empleado.');
+                }
+            }],
             'tipo_empleado' => [
                 Rule::requiredIf(function () {
                     $numero = (string) $this->input('numero_empleado');

@@ -19,7 +19,7 @@ class AprobarIncidenciaRequest extends FormRequest
             return false;
         }
 
-        if (! $user->area_id) {
+        if (! $user->tieneArea()) {
             return false;
         }
 

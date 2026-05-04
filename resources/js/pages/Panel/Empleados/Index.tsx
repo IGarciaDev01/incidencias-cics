@@ -113,7 +113,7 @@ export default function Index({ empleados, filtros }: Props) {
                                         </td>
                                         <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
                                             {emp.ultima_incidencia
-                                                ? formatDateOnly(emp.ultima_incidencia)
+                                                ? formatDateOnly(emp.ultima_incidencia, true)
                                                 : <span className="text-gray-300 italic">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-right">
@@ -159,7 +159,7 @@ export default function Index({ empleados, filtros }: Props) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Empleados' },
     ],
 };

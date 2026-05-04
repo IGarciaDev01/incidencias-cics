@@ -44,7 +44,7 @@ type Incidencia = {
 type Props = { incidencia: Incidencia };
 
 const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente (Jefe)',
+    pendiente_jefe: 'Pendiente de aprobación',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
     pendiente_subdireccion: 'Pendiente (Subdirección)',
     aprobada: 'Aprobada',
@@ -62,16 +62,19 @@ const TIPO_LABELS: Record<string, string> = {
     permiso_economico: 'Permiso Económico',
     comision_oficial: 'Comisión Oficial',
     salida_anticipada: 'Salida Anticipada',
+    permiso_sindical: 'Permiso Sindical',
+    incidencia_medica: 'Incidencia Médica',
+    buena_conducta: 'Buena Conducta',
 };
 const ACCION_LABELS: Record<string, string> = {
     creada: 'Registrada', aprobada: 'Aprobada', rechazada: 'Rechazada',
     comentario: 'Comentario', archivo_adjunto: 'Archivo adjunto',
 };
 
-function formatDate(d: string) {
+function formatDate(d: string, forcedHour: boolean): string {
     if (!d) return '—';
     if (isNaN(new Date(d).getTime())) return '—';
-    return formatDateOnly(d);
+    return formatDateOnly(d, forcedHour);
 }
 function formatBytes(b: number) {
     if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
@@ -128,16 +131,10 @@ export default function Show({ incidencia }: Props) {
                             <dt className="text-gray-500">Tipo de solicitante</dt>
                             <dd className="font-medium mt-0.5 capitalize">{incidencia.tipo_solicitante}</dd>
                         </div>
-                        {incidencia.area && (
-                            <div>
-                                <dt className="text-gray-500">Área de adscripción</dt>
-                                <dd className="font-medium mt-0.5">{incidencia.area.nombre}</dd>
-                            </div>
-                        )}
                         <div>
                             <dt className="text-gray-500">Fecha de incidencia</dt>
                             <dd className="font-medium mt-0.5">
-                                {formatDate(incidencia.fecha_incidencia)}
+                                {formatDate(incidencia.fecha_incidencia, false)}
                                 {incidencia.hora_incidencia && (
                                     <span className="text-gray-500 ml-1">— {formatTime(incidencia.hora_incidencia)}</span>
                                 )}
@@ -152,7 +149,7 @@ export default function Show({ incidencia }: Props) {
                         </div>
                         <div>
                             <dt className="text-gray-500">Registrada</dt>
-                            <dd className="font-medium mt-0.5">{formatDate(incidencia.created_at)}</dd>
+                            <dd className="font-medium mt-0.5">{formatDate(incidencia.created_at, true)}</dd>
                         </div>
                     </dl>
 
@@ -261,7 +258,7 @@ export default function Show({ incidencia }: Props) {
                                         </div>
                                         {item.comentario && <p className="text-sm text-gray-600 mt-0.5">{item.comentario}</p>}
                                         <p className="text-xs text-gray-400 mt-0.5">
-                                            {formatDate(item.created_at)} · {item.user?.nombre ?? 'Sistema'}
+                                            {formatDate(item.created_at, true)} · {item.user?.nombre ?? 'Empleado'}
                                         </p>
                                     </div>
                                 </li>
@@ -308,7 +305,7 @@ export default function Show({ incidencia }: Props) {
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Incidencias', href: index.url() },
         { title: 'Detalle' },
     ],
