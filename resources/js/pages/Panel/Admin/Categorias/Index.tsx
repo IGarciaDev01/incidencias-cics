@@ -41,7 +41,10 @@ export default function Index({ categorias, filtros }: Props) {
     const { flash } = usePage().props as { flash?: { success?: string } };
 
     function handleDelete(id: number, nombre: string) {
-        if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
+        if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) {
+return;
+}
+
         router.delete(destroy.url(id));
     }
 

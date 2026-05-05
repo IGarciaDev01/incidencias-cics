@@ -3,7 +3,6 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Select,
     SelectContent,
@@ -11,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
 import { index, store, create } from '@/routes/panel/subdireccion/admin/areas';
 
@@ -53,6 +53,7 @@ export default function Create({ jefes }: Props) {
                             value={data.nombre}
                             onChange={(e) => {
                                 setData('nombre', e.target.value);
+
                                 if (!data.slug || data.slug === toSlug(data.nombre)) {
                                     setData('slug', toSlug(e.target.value));
                                 }
@@ -122,7 +123,7 @@ export default function Create({ jefes }: Props) {
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Áreas', href: index.url() },
         { title: 'Nueva área', href: create.url() },
     ],

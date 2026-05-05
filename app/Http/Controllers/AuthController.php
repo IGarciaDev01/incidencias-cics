@@ -18,7 +18,15 @@ class AuthController extends Controller
     public function showLogin(): Response
     {
         return Inertia::render('auth/login', [
-            'areas' => Area::where('activa', true)->orderBy('nombre')->get(['id', 'nombre', 'slug']),
+            'areas' => Area::where('activa', true)
+                ->whereExists(fn ($q) => $q->from('area_user')
+                    ->join('users', 'area_user.user_id', '=', 'users.id')
+                    ->whereColumn('area_user.area_id', 'areas.id')
+                    ->where('area_user.es_jefe', true)
+                    ->where('users.activo', true)
+                )
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'slug']),
         ]);
     }
 
@@ -34,30 +42,38 @@ class AuthController extends Controller
             return back()->withErrors(['rol' => 'Rol inválido.'])->onlyInput('rol');
         }
 
-        $query = User::where('rol', $rolEnum)->where('activo', true);
-
         if ($rolEnum === RolUsuario::JefeInmediato) {
             if (! $areaId) {
                 return back()->withErrors(['area_id' => 'Selecciona tu área.'])->onlyInput('rol');
             }
-            $query->whereHas('areas', fn ($q) => $q->where('areas.id', $areaId));
+
+            $jefe = User::whereExists(fn ($q) => $q->from('area_user')
+                ->join('areas', 'area_user.area_id', '=', 'areas.id')
+                ->whereColumn('area_user.user_id', 'users.id')
+                ->where('area_user.area_id', $areaId)
+                ->where('area_user.es_jefe', true)
+            )->where('rol', $rolEnum)->where('activo', true)->first();
+
+            if (! $jefe) {
+                return back()->withErrors(['area_id' => 'No hay un jefe asignado a esta área, si se trata de un error acude a subdirección administrativa.'])->onlyInput('rol');
+            }
+
+            if (! Hash::check($password, $jefe->password)) {
+                return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->onlyInput('rol');
+            }
+
+            Auth::login($jefe, $request->boolean('remember'));
+            $request->session()->regenerate(true);
+            $request->session()->put('area_id', $areaId);
+            $request->session()->save();
+
+            return redirect()->to($this->destino($jefe->rol));
         }
 
-        $user = $query->first();
+        $user = User::where('rol', $rolEnum)->where('activo', true)->first();
 
         if (! $user) {
-            return back()->withErrors(['rol' => 'No se encontró un usuario activo con ese rol y área.'])->onlyInput('rol');
-        }
-
-        if ($rolEnum === RolUsuario::JefeInmediato) {
-            $isJefeOfArea = $user->areas()
-                ->wherePivot('es_jefe', true)
-                ->where('areas.id', $areaId)
-                ->exists();
-
-            if (! $isJefeOfArea) {
-                return back()->withErrors(['rol' => 'No se encontró un usuario activo con ese rol y área.'])->onlyInput('rol');
-            }
+            return back()->withErrors(['rol' => 'No se encontró un usuario activo para este rol.'])->onlyInput('rol');
         }
 
         if (! Hash::check($password, $user->password)) {

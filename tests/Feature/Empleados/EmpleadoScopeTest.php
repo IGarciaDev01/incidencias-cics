@@ -50,9 +50,9 @@ test('jefe ve empleados con incidencias solo de su area', function () {
 
     $jefeA = User::factory()->create([
         'rol' => 'jefe_inmediato',
-        'area_id' => $areaA->id,
         'activo' => true,
     ]);
+    $jefeA->areas()->attach($areaA->id, ['es_jefe' => true]);
 
     $this->actingAs($jefeA)
         ->get(route('panel.jefe_inmediato.empleados.index'))
@@ -77,7 +77,6 @@ test('capital humano ve empleados con incidencias de todas las areas', function 
 
     $ch = User::factory()->create([
         'rol' => 'capital_humano',
-        'area_id' => null,
         'activo' => true,
     ]);
 

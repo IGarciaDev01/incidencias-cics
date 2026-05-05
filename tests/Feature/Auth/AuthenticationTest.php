@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RolUsuario;
 use App\Models\Area;
 use App\Models\User;
 
@@ -10,15 +11,16 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'rol' => RolUsuario::Subdirector,
+    ]);
 
     $response = $this->post(route('login'), [
-        'email' => $user->email,
+        'numero_empleado' => $user->numero_empleado,
+        'rol' => 'subdirector',
         'password' => 'password',
     ]);
 
-    // assertAuthenticated relies on session state after session()->regenerate().
-    // Use the response redirect as the authentication indicator instead.
     $response->assertRedirect();
     $response->assertSessionHasNoErrors();
 });
@@ -32,15 +34,17 @@ test('login ignores stale intended urls that could cause 403', function () {
     ]);
 
     $user = User::factory()->create([
-        'rol' => 'jefe_inmediato',
-        'area_id' => $area->id,
+        'rol' => RolUsuario::JefeInmediato,
         'activo' => true,
     ]);
 
+    $user->areas()->attach($area->id, ['es_jefe' => true]);
+
     $response = $this
-        ->withSession(['url.intended' => '/panel/admin/usuarios'])
+        ->withSession(['url.intended' => '/panel/subdireccion/incidencias'])
         ->post(route('login'), [
-            'email' => $user->email,
+            'rol' => 'jefe_inmediato',
+            'area_id' => $area->id,
             'password' => 'password',
         ]);
 
@@ -52,10 +56,13 @@ test('users with two factor enabled are redirected to two factor challenge', fun
 });
 
 test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'rol' => RolUsuario::Subdirector,
+    ]);
 
     $this->post(route('login'), [
-        'email' => $user->email,
+        'numero_empleado' => $user->numero_empleado,
+        'rol' => 'subdirector',
         'password' => 'wrong-password',
     ]);
 

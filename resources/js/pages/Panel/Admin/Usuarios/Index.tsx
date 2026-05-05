@@ -9,16 +9,17 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index, create, destroy, toggleActivo } from '@/routes/panel/subdireccion/admin/usuarios';
+import { index, create, destroy, toggleActivo, edit } from '@/routes/panel/subdireccion/admin/usuarios';
 
 type Usuario = {
     id: number;
     nombre: string;
     email: string;
+    numero_empleado: string | null;
     rol: string;
     activo: boolean;
     created_at: string;
-    area: { id: number; nombre: string } | null;
+    areas: { id: number; nombre: string }[];
 };
 
 type Paginado<T> = {
@@ -42,7 +43,7 @@ const ROL_LABELS: Record<string, string> = {
     admin:                  'Administrador',
     jefe_inmediato:         'Jefe Inmediato',
     capital_humano:         'Capital Humano',
-    subdireccion_academica: 'Subdirección Académica',
+    subdirector: 'Subdirección Académica',
 };
 
 export default function Index({ usuarios, filtros, roles }: Props) {
@@ -67,7 +68,10 @@ export default function Index({ usuarios, filtros, roles }: Props) {
     }
 
     function handleDelete(id: number, nombre: string) {
-        if (!confirm(`¿Eliminar el usuario "${nombre}"?`)) return;
+        if (!confirm(`¿Eliminar el usuario "${nombre}"?`)) {
+return;
+}
+
         router.delete(destroy.url(id));
     }
 
@@ -148,9 +152,10 @@ export default function Index({ usuarios, filtros, roles }: Props) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Empleado</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Área</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Áreas</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                                 <th className="px-4 py-3" />
                             </tr>
@@ -158,7 +163,7 @@ export default function Index({ usuarios, filtros, roles }: Props) {
                         <tbody className="divide-y divide-gray-100">
                             {usuarios.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                                         No se encontraron usuarios
                                     </td>
                                 </tr>
@@ -166,13 +171,18 @@ export default function Index({ usuarios, filtros, roles }: Props) {
                                 usuarios.data.map((u) => (
                                     <tr key={u.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">{u.nombre}</td>
+                                        <td className="px-4 py-3 text-gray-600">{u.numero_empleado ?? '—'}</td>
                                         <td className="px-4 py-3 text-gray-600">{u.email}</td>
                                         <td className="px-4 py-3">
                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
                                                 {ROL_LABELS[u.rol] ?? u.rol}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-600">{u.area?.nombre ?? '—'}</td>
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {u.areas.length > 0
+                                                ? u.areas.map((a) => a.nombre).join(', ')
+                                                : '—'}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${u.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                                                 {u.activo ? 'Activo' : 'Inactivo'}
@@ -188,7 +198,7 @@ export default function Index({ usuarios, filtros, roles }: Props) {
                                                     {u.activo ? 'Desactivar' : 'Activar'}
                                                 </Button>
                                                 <Button variant="outline" size="sm" asChild>
-                                                    <Link href={`/panel/admin/usuarios/${u.id}/edit`}>
+                                                    <Link href={edit.url(u.id)}>
                                                         Editar
                                                     </Link>
                                                 </Button>
@@ -241,7 +251,7 @@ export default function Index({ usuarios, filtros, roles }: Props) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Usuarios', href: index.url() },
     ],
 };

@@ -72,12 +72,21 @@ const ACCION_LABELS: Record<string, string> = {
 };
 
 function formatDate(d: string, forcedHour: boolean): string {
-    if (!d) return '—';
-    if (isNaN(new Date(d).getTime())) return '—';
+    if (!d) {
+return '—';
+}
+
+    if (isNaN(new Date(d).getTime())) {
+return '—';
+}
+
     return formatDateOnly(d, forcedHour);
 }
 function formatBytes(b: number) {
-    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+    if (b < 1024 * 1024) {
+return `${(b / 1024).toFixed(1)} KB`;
+}
+
     return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 

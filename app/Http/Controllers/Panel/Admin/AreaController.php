@@ -39,7 +39,13 @@ class AreaController extends Controller
 
     public function store(StoreAreaRequest $request): RedirectResponse
     {
-        Area::create($request->validated());
+        $jefeId = $request->filled('jefe_id') ? $request->jefe_id : null;
+
+        $area = Area::create([...$request->validated(), 'jefe_id' => $jefeId]);
+
+        if ($jefeId) {
+            $area->usuarios()->attach($jefeId, ['es_jefe' => true]);
+        }
 
         return redirect()->route('panel.subdireccion.admin.areas.index')
             ->with('success', 'Área creada correctamente.');
@@ -57,7 +63,20 @@ class AreaController extends Controller
 
     public function update(UpdateAreaRequest $request, Area $area): RedirectResponse
     {
+        $oldJefeId = $area->jefe_id;
+        $newJefeId = $request->filled('jefe_id') ? $request->jefe_id : null;
+
         $area->update($request->validated());
+
+        if ($newJefeId !== $oldJefeId) {
+            if ($oldJefeId) {
+                $area->usuarios()->detach($oldJefeId);
+            }
+
+            if ($newJefeId) {
+                $area->usuarios()->attach($newJefeId, ['es_jefe' => true]);
+            }
+        }
 
         return redirect()->route('panel.subdireccion.admin.areas.index')
             ->with('success', 'Área actualizada correctamente.');

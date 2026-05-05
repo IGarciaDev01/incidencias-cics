@@ -151,6 +151,7 @@ function BarChart({ data, colorMap, labelMap }: {
     labelMap?: Record<string, string>;
 }) {
     const max = Math.max(...Object.values(data), 1);
+
     return (
         <div className="space-y-2.5">
             {Object.entries(data).map(([key, value]) => (
@@ -175,6 +176,7 @@ function DonutChart({ data, colorMap, labelMap }: {
     labelMap?: Record<string, string>;
 }) {
     const total = Object.values(data).reduce((a, b) => a + b, 0);
+
     if (total === 0) {
         return <p className="text-sm text-gray-400 text-center py-4">Sin datos</p>;
     }
@@ -186,6 +188,7 @@ function DonutChart({ data, colorMap, labelMap }: {
             const pct = value / total;
             const start = cumulative;
             cumulative += pct;
+
             return { key, value, pct, start, end: cumulative };
         });
 
@@ -230,6 +233,7 @@ function TrendChart({ data }: { data: Record<string, { label: string; total: num
             <div className="flex items-end gap-1 h-24">
                 {Object.entries(data).map(([key, { label, total }]) => {
                     const height = Math.max((total / max) * 100, total > 0 ? 8 : 0);
+
                     return (
                         <div key={key} className="flex-1 flex flex-col items-center gap-1">
                             <div

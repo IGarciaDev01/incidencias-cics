@@ -2,9 +2,9 @@ import { Form, Head, Link, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { formatDateOnly, formatDateTime, formatTime } from '@/utils/date';
-import { comentar, adjuntar, index as seguimientoIndex } from '@/routes/seguimiento';
 import download from '@/routes/comprobante';
+import { comentar, adjuntar, index as seguimientoIndex } from '@/routes/seguimiento';
+import { formatDateOnly, formatDateTime, formatTime } from '@/utils/date';
 
 type HistorialItem = {
     id: number;
@@ -83,13 +83,22 @@ const ACCION_LABELS: Record<string, string> = {
 };
 
 function formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {
+return `${bytes} B`;
+}
+
+    if (bytes < 1024 * 1024) {
+return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDate(dateStr: string): string {
-    if (!dateStr) return '—';
+    if (!dateStr) {
+return '—';
+}
+
     return formatDateTime(dateStr);
 }
 

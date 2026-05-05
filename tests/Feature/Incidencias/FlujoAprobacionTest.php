@@ -37,9 +37,9 @@ test('el jefe inmediato solo puede acceder a incidencias de su area', function (
 
     $jefeB = User::factory()->create([
         'rol' => 'jefe_inmediato',
-        'area_id' => $areaB->id,
         'activo' => true,
     ]);
+    $jefeB->areas()->attach($areaB->id, ['es_jefe' => true]);
 
     $this->actingAs($jefeB)
         ->get(route('panel.jefe_inmediato.incidencias.show', $incidencia))
@@ -75,19 +75,17 @@ test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function (
 
     $jefe = User::factory()->create([
         'rol' => 'jefe_inmediato',
-        'area_id' => $area->id,
         'activo' => true,
     ]);
+    $jefe->areas()->attach($area->id, ['es_jefe' => true]);
 
     $capitalHumano = User::factory()->create([
         'rol' => 'capital_humano',
-        'area_id' => null,
         'activo' => true,
     ]);
 
     $subdireccion = User::factory()->create([
         'rol' => 'subdirector',
-        'area_id' => null,
         'activo' => true,
     ]);
 

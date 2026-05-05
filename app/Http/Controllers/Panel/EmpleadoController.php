@@ -67,7 +67,10 @@ class EmpleadoController extends Controller
             $query->where('area_id', $user->area_id);
         }
 
-        if ($request->filled('fecha')) {
+        if ($request->filled('fecha') && $request->filled('fecha_fin')) {
+            $query->where('fecha_incidencia', '>=', $request->fecha)
+                ->where('fecha_incidencia', '<=', $request->fecha_fin);
+        } elseif ($request->filled('fecha')) {
             $fecha = Carbon::parse($request->fecha);
             $inicio = $fecha->copy()->startOfMonth();
             $fin = $fecha->copy()->endOfMonth();
@@ -98,17 +101,20 @@ class EmpleadoController extends Controller
         $permisoEconomicoStats = null;
 
         if (! $user->esJefeInmediato()) {
-            if ($request->filled('fecha')) {
+            if ($request->filled('fecha') && $request->filled('fecha_fin')) {
+                $inicio = Carbon::parse($request->fecha)->startOfDay();
+                $fin = Carbon::parse($request->fecha_fin)->endOfDay();
+            } elseif ($request->filled('fecha')) {
                 $fecha = Carbon::parse($request->fecha);
+                $inicio = $fecha->copy()->startOfMonth();
+                $fin = $fecha->copy()->endOfMonth();
             } else {
-                $fecha = Carbon::now();
+                $inicio = Carbon::now()->startOfMonth();
+                $fin = Carbon::now()->endOfMonth();
             }
 
-            $inicioMes = $fecha->copy()->startOfMonth();
-            $finMes = $fecha->copy()->endOfMonth();
-
             $permisoEconomicoUsados = Incidencia::where('numero_empleado', $numeroEmpleado)
-                ->whereBetween('fecha_incidencia', [$inicioMes, $finMes])
+                ->whereBetween('fecha_incidencia', [$inicio, $fin])
                 ->where('tipo_incidencia', TipoIncidencia::PermisoEconomico->value)
                 ->whereNotIn('estado', [EstadoIncidencia::Rechazada->value])
                 ->count();
@@ -130,7 +136,7 @@ class EmpleadoController extends Controller
         return Inertia::render('Panel/Empleados/Show', [
             'empleado' => $empleado,
             'incidencias' => $incidencias,
-            'filtros' => $request->only(['fecha', 'estado', 'tipo']),
+            'filtros' => $request->only(['fecha', 'fecha_fin', 'estado', 'tipo']),
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
             'permiso_economico_stats' => $permisoEconomicoStats,

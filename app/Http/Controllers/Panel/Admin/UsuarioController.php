@@ -32,9 +32,10 @@ class UsuarioController extends Controller
             'id' => $user->id,
             'nombre' => $user->nombre,
             'email' => $user->email,
+            'numero_empleado' => $user->numero_empleado,
             'rol' => $user->rol,
             'activo' => $user->activo,
-            'area' => $user->area ? ['id' => $user->area->id, 'nombre' => $user->area->nombre] : null,
+            'areas' => $user->areas->map(fn ($area) => ['id' => $area->id, 'nombre' => $area->nombre]),
         ]);
 
         return Inertia::render('Panel/Admin/Usuarios/Index', [
@@ -47,25 +48,43 @@ class UsuarioController extends Controller
 
     public function create(): Response
     {
+        $roles = collect(RolUsuario::cases())->filter(function ($rol) {
+            if ($rol === RolUsuario::Subdirector) {
+                return ! User::where('rol', RolUsuario::Subdirector)->exists();
+            }
+
+            if ($rol === RolUsuario::CapitalHumano) {
+                return ! User::where('rol', RolUsuario::CapitalHumano)->exists();
+            }
+
+            return true;
+        })->values();
+
         return Inertia::render('Panel/Admin/Usuarios/Create', [
-            'roles' => RolUsuario::cases(),
-            'areas' => Area::where('activa', true)->get(['id', 'nombre']),
+            'roles' => $roles,
+            'areas' => Area::query()
+                ->where('activa', true)
+                ->whereRaw('not exists (select 1 from area_user au where au.area_id = areas.id and au.es_jefe = 1)')
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ]);
     }
 
     public function store(StoreUsuarioRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $areaId = $data['area_id'] ?? null;
-        unset($data['area_id']);
+        $areaIds = $data['area_ids'] ?? [];
+        $esJefe = $request->boolean('es_jefe');
+        unset($data['area_ids'], $data['es_jefe']);
 
         $user = User::create($data);
 
-        if ($areaId && $user->esJefeInmediato()) {
-            $user->areas()->attach($areaId, ['es_jefe' => true]);
+        if ($user->esJefeInmediato() && ! empty($areaIds)) {
+            $user->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => $esJefe]));
+            Area::whereIn('id', $areaIds)->update(['jefe_id' => $user->id]);
         }
 
-        return redirect()->route('panel.admin.usuarios.index')
+        return redirect()->route('panel.subdireccion.admin.usuarios.index')
             ->with('success', 'Usuario creado correctamente.');
     }
 
@@ -76,12 +95,21 @@ class UsuarioController extends Controller
                 'id' => $usuario->id,
                 'nombre' => $usuario->nombre,
                 'email' => $usuario->email,
+                'numero_empleado' => $usuario->numero_empleado,
                 'rol' => $usuario->rol,
                 'activo' => $usuario->activo,
-                'area' => $usuario->area ? ['id' => $usuario->area->id, 'nombre' => $usuario->area->nombre] : null,
+                'areas' => $usuario->areas->map(fn ($area) => ['id' => $area->id, 'nombre' => $area->nombre]),
             ],
             'roles' => RolUsuario::cases(),
-            'areas' => Area::where('activa', true)->get(['id', 'nombre']),
+            'areas' => Area::query()
+                ->where('activa', true)
+                ->where(function ($q) use ($usuario) {
+                    $jefeAreaIds = $usuario->areas->pluck('id');
+                    $q->whereRaw('not exists (select 1 from area_user au where au.area_id = areas.id and au.es_jefe = 1)')
+                        ->orWhereIn('id', $jefeAreaIds);
+                })
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ]);
     }
 
@@ -93,20 +121,26 @@ class UsuarioController extends Controller
             unset($data['password']);
         }
 
-        $areaId = $data['area_id'] ?? null;
-        unset($data['area_id']);
+        $areaIds = $data['area_ids'] ?? [];
+        $esJefe = $request->boolean('es_jefe');
+        unset($data['area_ids'], $data['es_jefe']);
 
         $usuario->update($data);
 
         if ($usuario->esJefeInmediato()) {
-            if ($areaId) {
-                $usuario->areas()->sync([$areaId => ['es_jefe' => true]]);
-            } else {
-                $usuario->areas()->detach();
+            $currentJefeAreaIds = $usuario->areas()->wherePivot('es_jefe', true)->pluck('areas.id')->toArray();
+            $newAreaIds = $areaIds;
+
+            $toRemove = array_diff($currentJefeAreaIds, $newAreaIds);
+            if (! empty($toRemove)) {
+                Area::whereIn('id', $toRemove)->update(['jefe_id' => null]);
             }
+            $usuario->areas()->detach();
+            $usuario->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => $esJefe]));
+            Area::whereIn('id', $areaIds)->update(['jefe_id' => $usuario->id]);
         }
 
-        return redirect()->route('panel.admin.usuarios.index')
+        return redirect()->route('panel.subdireccion.admin.usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
     }
 
@@ -116,7 +150,7 @@ class UsuarioController extends Controller
 
         $usuario->delete();
 
-        return redirect()->route('panel.admin.usuarios.index')
+        return redirect()->route('panel.subdireccion.admin.usuarios.index')
             ->with('success', 'Usuario eliminado.');
     }
 

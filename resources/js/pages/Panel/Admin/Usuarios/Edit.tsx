@@ -3,7 +3,6 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Select,
     SelectContent,
@@ -11,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
 import { index, update } from '@/routes/panel/subdireccion/admin/usuarios';
 
@@ -18,10 +18,10 @@ type Usuario = {
     id: number;
     nombre: string;
     email: string;
+    numero_empleado: string | null;
     rol: string;
     activo: boolean;
-    area_id: number | null;
-    area: { id: number; nombre: string } | null;
+    areas: { id: number; nombre: string }[];
 };
 
 type Props = {
@@ -34,23 +34,46 @@ const ROL_LABELS: Record<string, string> = {
     admin: 'Administrador',
     jefe_inmediato: 'Jefe Inmediato',
     capital_humano: 'Capital Humano',
-    subdireccion_academica: 'Subdirección Académica',
+    subdirector: 'Subdirección Académica',
 };
 
 export default function Edit({ usuario, roles, areas }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         nombre: usuario.nombre,
         email: usuario.email,
+        numero_empleado: usuario.numero_empleado ?? '',
         password: '',
         password_confirmation: '',
         rol: usuario.rol,
-        area_id: usuario.area_id ? String(usuario.area_id) : '',
+        area_ids: usuario.areas.map((a) => String(a.id)),
+        es_jefe: true,
         activo: usuario.activo,
     });
 
+    const mostrarAreas = data.rol === 'jefe_inmediato';
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        setData('area_ids', mostrarAreas ? data.area_ids : []);
         put(update.url(usuario.id));
+    }
+
+    function handleRolChange(v: string) {
+        setData('rol', v);
+
+        if (v !== 'jefe_inmediato') {
+            setData('area_ids', []);
+        }
+    }
+
+    function toggleArea(id: string) {
+        const current = data.area_ids;
+
+        if (current.includes(id)) {
+            setData('area_ids', current.filter((a) => a !== id));
+        } else {
+            setData('area_ids', [...current, id]);
+        }
     }
 
     return (
@@ -74,6 +97,16 @@ export default function Edit({ usuario, roles, areas }: Props) {
                             autoFocus
                         />
                         <InputError message={errors.nombre} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="numero_empleado">Número de empleado</Label>
+                        <Input
+                            id="numero_empleado"
+                            value={data.numero_empleado}
+                            onChange={(e) => setData('numero_empleado', e.target.value)}
+                        />
+                        <InputError message={errors.numero_empleado} />
                     </div>
 
                     <div className="grid gap-2">
@@ -112,37 +145,40 @@ export default function Edit({ usuario, roles, areas }: Props) {
                         </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label>Rol</Label>
-                            <Select value={data.rol} onValueChange={(v) => setData('rol', v)} required>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {roles.map((r) => (
-                                        <SelectItem key={r} value={r}>{ROL_LABELS[r] ?? r}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.rol} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label>Área</Label>
-                            <Select value={data.area_id || '_none_'} onValueChange={(v) => setData('area_id', v === '_none_' ? '' : v)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sin área" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="_none_">Sin área</SelectItem>
-                                    {areas.map((a) => (
-                                        <SelectItem key={a.id} value={String(a.id)}>{a.nombre}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.area_id} />
-                        </div>
+                    <div className="grid gap-2">
+                        <Label>Rol</Label>
+                        <Select value={data.rol} onValueChange={handleRolChange} required>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {roles.map((r) => (
+                                    <SelectItem key={r} value={r}>{ROL_LABELS[r] ?? r}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.rol} />
                     </div>
+
+                    {mostrarAreas && (
+                        <div className="grid gap-2">
+                            <Label>Áreas a administrar</Label>
+                            <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                                {areas.map((a) => (
+                                    <label key={a.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.area_ids.includes(String(a.id))}
+                                            onChange={() => toggleArea(String(a.id))}
+                                            className="rounded border-gray-300"
+                                        />
+                                        <span className="text-sm">{a.nombre}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <InputError message={errors.area_ids} />
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-3 pt-2">
                         <Button type="submit" disabled={processing}>
@@ -161,7 +197,7 @@ export default function Edit({ usuario, roles, areas }: Props) {
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Usuarios', href: index.url() },
         { title: 'Editar usuario' },
     ],

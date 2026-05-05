@@ -22,7 +22,7 @@ class CategoriaController extends Controller
                 ->orderBy('nombre')
                 ->paginate(20)
                 ->withQueryString(),
-            'filtros'    => $request->only(['buscar']),
+            'filtros' => $request->only(['buscar']),
             'prioridades' => Prioridad::cases(),
         ]);
     }
@@ -38,14 +38,14 @@ class CategoriaController extends Controller
     {
         Categoria::create($request->validated());
 
-        return redirect()->route('panel.admin.categorias.index')
+        return redirect()->route('panel.subdireccion.admin.categorias.index')
             ->with('success', 'Categoría creada correctamente.');
     }
 
     public function edit(Categoria $categoria): Response
     {
         return Inertia::render('Panel/Admin/Categorias/Edit', [
-            'categoria'   => $categoria,
+            'categoria' => $categoria,
             'prioridades' => Prioridad::cases(),
         ]);
     }
@@ -54,7 +54,7 @@ class CategoriaController extends Controller
     {
         $categoria->update($request->validated());
 
-        return redirect()->route('panel.admin.categorias.index')
+        return redirect()->route('panel.subdireccion.admin.categorias.index')
             ->with('success', 'Categoría actualizada correctamente.');
     }
 
@@ -68,7 +68,7 @@ class CategoriaController extends Controller
 
         $categoria->delete();
 
-        return redirect()->route('panel.admin.categorias.index')
+        return redirect()->route('panel.subdireccion.admin.categorias.index')
             ->with('success', 'Categoría eliminada.');
     }
 }

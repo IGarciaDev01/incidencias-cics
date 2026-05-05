@@ -97,6 +97,7 @@ export default function Create({ areas }: Props) {
             setBusquedaHecha(false);
             setNombreManual(false);
             setEmailManual(false);
+
             return;
         }
 
@@ -106,6 +107,7 @@ export default function Create({ areas }: Props) {
 
         debounceRef.current = setTimeout(async () => {
             setBuscando(true);
+
             try {
                 const res = await fetch(
                     buscarEmpleado.url({ query: { numero } }),
@@ -122,8 +124,10 @@ export default function Create({ areas }: Props) {
 
                 // Si existe coincidencia exacta, autocompletar de inmediato.
                 const exacto = json.find((e) => e.numero_empleado === numero);
+
                 if (exacto) {
                     seleccionarSugerido(exacto);
+
                     return;
                 }
 

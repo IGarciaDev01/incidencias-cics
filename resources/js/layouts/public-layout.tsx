@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { create as nuevaIncidencia } from '@/routes/incidencias';
-import { index as seguimientoIndex } from '@/routes/seguimiento';
 import { dashboard as IniciarSesion } from '@/routes/panel';
+import { index as seguimientoIndex } from '@/routes/seguimiento';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
     return (

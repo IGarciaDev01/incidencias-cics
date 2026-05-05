@@ -246,7 +246,7 @@ export default function Index({ logs, filtros, tiposAccion, usuarios }: Props) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Logs de actividad', href: index.url() },
     ],
 };

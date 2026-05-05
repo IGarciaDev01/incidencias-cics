@@ -51,6 +51,7 @@ function BarChart({ data, colorMap, labelMap }: {
     labelMap?: Record<string, string>;
 }) {
     const max = Math.max(...Object.values(data), 1);
+
     return (
         <div className="space-y-2.5">
             {Object.entries(data).map(([key, value]) => (
@@ -175,7 +176,7 @@ export default function Index({ filtros, porEstado, porTipoIncidencia, porTipoSo
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Reportes', href: index.url() },
     ],
 };

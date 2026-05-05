@@ -71,8 +71,14 @@ const TIPO_LABELS: Record<string, string> = {
 };
 
 export function formatDate(d: string, forcedHour: boolean) {
-    if (!d) return '—';
-    if (isNaN(new Date(d).getTime())) return '—';
+    if (!d) {
+return '—';
+}
+
+    if (isNaN(new Date(d).getTime())) {
+return '—';
+}
+
     return formatDateOnly(d, forcedHour);
 }
 

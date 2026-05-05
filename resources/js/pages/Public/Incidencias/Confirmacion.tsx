@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { index as seguimientoIndex } from '@/routes/seguimiento';
-import { create as nuevaIncidencia } from '@/routes/incidencias';
 import download from '@/routes/comprobante';
+import { create as nuevaIncidencia } from '@/routes/incidencias';
+import { index as seguimientoIndex } from '@/routes/seguimiento';
 
 type Props = {
     folio: string;

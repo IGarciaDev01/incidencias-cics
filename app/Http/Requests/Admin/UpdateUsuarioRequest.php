@@ -22,9 +22,11 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'nombre' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'numero_empleado' => ['nullable', 'string', 'max:20', Rule::unique('users', 'numero_empleado')->ignore($userId)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'rol' => ['required', new Enum(RolUsuario::class)],
-            'area_id' => ['nullable', 'integer', 'exists:areas,id'],
+            'area_ids' => ['nullable', 'array'],
+            'area_ids.*' => ['integer', 'exists:areas,id'],
             'activo' => ['boolean'],
         ];
     }
@@ -35,6 +37,7 @@ class UpdateUsuarioRequest extends FormRequest
             'nombre.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.unique' => 'Este correo ya está registrado por otro usuario.',
+            'numero_empleado.unique' => 'Este número de empleado ya está registrado.',
             'rol.required' => 'Debes asignar un rol.',
         ];
     }

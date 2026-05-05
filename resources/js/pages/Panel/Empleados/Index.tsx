@@ -1,9 +1,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
-import { index as jefeEmpleados, show as jefeShow }   from '@/routes/panel/jefe_inmediato/empleados';
 import { index as chEmpleados,   show as chShow }     from '@/routes/panel/capital_humano/empleados';
+import { index as jefeEmpleados, show as jefeShow }   from '@/routes/panel/jefe_inmediato/empleados';
 import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
 import { formatDateOnly } from '@/utils/date';
 
@@ -32,8 +32,15 @@ type Props = {
 function useRolRoutes() {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
     const rol = auth.user?.rol ?? '';
-    if (rol === 'jefe_inmediato')         return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url };
-    if (rol === 'capital_humano')         return { indexUrl: chEmpleados.url, showUrl: chShow.url };
+
+    if (rol === 'jefe_inmediato')         {
+return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url };
+}
+
+    if (rol === 'capital_humano')         {
+return { indexUrl: chEmpleados.url, showUrl: chShow.url };
+}
+
     return { indexUrl: subdirEmpleados.url, showUrl: subdirShow.url };
 }
 

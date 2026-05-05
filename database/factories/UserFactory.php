@@ -22,6 +22,7 @@ class UserFactory extends Factory
         return [
             'nombre' => 'Usuario '.$counter,
             'email' => 'usuario'.$counter.'@test.com',
+            'numero_empleado' => 'EMP'.str_pad($counter, 6, '0', STR_PAD_LEFT),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'rol' => 'subdirector',

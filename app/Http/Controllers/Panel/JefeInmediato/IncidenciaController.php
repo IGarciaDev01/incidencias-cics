@@ -25,7 +25,8 @@ class IncidenciaController extends Controller
 
         abort_if(! $user->tieneArea(), 403, 'No tienes un área asignada.');
 
-        $areaId = $user->area_id;
+        $queryAreaId = $request->query('area');
+        $areaId = $queryAreaId ? (int) $queryAreaId : (int) $user->area_id;
 
         $query = Incidencia::with(['area:id,nombre'])
             ->where('area_id', $areaId)
@@ -109,6 +110,8 @@ class IncidenciaController extends Controller
         $user = $request->user();
 
         abort_if(! $user || ! $user->tieneArea(), 403, 'No tienes un área asignada.');
-        abort_if((int) $incidencia->area_id !== (int) $user->area_id, 403, 'No tienes permiso para acceder a esta incidencia.');
+
+        $areaId = (int) $request->session()->get('area_id', $user->area_id);
+        abort_if((int) $incidencia->area_id !== $areaId, 403, 'No tienes permiso para acceder a esta incidencia.');
     }
 }

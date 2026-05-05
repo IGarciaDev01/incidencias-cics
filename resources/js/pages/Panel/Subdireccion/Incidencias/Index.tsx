@@ -46,9 +46,9 @@ type Props = {
 };
 
 const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente (Jefe Directo)',
+    pendiente_jefe: 'Pendiente (Jefe Inmediato)',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
-    pendiente_subdireccion: 'Pendiente (Subdirección)',
+    pendiente_subdireccion: 'Pendiente de aprobación',
     aprobada: 'Aprobada',
     rechazada: 'Rechazada',
 };
@@ -69,8 +69,8 @@ const TIPO_LABELS: Record<string, string> = {
     buena_conducta: 'Buena Conducta',
 };
 
-export function formatDate(d: string) {
-    return formatDateOnly(d);
+export function formatDate(d: string, withTime: boolean) {
+    return formatDateOnly(d, withTime);
 }
 
 export default function Index({ incidencias, filtros, estados, tipos, areas }: Props) {
@@ -101,7 +101,7 @@ export default function Index({ incidencias, filtros, estados, tipos, areas }: P
                 </div>
 
                 {/* Filtros */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 items-end">
                     <form onSubmit={handleBuscar} className="flex gap-2">
                         <Input name="buscar" defaultValue={filtros.buscar} placeholder="Folio, empleado o nombre..." className="w-64" />
                         <Button type="submit" variant="outline" size="sm">Buscar</Button>
@@ -208,8 +208,8 @@ export default function Index({ incidencias, filtros, estados, tipos, areas }: P
                                         </td>
                                         <td className="px-4 py-3 text-gray-600">{inc.area?.nombre ?? '—'}</td>
                                         <td className="px-4 py-3 text-gray-700">{TIPO_LABELS[inc.tipo_incidencia] ?? inc.tipo_incidencia}</td>
-                                        <td className="px-4 py-3 text-gray-600">{formatDate(inc.fecha_incidencia)}</td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(inc.created_at)}</td>
+                                        <td className="px-4 py-3 text-gray-600">{formatDate(inc.fecha_incidencia, false)}</td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(inc.created_at, true)}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[inc.estado] ?? 'bg-gray-100 text-gray-800'}`}>
                                                 {ESTADO_LABELS[inc.estado] ?? inc.estado}
@@ -250,7 +250,7 @@ export default function Index({ incidencias, filtros, estados, tipos, areas }: P
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Incidencias', href: index.url() },
     ],
 };

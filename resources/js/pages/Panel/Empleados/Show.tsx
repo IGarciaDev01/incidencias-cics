@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -7,13 +8,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
-import { index as jefeEmpleados, show as jefeShow } from '@/routes/panel/jefe_inmediato/empleados';
 import { index as chEmpleados,   show as chShow }   from '@/routes/panel/capital_humano/empleados';
-import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
-import { show as jefeVerIncidencia } from '@/routes/panel/jefe_inmediato/incidencias';
 import { show as chVerIncidencia }   from '@/routes/panel/capital_humano/incidencias';
+import { index as jefeEmpleados, show as jefeShow } from '@/routes/panel/jefe_inmediato/empleados';
+import { show as jefeVerIncidencia } from '@/routes/panel/jefe_inmediato/incidencias';
+import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
 import { show as subdirVerIncidencia } from '@/routes/panel/subdireccion/incidencias';
 import { formatDateOnly } from '@/utils/date';
 
@@ -40,14 +40,14 @@ type Empleado = {
 type Props = {
     empleado: Empleado;
     incidencias: Incidencia[];
-    filtros: { fecha?: string; estado?: string; tipo?: string };
+    filtros: { fecha?: string; fecha_fin?: string; estado?: string; tipo?: string };
     estados: Opcion[];
     tipos: Opcion[];
     permiso_economico_stats: {
         usados: number;
         disponibles: number;
         total: number;
-    };
+    } | null;
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -81,8 +81,15 @@ const TIPO_SOLICITANTE_LABELS: Record<string, string> = {
 function useRolBackUrl() {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
     const rol = auth.user?.rol ?? '';
-    if (rol === 'jefe_inmediato') return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: jefeShow.url };
-    if (rol === 'capital_humano') return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url };
+
+    if (rol === 'jefe_inmediato') {
+return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: jefeShow.url };
+}
+
+    if (rol === 'capital_humano') {
+return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url };
+}
+
     return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url };
 }
 
@@ -190,12 +197,21 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
 
                     <div className="flex flex-wrap gap-3 items-center px-5 py-3 bg-gray-50 border-b border-gray-100">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-gray-500 font-medium">Mes</label>
+                            <label className="text-xs text-gray-500 font-medium">Desde</label>
                             <Input
-                                type="month"
-                                className="h-8 w-40 text-sm"
+                                type="date"
+                                className="h-8 w-36 text-sm"
                                 value={filtros.fecha ?? ''}
                                 onChange={(e) => handleFiltro('fecha', e.target.value)}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-gray-500 font-medium">Hasta</label>
+                            <Input
+                                type="date"
+                                className="h-8 w-36 text-sm"
+                                value={filtros.fecha_fin ?? ''}
+                                onChange={(e) => handleFiltro('fecha_fin', e.target.value)}
                             />
                         </div>
                         <div className="flex flex-col gap-1">

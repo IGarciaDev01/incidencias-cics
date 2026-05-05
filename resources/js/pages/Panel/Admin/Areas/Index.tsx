@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
 import { index as subdirIndex, create, destroy, edit } from '@/routes/panel/subdireccion/admin/areas';
+import { index as incidenciasIndex } from '@/routes/panel/subdireccion/incidencias';
 
 type Area = {
     id: number;
@@ -32,7 +33,10 @@ export default function Index({ areas, filtros }: Props) {
     const { flash } = usePage().props as { flash?: { success?: string } };
 
     function handleDelete(id: number, nombre: string) {
-        if (!confirm(`¿Eliminar el área "${nombre}"?`)) return;
+        if (!confirm(`¿Eliminar el área "${nombre}"?`)) {
+return;
+}
+
         router.delete(destroy.url(id));
     }
 
@@ -79,8 +83,8 @@ export default function Index({ areas, filtros }: Props) {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jefe</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Incidencias</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuarios</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                                 <th className="px-4 py-3" />
                             </tr>
                         </thead>
@@ -101,7 +105,6 @@ export default function Index({ areas, filtros }: Props) {
                                                 {area.incidencias_count}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-600">{area.usuarios_count}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${area.activa ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                                                 {area.activa ? 'Activa' : 'Inactiva'}
@@ -109,6 +112,9 @@ export default function Index({ areas, filtros }: Props) {
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link href={incidenciasIndex.url({ query: { area_id: String(area.id) } })}>Ver incidencias</Link>
+                                                </Button>
                                                 <Button variant="outline" size="sm" asChild>
                                                     <Link href={edit.url(area.id)}>Editar</Link>
                                                 </Button>
@@ -153,7 +159,7 @@ export default function Index({ areas, filtros }: Props) {
 
 Index.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Áreas', href: subdirIndex.url() },
     ],
 };
