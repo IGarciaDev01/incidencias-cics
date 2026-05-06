@@ -328,7 +328,7 @@ export default function Show({ incidencia }: Props) {
 
 Show.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
+        { title: 'Panel Principal', href: dashboard.url() },
         { title: 'Incidencias', href: index.url() },
         { title: 'Detalle' },
     ],

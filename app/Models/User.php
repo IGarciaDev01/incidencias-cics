@@ -59,7 +59,13 @@ class User extends Authenticatable
 
     public function getAreaAttribute(): ?Area
     {
-        return $this->areas()->first();
+        $areaId = $this->area_id; // Ahora usa el accessor corregido ↑
+
+        if ($areaId === null) {
+            return null;
+        }
+
+        return $this->areas()->where('areas.id', $areaId)->first();
     }
 
     public function incidenciasRevisadas(): HasMany
@@ -90,14 +96,34 @@ class User extends Authenticatable
     }
 
     public function getAreaIdAttribute(): ?int
+{
+    if (! $this->esJefeInmediato()) {
+        return null;
+    }
+
+    // En contexto web: leer el área seleccionada al hacer login
+    try {
+        if (! app()->runningInConsole()) {
+            $sessionAreaId = session('area_id');
+            if ($sessionAreaId && $this->isJefeOfArea((int) $sessionAreaId)) {
+                return (int) $sessionAreaId;
+            }
+        }
+    } catch (\Throwable) {
+        // Sin sesión activa (CLI, tests, etc.) → fallback
+    }
+
+    // Fallback: primera área asignada (orden de la DB)
+    return $this->areasJefatura()->value('areas.id');
+}
+
+    public function primerAreaJefaturaId(): ?int
     {
         if (! $this->esJefeInmediato()) {
             return null;
         }
 
-        $jefatura = $this->areasJefatura()->first();
-
-        return $jefatura?->id;
+        return $this->areasJefatura()->value('areas.id');
     }
 
     public function tieneArea(): bool

@@ -46,7 +46,9 @@ class HandleInertiaRequests extends Middleware
                     'nombre' => $user->nombre,
                     'email' => $user->email,
                     'rol' => $user->rol?->value,
-                    'area' => $user->tieneArea() ? ['id' => $user->area_id] : null,
+                    'area' => $user->tieneArea()
+                        ? ['id' => (int) $request->session()->get('area_id', $user->primerAreaJefaturaId())]
+                        : null,
                 ] : null,
             ],
             'flash' => [

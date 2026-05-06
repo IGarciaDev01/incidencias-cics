@@ -111,7 +111,7 @@ class IncidenciaController extends Controller
 
         abort_if(! $user || ! $user->tieneArea(), 403, 'No tienes un área asignada.');
 
-        $areaId = (int) $request->session()->get('area_id', $user->area_id);
+        $areaId = (int) $user->area_id;
         abort_if((int) $incidencia->area_id !== $areaId, 403, 'No tienes permiso para acceder a esta incidencia.');
     }
 }
