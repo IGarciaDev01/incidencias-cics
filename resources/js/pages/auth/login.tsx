@@ -66,8 +66,8 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="space-y-3">
-                    <Label> Selecciona tu rol</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <Label htmlFor="rol"> Selecciona tu rol</Label>
+                    <div className="grid grid-cols-3 gap-3" role="group" aria-label="Selecciona tu rol">
                         {ROLES.map((r) => (
                             <button
                                 key={r.value}
@@ -83,7 +83,7 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
                                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                                 }`}
                             >
-                                <span className="text-2xl">{r.icon}</span>
+                                <span className="text-2xl" aria-hidden="true">{r.icon}</span>
                                 <span className="text-center leading-tight">{r.label}</span>
                             </button>
                         ))}
@@ -93,7 +93,7 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
 
                 {showAreaSelector && (
                     <div className="space-y-3">
-                        <Label>Selecciona tu área</Label>
+                        <Label htmlFor="area_id">Selecciona tu área</Label>
                         {areas && areas.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                                 {areas!.map((area) => (

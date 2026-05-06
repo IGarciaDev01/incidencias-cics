@@ -12,9 +12,9 @@ class DemoDataSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'subdirector@test.com'],
             [
-                'nombre' => 'Subdirector',
+                'nombre' => 'Lic. Nombre Subdirector',
                 'numero_empleado' => '000001',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('11223344'),
                 'rol' => 'subdirector',
                 'activo' => true,
             ]

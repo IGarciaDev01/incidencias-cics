@@ -16,6 +16,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         <Link
                             href={nuevaIncidencia.url()}
                             className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                            aria-label="Levantar incidencia"
                         >
                             Levantar incidencia
                         </Link>

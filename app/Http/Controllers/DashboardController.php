@@ -201,7 +201,7 @@ class DashboardController extends Controller
                 DB::raw("DATE_FORMAT(fecha_incidencia, '%Y-%m') as mes"),
                 DB::raw('count(*) as total')
             )
-            ->where('fecha_incidencia', '>=', now()->subMonths($months)->startOfMonth()->timezone('America/Mexico_City'));
+            ->where('fecha_incidencia', '>=', now()->timezone('America/Mexico_City')->subMonths($months)->startOfMonth());
 
         if ($areaId) {
             $query->where('area_id', $areaId);
@@ -214,7 +214,7 @@ class DashboardController extends Controller
 
         $meses = [];
         for ($i = $months - 1; $i >= 0; $i--) {
-            $fecha = now()->subMonths($i)->timezone('America/Mexico_City');
+            $fecha = now()->timezone('America/Mexico_City')->subMonths($i);
             $mes = $fecha->format('Y-m');
             $label = $fecha->format('M');
             $meses[$mes] = [

@@ -34,7 +34,6 @@ class Incidencia extends Model
         'user_id',
         'revisado_por',
         'motivo_rechazo',
-        'resolucion',
     ];
 
     protected function casts(): array

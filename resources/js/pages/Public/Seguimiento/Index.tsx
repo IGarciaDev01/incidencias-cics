@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,9 +74,9 @@ export default function Index() {
 
             <div className="mt-4 text-center text-sm text-gray-500">
                 ¿Necesitas reportar una incidencia?{' '}
-                <a href="/nueva-incidencia" className="text-primary hover:underline font-medium">
+                <Link href="/nueva-incidencia" className="text-primary hover:underline font-medium">
                     Haz clic aquí para reportarla
-                </a>
+                </Link>
             </div>
         </>
     );

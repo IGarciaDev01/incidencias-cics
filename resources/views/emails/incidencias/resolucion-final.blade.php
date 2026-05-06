@@ -5,12 +5,6 @@ Tu incidencia ha recibido una resolución final.
 
 **Estado:** {{ $estado }}
 
-@if($resolucion)
-@component('mail::panel')
-**Resolución:** {{ $resolucion }}
-@endcomponent
-@endif
-
 @if($motivoRechazo)
 @component('mail::panel')
 **Motivo del rechazo:** {{ $motivoRechazo }}

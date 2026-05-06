@@ -27,11 +27,10 @@ class IncidenciaCambioEstadoMail extends Mailable
         return new Content(
             markdown: 'emails.incidencias.cambio-estado',
             with: [
-                'folio'          => $this->incidencia->folio,
-                'titulo'         => $this->incidencia->titulo,
-                'estado'         => $this->incidencia->estado->label(),
-                'motivoRechazo'  => $this->incidencia->motivo_rechazo,
-                'resolucion'     => $this->incidencia->resolucion,
+                'folio' => $this->incidencia->folio,
+                'titulo' => $this->incidencia->titulo,
+                'estado' => $this->incidencia->estado->label(),
+                'motivoRechazo' => $this->incidencia->motivo_rechazo,
                 'urlSeguimiento' => route('seguimiento.show', $this->incidencia->folio),
             ],
         );

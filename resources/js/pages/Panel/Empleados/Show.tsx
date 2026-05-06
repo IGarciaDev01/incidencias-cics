@@ -179,7 +179,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
                             <div className="w-full bg-gray-100 rounded-full h-2.5">
                                 <div
                                     className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
-                                    style={{ width: `${(permiso_economico_stats.disponibles / permiso_economico_stats.total) * 100}%` }}
+                                    style={{ width: `${permiso_economico_stats.total > 0 ? (permiso_economico_stats.disponibles / permiso_economico_stats.total) * 100 : 0}%` }}
                                 />
                             </div>
                             <p className="text-xs text-gray-400 mt-1">

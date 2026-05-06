@@ -11,12 +11,6 @@ El estado de tu incidencia ha sido actualizado.
 @endcomponent
 @endif
 
-@if($resolucion)
-@component('mail::panel')
-**Resolución:** {{ $resolucion }}
-@endcomponent
-@endif
-
 @component('mail::button', ['url' => $urlSeguimiento])
 Ver mi incidencia
 @endcomponent

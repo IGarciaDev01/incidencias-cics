@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ const TIPOS_INCIDENCIA = [
 ];
 
 export default function Create({ areas }: Props) {
+    const { flash } = usePage().props as { flash?: { error?: string } };
     const { data, setData, post, processing, errors } = useForm({
         numero_empleado:   '',
         reportante_nombre: '',
@@ -139,7 +140,8 @@ export default function Create({ areas }: Props) {
                 } else {
                     setNombreManual(false);
                 }
-            } catch {
+            } catch (err) {
+                console.error('Error al buscar empleado:', err);
                 setBusquedaHecha(true);
                 setNombreManual(true);
                 setEmailManual(true);
@@ -174,6 +176,12 @@ export default function Create({ areas }: Props) {
                         Completa el formulario con los datos de la incidencia. Recibirás un número de folio para dar seguimiento.
                     </p>
                 </div>
+
+                {flash?.error && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        {flash.error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-5" encType="multipart/form-data">
 
