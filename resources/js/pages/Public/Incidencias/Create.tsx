@@ -25,7 +25,7 @@ type EmpleadoSugerido = {
 type Props = { areas: Area[] };
 
 const TIPOS_INCIDENCIA = [
-    { value: 'retardo',           label: 'Retardo',                   descripcion: 'Menor a 30 min, máximo 2 a la quincena', requiereMinutos: true },
+    { value: 'retardo',           label: 'Retardo',                   descripcion: 'De 11 a 30 min, máximo 2 a la quincena', requiereMinutos: true },
     { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: '',                                    requiereMinutos: false },
     { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
     { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                                    requiereMinutos: false },
@@ -433,14 +433,14 @@ export default function Create({ areas }: Props) {
                                     id="minutos_retardo"
                                     name="minutos_retardo"
                                     type="number"
-                                    min={1}
-                                    max={29}
+                                    min={11}
+                                    max={30}
                                     value={data.minutos_retardo}
                                     onChange={(e) => setData('minutos_retardo', e.target.value)}
                                     placeholder="Ej. 15"
                                     required
                                 />
-                                <p className="text-xs text-gray-500">Debe ser menor a 30 minutos.</p>
+                                <p className="text-xs text-gray-500">Debe ser entre 11 y 30 minutos.</p>
                                 <InputError message={errors.minutos_retardo} />
                             </div>
                         )}

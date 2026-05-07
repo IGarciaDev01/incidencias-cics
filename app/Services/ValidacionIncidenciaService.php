@@ -17,8 +17,8 @@ class ValidacionIncidenciaService
     public function obtenerRazonRechazo(string $numeroEmpleado, TipoSolicitante $tipo, Carbon $fechaIncidencia, int $minutosRetardo, string $tipoIncidencia): ?string
     {
         if ($tipoIncidencia === TipoIncidencia::Retardo->value) {
-            if ($minutosRetardo >= 30) {
-                return 'El retardo debe ser menor a 30 minutos.';
+            if ($minutosRetardo < 11 || $minutosRetardo >= 31) {
+                return 'El retardo debe ser entre 11 y 30 minutos.';
             }
 
             if ($this->excedeLimiteQuincenalRetardos($numeroEmpleado, $fechaIncidencia)) {

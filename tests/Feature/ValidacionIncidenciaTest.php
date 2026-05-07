@@ -76,9 +76,41 @@ function crearIncidencia(array $override = []): Incidencia
     ]);
 }
 
-// ─── Retardo: menos de 30 minutos ─────────────────────────────────────────────
+// ─── Retardo: entre 11 y 30 minutos ──────────────────────────────────────────
 
-test('se rechaza retardo de 30 o más minutos', function () {
+test('se rechaza retardo de 31 o más minutos', function () {
+    Mail::fake();
+
+    $area = Area::create([
+        'nombre' => 'Area retardo31',
+        'slug' => 'area-retardo31-'.uniqid(),
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    $empleadoNum = '90110';
+    Empleado::create([
+        'numero_empleado' => $empleadoNum,
+        'nombre' => 'Retardo 31',
+        'email' => 'retardo31@example.com',
+        'tipo' => TipoSolicitante::Administrativo->value,
+    ]);
+
+    $response = $this->post(route('incidencias.store'), [
+        'numero_empleado' => $empleadoNum,
+        'reportante_nombre' => 'Retardo 31',
+        'email_reportante' => 'retardo31@example.com',
+        'area_id' => $area->id,
+        'fecha_incidencia' => '2026-04-15',
+        'tipo_incidencia' => 'retardo',
+        'minutos_retardo' => 31,
+        'descripcion' => 'Retardo de 31 min',
+    ]);
+
+    $response->assertSessionHasErrors('minutos_retardo');
+});
+
+test('se permite retardo de 30 minutos', function () {
     Mail::fake();
 
     $area = Area::create([
@@ -88,7 +120,7 @@ test('se rechaza retardo de 30 o más minutos', function () {
         'activa' => true,
     ]);
 
-    $empleadoNum = '90110';
+    $empleadoNum = '90111';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
         'nombre' => 'Retardo 30',
@@ -96,7 +128,7 @@ test('se rechaza retardo de 30 o más minutos', function () {
         'tipo' => TipoSolicitante::Administrativo->value,
     ]);
 
-    $response = $this->post(route('incidencias.store'), [
+    $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Retardo 30',
         'email_reportante' => 'retardo30@example.com',
@@ -105,38 +137,6 @@ test('se rechaza retardo de 30 o más minutos', function () {
         'tipo_incidencia' => 'retardo',
         'minutos_retardo' => 30,
         'descripcion' => 'Retardo de 30 min',
-    ]);
-
-    $response->assertSessionHasErrors('minutos_retardo');
-});
-
-test('se permite retardo de 29 minutos', function () {
-    Mail::fake();
-
-    $area = Area::create([
-        'nombre' => 'Area retardo29',
-        'slug' => 'area-retardo29-'.uniqid(),
-        'descripcion' => null,
-        'activa' => true,
-    ]);
-
-    $empleadoNum = '90111';
-    Empleado::create([
-        'numero_empleado' => $empleadoNum,
-        'nombre' => 'Retardo 29',
-        'email' => 'retardo29@example.com',
-        'tipo' => TipoSolicitante::Administrativo->value,
-    ]);
-
-    $this->post(route('incidencias.store'), [
-        'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'Retardo 29',
-        'email_reportante' => 'retardo29@example.com',
-        'area_id' => $area->id,
-        'fecha_incidencia' => '2026-04-15',
-        'tipo_incidencia' => 'retardo',
-        'minutos_retardo' => 29,
-        'descripcion' => 'Retardo de 29 min',
     ]);
 
     $aprobadas = Incidencia::where('numero_empleado', $empleadoNum)
@@ -210,7 +210,7 @@ test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'retardo',
-        'minutos_retardo' => 10,
+        'minutos_retardo' => 15,
         'descripcion' => 'Retardo 3',
     ]);
 
@@ -276,7 +276,7 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-20',
         'tipo_incidencia' => 'retardo',
-        'minutos_retardo' => 5,
+        'minutos_retardo' => 15,
         'descripcion' => 'Retardo 3 en segunda quincena',
     ]);
 

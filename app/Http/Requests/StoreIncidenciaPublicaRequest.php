@@ -59,7 +59,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             'minutos_retardo' => [
                 Rule::when(
                     $this->tipo_incidencia === TipoIncidencia::Retardo->value,
-                    ['required', 'integer', 'min:1', 'max:29'],
+                    ['required', 'integer', 'min:11', 'max:30'],
                     ['nullable'],
                 ),
             ],
@@ -83,7 +83,8 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             'fecha_incidencia.before_or_equal' => 'La fecha no puede ser posterior a hoy.',
             'tipo_incidencia.required' => 'El tipo de incidencia es obligatorio.',
             'minutos_retardo.required' => 'Debes indicar los minutos de retardo.',
-            'minutos_retardo.max' => 'El retardo debe ser menor a 30 minutos.',
+            'minutos_retardo.min' => 'El retardo debe ser al menos 11 minutos.',
+            'minutos_retardo.max' => 'El retardo debe ser menor a 31 minutos.',
             'archivos.max' => 'Puedes adjuntar un máximo de 5 archivos.',
             'archivos.*.max' => 'Cada archivo no puede superar '.ArchivoService::TAMANIO_MAX_MB.' MB.',
             'archivos.*.mimetypes' => 'El tipo de archivo no está permitido.',
