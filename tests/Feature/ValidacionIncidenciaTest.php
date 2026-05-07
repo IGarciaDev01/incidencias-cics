@@ -296,15 +296,15 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
     Carbon::setTestNow();
 });
 
-// ─── Permiso Económico: máximo 12 por mes ─────────────────────────────────────
+// ─── Permiso Económico: máximo 3 por mes ─────────────────────────────────────
 
-test('se rechaza permiso economico cuando ya hay 12 en el mes', function () {
+test('se rechaza permiso economico cuando ya hay 3 en el mes', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = Area::create([
-        'nombre' => 'Area pe12',
-        'slug' => 'area-pe12-'.uniqid(),
+        'nombre' => 'Area pe3',
+        'slug' => 'area-pe3-'.uniqid(),
         'descripcion' => null,
         'activa' => true,
     ]);
@@ -312,17 +312,17 @@ test('se rechaza permiso economico cuando ya hay 12 en el mes', function () {
     $empleadoNum = '90114';
     Empleado::create([
         'numero_empleado' => $empleadoNum,
-        'nombre' => 'PermisoEconomico 12',
-        'email' => 'pe12@example.com',
+        'nombre' => 'PermisoEconomico 3',
+        'email' => 'pe3@example.com',
         'tipo' => TipoSolicitante::Docente->value,
     ]);
 
-    for ($i = 0; $i < 12; $i++) {
+    for ($i = 0; $i < 3; $i++) {
         Incidencia::create([
             'folio' => 'FOLIO-'.uniqid(),
             'numero_empleado' => $empleadoNum,
-            'reportante_nombre' => 'PermisoEconomico 12',
-            'email_reportante' => 'pe12@example.com',
+            'reportante_nombre' => 'PermisoEconomico 3',
+            'email_reportante' => 'pe3@example.com',
             'tipo_solicitante' => TipoSolicitante::Docente->value,
             'area_id' => $area->id,
             'fecha_incidencia' => '2026-04-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
@@ -336,16 +336,16 @@ test('se rechaza permiso economico cuando ya hay 12 en el mes', function () {
 
     $response = $this->post(route('incidencias.store'), [
         'numero_empleado' => $empleadoNum,
-        'reportante_nombre' => 'PermisoEconomico 12',
-        'email_reportante' => 'pe12@example.com',
+        'reportante_nombre' => 'PermisoEconomico 3',
+        'email_reportante' => 'pe3@example.com',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'permiso_economico',
-        'descripcion' => 'Permiso 13',
+        'descripcion' => 'Permiso 4',
     ]);
 
     $response->assertRedirect();
-    expect(session('error'))->toContain('12 permisos económicos');
+    expect(session('error'))->toContain('3 permisos económicos');
 
     Carbon::setTestNow();
 });

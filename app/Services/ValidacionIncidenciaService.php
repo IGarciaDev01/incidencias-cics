@@ -12,7 +12,9 @@ class ValidacionIncidenciaService
 {
     public const MAX_RETARDOS_QUINCENALES = 2;
 
-    public const MAX_PERMISO_ECONOMICO_MENSUALES = 12;
+    public const MAX_PERMISO_ECONOMICO_MENSUALES = 3;
+
+    public const MAX_PERMISO_ECONOMICO_ANUALES = 12;
 
     public function obtenerRazonRechazo(string $numeroEmpleado, TipoSolicitante $tipo, Carbon $fechaIncidencia, int $minutosRetardo, string $tipoIncidencia): ?string
     {
@@ -30,6 +32,10 @@ class ValidacionIncidenciaService
             if ($this->excedeLimitePermisoEconomicoMensual($numeroEmpleado, $fechaIncidencia)) {
                 return 'Se ha alcanzado el límite mensual de '.self::MAX_PERMISO_ECONOMICO_MENSUALES.' permisos económicos.';
             }
+
+            if ($this->excedeLimitePermisoEconomicoAnual($numeroEmpleado, $fechaIncidencia)) {
+                return 'Se ha alcanzado el límite anual de '.self::MAX_PERMISO_ECONOMICO_ANUALES.' permisos económicos.';
+            }
         }
 
         return null;
@@ -37,8 +43,8 @@ class ValidacionIncidenciaService
 
     public function excedeLimiteQuincenalRetardos(string $numeroEmpleado, Carbon $fecha): bool
     {
-        $inicioQuincena = $this->obtenerInicioQuincena($fecha);
-        $finQuincena = $this->obtenerFinQuincena($fecha);
+        $inicioQuincena = $this->obtenerInicioQuincena($fecha)->format('Y-m-d');
+        $finQuincena = $this->obtenerFinQuincena($fecha)->format('Y-m-d');
 
         $count = Incidencia::where('numero_empleado', $numeroEmpleado)
             ->whereBetween('fecha_incidencia', [$inicioQuincena, $finQuincena])
@@ -51,8 +57,8 @@ class ValidacionIncidenciaService
 
     public function excedeLimitePermisoEconomicoMensual(string $numeroEmpleado, Carbon $fecha): bool
     {
-        $inicioMes = $fecha->copy()->startOfMonth();
-        $finMes = $fecha->copy()->endOfMonth();
+        $inicioMes = $fecha->copy()->startOfMonth()->format('Y-m-d');
+        $finMes = $fecha->copy()->endOfMonth()->format('Y-m-d');
 
         $count = Incidencia::where('numero_empleado', $numeroEmpleado)
             ->whereBetween('fecha_incidencia', [$inicioMes, $finMes])
@@ -61,6 +67,20 @@ class ValidacionIncidenciaService
             ->count();
 
         return $count >= self::MAX_PERMISO_ECONOMICO_MENSUALES;
+    }
+
+    public function excedeLimitePermisoEconomicoAnual(string $numeroEmpleado, Carbon $fecha): bool
+    {
+        $inicioAnio = $fecha->copy()->startOfYear()->format('Y-m-d');
+        $finAnio = $fecha->copy()->endOfYear()->format('Y-m-d');
+
+        $count = Incidencia::where('numero_empleado', $numeroEmpleado)
+            ->whereBetween('fecha_incidencia', [$inicioAnio, $finAnio])
+            ->where('tipo_incidencia', TipoIncidencia::PermisoEconomico->value)
+            ->whereNotIn('estado', [EstadoIncidencia::Rechazada->value])
+            ->count();
+
+        return $count >= self::MAX_PERMISO_ECONOMICO_ANUALES;
     }
 
     private function obtenerInicioQuincena(Carbon $fecha): Carbon

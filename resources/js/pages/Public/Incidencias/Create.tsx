@@ -26,7 +26,7 @@ type Props = { areas: Area[] };
 
 const TIPOS_INCIDENCIA = [
     { value: 'retardo',           label: 'Retardo',                   descripcion: 'De 11 a 30 min, máximo 2 a la quincena', requiereMinutos: true },
-    { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: '',                                    requiereMinutos: false },
+    { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: 'Máx 3 al mes, 12 al año',               requiereMinutos: false },
     { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
     { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                                    requiereMinutos: false },
     { value: 'permiso_sindical',  label: 'Permiso Sindical',          descripcion: '',                                    requiereMinutos: false },

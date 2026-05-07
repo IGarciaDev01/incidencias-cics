@@ -44,9 +44,8 @@ type Props = {
     estados: Opcion[];
     tipos: Opcion[];
     permiso_economico_stats: {
-        usados: number;
-        disponibles: number;
-        total: number;
+        mensual: { usados: number; disponibles: number; total: number };
+        anual: { usados: number; disponibles: number; total: number };
     } | null;
 };
 
@@ -169,22 +168,41 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
 
                     {/* Permiso Económico stats */}
                     {permiso_economico_stats && (
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-gray-500">Permisos Económicos del mes</span>
-                                <span className="text-xs font-medium text-gray-700">
-                                    {permiso_economico_stats.disponibles} de {permiso_economico_stats.total} disponibles
-                                </span>
+                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-gray-500">Permisos Económicos del mes</span>
+                                    <span className="text-xs font-medium text-gray-700">
+                                        {permiso_economico_stats.mensual.disponibles} de {permiso_economico_stats.mensual.total} disponibles
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                    <div
+                                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${permiso_economico_stats.mensual.total > 0 ? (permiso_economico_stats.mensual.disponibles / permiso_economico_stats.mensual.total) * 100 : 0}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {permiso_economico_stats.mensual.usados} utilizados este mes
+                                </p>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2.5">
-                                <div
-                                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
-                                    style={{ width: `${permiso_economico_stats.total > 0 ? (permiso_economico_stats.disponibles / permiso_economico_stats.total) * 100 : 0}%` }}
-                                />
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-gray-500">Permisos Económicos del año</span>
+                                    <span className="text-xs font-medium text-gray-700">
+                                        {permiso_economico_stats.anual.disponibles} de {permiso_economico_stats.anual.total} disponibles
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                    <div
+                                        className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${permiso_economico_stats.anual.total > 0 ? (permiso_economico_stats.anual.disponibles / permiso_economico_stats.anual.total) * 100 : 0}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {permiso_economico_stats.anual.usados} utilizados este año
+                                </p>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">
-                                {permiso_economico_stats.usados} utilizados este mes
-                            </p>
                         </div>
                     )}
                 </div>

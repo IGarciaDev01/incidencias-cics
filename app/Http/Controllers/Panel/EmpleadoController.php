@@ -113,16 +113,32 @@ class EmpleadoController extends Controller
                 $fin = Carbon::now()->endOfMonth();
             }
 
-            $permisoEconomicoUsados = Incidencia::where('numero_empleado', $numeroEmpleado)
+            $permisoEconomicoMensualUsados = Incidencia::where('numero_empleado', $numeroEmpleado)
                 ->whereBetween('fecha_incidencia', [$inicio, $fin])
                 ->where('tipo_incidencia', TipoIncidencia::PermisoEconomico->value)
                 ->whereNotIn('estado', [EstadoIncidencia::Rechazada->value])
                 ->count();
 
+            $inicioAnio = Carbon::now()->startOfYear();
+            $finAnio = Carbon::now()->endOfYear();
+
+            $permisoEconomicoAnualUsados = Incidencia::where('numero_empleado', $numeroEmpleado)
+                ->whereBetween('fecha_incidencia', [$inicioAnio, $finAnio])
+                ->where('tipo_incidencia', TipoIncidencia::PermisoEconomico->value)
+                ->whereNotIn('estado', [EstadoIncidencia::Rechazada->value])
+                ->count();
+
             $permisoEconomicoStats = [
-                'usados' => $permisoEconomicoUsados,
-                'disponibles' => max(0, 12 - $permisoEconomicoUsados),
-                'total' => 12,
+                'mensual' => [
+                    'usados' => $permisoEconomicoMensualUsados,
+                    'disponibles' => max(0, 3 - $permisoEconomicoMensualUsados),
+                    'total' => 3,
+                ],
+                'anual' => [
+                    'usados' => $permisoEconomicoAnualUsados,
+                    'disponibles' => max(0, 12 - $permisoEconomicoAnualUsados),
+                    'total' => 12,
+                ],
             ];
         }
 
