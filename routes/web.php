@@ -130,6 +130,8 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
                 Route::get('/crear', [EmpleadoController::class, 'create'])->name('create');
                 Route::post('/crear', [EmpleadoController::class, 'store'])->name('store');
+                Route::get('/plantilla', [EmpleadoController::class, 'descargarPlantilla'])->name('plantilla');
+                Route::post('/importar', [EmpleadoController::class, 'importarExcel'])->name('importar');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
                 Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
                 Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');
@@ -162,6 +164,8 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
                 Route::get('/crear', [EmpleadoController::class, 'create'])->name('create');
                 Route::post('/crear', [EmpleadoController::class, 'store'])->name('store');
+                Route::get('/plantilla', [EmpleadoController::class, 'descargarPlantilla'])->name('plantilla');
+                Route::post('/importar', [EmpleadoController::class, 'importarExcel'])->name('importar');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
                 Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
                 Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');

@@ -9,10 +9,13 @@ use App\Http\Requests\StoreEmpleadoRequest;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class EmpleadoController extends Controller
 {
@@ -220,6 +223,143 @@ class EmpleadoController extends Controller
         };
 
         return redirect()->route($route)->with('success', 'Empleado actualizado correctamente.');
+    }
+
+    public function descargarPlantilla(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $this->authorizeCreate($request->user());
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Plantilla Empleados');
+
+        $headers = ['numero_empleado', 'nombre', 'email', 'tipo', 'password'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+
+        $sheet->setCellValue('A2', '12345');
+        $sheet->setCellValue('B2', 'Ejemplo Empleado');
+        $sheet->setCellValue('C2', 'ejemplo@correo.com');
+        $sheet->setCellValue('D2', 'docente');
+        $sheet->setCellValue('E2', 'password123');
+
+        $sheet->setCellValue('A3', '');
+        $sheet->setCellValue('B3', '');
+        $sheet->setCellValue('C3', '');
+        $sheet->setCellValue('D3', 'administrativo');
+        $sheet->setCellValue('E3', '');
+
+        $writer = new Xlsx($spreadsheet);
+        $tempPath = tempnam(sys_get_temp_dir(), 'plantilla_empleados_') . '.xlsx';
+        $writer->save($tempPath);
+
+        return response()->download($tempPath, 'plantilla_empleados.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+
+    public function importarExcel(Request $request): JsonResponse
+    {
+        $this->authorizeCreate($request->user());
+
+        $request->validate([
+            'archivo' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:2048'],
+        ]);
+
+        $file = $request->file('archivo');
+        $importados = 0;
+        $errores = [];
+
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+            $total = count($rows) - 1;
+
+            foreach ($rows as $index => $row) {
+                if ($index === 0) continue;
+
+                $numeroEmpleado = trim((string) ($row[0] ?? ''));
+                $nombre = trim((string) ($row[1] ?? ''));
+                $email = trim((string) ($row[2] ?? ''));
+                $tipo = trim((string) ($row[3] ?? ''));
+                $password = (string) ($row[4] ?? '');
+
+                $fila = $index + 1;
+                $rowErrors = [];
+
+                if (empty($numeroEmpleado)) {
+                    $rowErrors[] = 'El número de empleado es obligatorio.';
+                } elseif (Empleado::where('numero_empleado', $numeroEmpleado)->exists()) {
+                    $rowErrors[] = "El número de empleado '{$numeroEmpleado}' ya está registrado.";
+                }
+
+                if (empty($nombre)) {
+                    $rowErrors[] = 'El nombre es obligatorio.';
+                }
+
+                if (empty($email)) {
+                    $rowErrors[] = 'El correo electrónico es obligatorio.';
+                } elseif (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $rowErrors[] = "El correo '{$email}' no es válido.";
+                } elseif (Empleado::where('email', $email)->exists()) {
+                    $rowErrors[] = "El correo '{$email}' ya está registrado.";
+                }
+
+                $tiposValidos = ['docente', 'administrativo'];
+                if (empty($tipo)) {
+                    $rowErrors[] = 'El tipo es obligatorio (docente o administrativo).';
+                } elseif (! in_array($tipo, $tiposValidos, true)) {
+                    $rowErrors[] = "El tipo '{$tipo}' no es válido. Debe ser 'docente' o 'administrativo'.";
+                }
+
+                if (empty($password)) {
+                    $rowErrors[] = 'La contraseña es obligatoria.';
+                } elseif (strlen($password) < 8) {
+                    $rowErrors[] = 'La contraseña debe tener al menos 8 caracteres.';
+                }
+
+                if (! empty($rowErrors)) {
+                    $errores[] = [
+                        'fila' => $fila,
+                        'numero_empleado' => $numeroEmpleado ?: '—',
+                        'nombre' => $nombre ?: '—',
+                        'errores' => $rowErrors,
+                    ];
+                    continue;
+                }
+
+                Empleado::create([
+                    'numero_empleado' => $numeroEmpleado,
+                    'nombre' => $nombre,
+                    'email' => $email,
+                    'tipo' => $tipo,
+                    'password' => $password,
+                ]);
+
+                $importados++;
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el archivo: ' . $e->getMessage(),
+                'importados' => 0,
+                'errores' => [],
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Se importaron {$importados} de {$total} empleados correctamente.",
+            'importados' => $importados,
+            'total' => $total,
+            'errores' => $errores,
+        ]);
     }
 
     private function authorizeCreate($user): void
