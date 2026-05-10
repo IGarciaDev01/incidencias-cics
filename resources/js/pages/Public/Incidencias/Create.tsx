@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { store, buscarEmpleado } from '@/routes/incidencias';
 
 type Area = { id: number; nombre: string };
-type EmpleadoSugerido = {
-    numero_empleado: string;
-    reportante_nombre: string;
-    email_reportante: string | null;
-    tipo_empleado: 'docente' | 'administrativo' | null;
-};
 
 type Props = { areas: Area[] };
 
@@ -28,10 +22,10 @@ const TIPOS_INCIDENCIA = [
     { value: 'retardo',           label: 'Retardo',                   descripcion: 'De 11 a 30 min, máximo 2 a la quincena', requiereMinutos: true },
     { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: 'Máx 3 al mes, 12 al año',               requiereMinutos: false },
     { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
-    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                                    requiereMinutos: false },
+    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                         requiereMinutos: false },
     { value: 'permiso_sindical',  label: 'Permiso Sindical',          descripcion: '',                                    requiereMinutos: false },
-    { value: 'incidencia_medica', label: 'Médica',         descripcion: '',                                    requiereMinutos: false },
-    { value: 'buena_conducta',   label: 'Buena Conducta', descripcion: '',                                  requiereMinutos: false },
+    { value: 'incidencia_medica', label: 'Médica',                     descripcion: '',                                    requiereMinutos: false },
+    { value: 'buena_conducta',   label: 'Buena Conducta',             descripcion: '',                                     requiereMinutos: false },
 ];
 
 export default function Create({ areas }: Props) {
@@ -50,113 +44,64 @@ export default function Create({ areas }: Props) {
         archivos:          [] as File[],
     });
 
-    const [buscando, setBuscando]           = useState(false);
-    const [sugeridos, setSugeridos]         = useState<EmpleadoSugerido[]>([]);
-    const [nombreManual, setNombreManual]   = useState(false);
-    const [emailManual, setEmailManual]     = useState(false);
-    const [tipoManual, setTipoManual]       = useState(false);
-    const [busquedaHecha, setBusquedaHecha] = useState(false);
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [validando, setValidando] = useState(false);
+    const [empleadoValido, setEmpleadoValido] = useState(false);
+    const [empleadoNoEncontrado, setEmpleadoNoEncontrado] = useState(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const seleccionarSugerido = useCallback((sugerido: EmpleadoSugerido) => {
-        setData((prev) => ({
-            ...prev,
-            numero_empleado: sugerido.numero_empleado,
-            reportante_nombre: sugerido.reportante_nombre,
-            email_reportante:  sugerido.email_reportante ?? '',
-            tipo_empleado: sugerido.tipo_empleado ?? '',
-        }));
-        setNombreManual(false);
-        setEmailManual(false);
-        setTipoManual(false);
-        setSugeridos([]);
-    }, [setData]);
+    function handleNumeroChange(value: string) {
+        setData('numero_empleado', value);
+        setEmpleadoValido(false);
+        setEmpleadoNoEncontrado(false);
 
-    const activarNombreManual = useCallback(() => {
-        setNombreManual(true);
-        setTipoManual(true);
-        setSugeridos([]);
-        setData((prev) => ({ ...prev, reportante_nombre: '', tipo_empleado: '' }));
-    }, [setData]);
+        if (value.trim().length >= 3) {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    const activarEmailManual = useCallback(() => {
-        setEmailManual(true);
-        setSugeridos([]);
-        setData((prev) => ({ ...prev, email_reportante: '' }));
-    }, [setData]);
-
-    const activarTipoManual = useCallback(() => {
-        setTipoManual(true);
-        setData((prev) => ({ ...prev, tipo_empleado: '' }));
-    }, [setData]);
-
-    useEffect(() => {
-        const numero = data.numero_empleado.trim();
-
-        if (numero.length < 3) {
-            setSugeridos([]);
-            setBusquedaHecha(false);
-            setNombreManual(false);
-            setEmailManual(false);
-
-            return;
+            timeoutRef.current = setTimeout(() => buscarEmpleadoExacto(value.trim()), 500);
         }
+    }
 
-        if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
+    async function buscarEmpleadoExacto(numero: string) {
+        setValidando(true);
+
+        try {
+            const res = await fetch(
+                buscarEmpleado.url({ query: { numero } }),
+                { headers: { Accept: 'application/json' } },
+            );
+
+            if (!res.ok) return;
+
+            const json: { numero_empleado: string; reportante_nombre: string; email_reportante: string | null; tipo_empleado: string | null }[] = await res.json();
+            const exacto = json.find((e) => e.numero_empleado === numero);
+
+            if (exacto) {
+                setData((prev) => ({
+                    ...prev,
+                    numero_empleado: exacto.numero_empleado,
+                    reportante_nombre: exacto.reportante_nombre,
+                    email_reportante: exacto.email_reportante ?? '',
+                    tipo_empleado: exacto.tipo_empleado ?? '',
+                }));
+                setEmpleadoValido(true);
+                setEmpleadoNoEncontrado(false);
+            } else {
+                setData((prev) => ({
+                    ...prev,
+                    reportante_nombre: '',
+                    email_reportante: '',
+                    tipo_empleado: '',
+                }));
+                setEmpleadoValido(false);
+                setEmpleadoNoEncontrado(true);
+            }
+        } catch {
+            setEmpleadoNoEncontrado(true);
+            setEmpleadoValido(false);
+        } finally {
+            setValidando(false);
         }
-
-        debounceRef.current = setTimeout(async () => {
-            setBuscando(true);
-
-            try {
-                const res = await fetch(
-                    buscarEmpleado.url({ query: { numero } }),
-                    { headers: { Accept: 'application/json' } },
-                );
-
-                if (!res.ok) {
-                    throw new Error('No se pudo consultar el empleado.');
-                }
-
-                const json: EmpleadoSugerido[] = await res.json();
-                setSugeridos(json);
-                setBusquedaHecha(true);
-
-                // Si existe coincidencia exacta, autocompletar de inmediato.
-                const exacto = json.find((e) => e.numero_empleado === numero);
-
-                if (exacto) {
-                    seleccionarSugerido(exacto);
-
-                    return;
-                }
-
-                if (json.length === 0) {
-                    setNombreManual(true);
-                    setEmailManual(true);
-                    setTipoManual(true);
-                    setData((prev) => ({ ...prev, reportante_nombre: '', email_reportante: '', tipo_empleado: '' }));
-                } else {
-                    setNombreManual(false);
-                }
-            } catch (err) {
-                console.error('Error al buscar empleado:', err);
-                setBusquedaHecha(true);
-                setNombreManual(true);
-                setEmailManual(true);
-                setTipoManual(true);
-            } finally {
-                setBuscando(false);
-            }
-        }, 500);
-
-        return () => {
-            if (debounceRef.current) {
-                clearTimeout(debounceRef.current);
-            }
-        };
-    }, [data.numero_empleado, seleccionarSugerido, setData]);
+    }
 
     const tipoSeleccionado = TIPOS_INCIDENCIA.find((t) => t.value === data.tipo_incidencia);
 
@@ -173,7 +118,7 @@ export default function Create({ areas }: Props) {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Registrar Nueva Incidencia</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                        Completa el formulario con los datos de la incidencia. Recibirás un número de folio para dar seguimiento.
+                        Ingresa tu número de empleado para autocompletar tus datos y registrar tu incidencia.
                     </p>
                 </div>
 
@@ -194,12 +139,12 @@ export default function Create({ areas }: Props) {
                                     id="numero_empleado"
                                     name="numero_empleado"
                                     value={data.numero_empleado}
-                                    onChange={(e) => setData('numero_empleado', e.target.value)}
+                                    onChange={(e) => handleNumeroChange(e.target.value)}
                                     placeholder="Ej. 12345"
                                     required
                                     autoComplete="off"
                                 />
-                                {buscando && (
+                                {validando && (
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2">
                                         <Spinner />
                                     </span>
@@ -208,69 +153,24 @@ export default function Create({ areas }: Props) {
                             <InputError message={errors.numero_empleado} />
                         </div>
 
-                        {/* Nombre — sugerencias o input manual */}
+                        {/* Nombre */}
                         <div className="grid gap-2">
                             <Label htmlFor="reportante_nombre">Nombre completo <span className="text-red-500">*</span></Label>
 
-                            {/* Lista de sugeridos */}
-                            {sugeridos.length > 0 && !nombreManual && (
-                                <div className="border border-gray-200 rounded-md divide-y divide-gray-100 bg-white shadow-sm">
-                                    {sugeridos.map((s, i) => (
-                                        <button
-                                            key={i}
-                                            type="button"
-                                            onClick={() => seleccionarSugerido(s)}
-                                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
-                                        >
-                                            <span className="font-medium text-gray-900">{s.reportante_nombre}</span>
-                                            {s.email_reportante && (
-                                                <span className="text-gray-400 ml-2 text-xs">{s.email_reportante}</span>
-                                            )}
-                                        </button>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={activarNombreManual}
-                                        className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-gray-50 transition-colors"
-                                    >
-                                        + Ingresar nombre manualmente
-                                    </button>
+                            {empleadoNoEncontrado && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                    Empleado no registrado. Contacta a Capital Humano o Subdirección para registrarte.
                                 </div>
                             )}
 
-                            {/* Nombre ya seleccionado (chip) */}
-                            {data.reportante_nombre && sugeridos.length === 0 && !nombreManual && (
+                            {data.reportante_nombre && empleadoValido && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
                                     <span className="flex-1 text-gray-900">{data.reportante_nombre}</span>
-                                    <button
-                                        type="button"
-                                        onClick={activarNombreManual}
-                                        className="text-xs text-gray-400 hover:text-gray-600"
-                                    >
-                                        Cambiar
-                                    </button>
                                 </div>
                             )}
 
-                            {/* Input manual */}
-                            {(nombreManual || (busquedaHecha && sugeridos.length === 0 && !data.reportante_nombre)) && (
-                                <Input
-                                    id="reportante_nombre"
-                                    name="reportante_nombre"
-                                    value={data.reportante_nombre}
-                                    onChange={(e) => setData('reportante_nombre', e.target.value)}
-                                    placeholder="Escribe el nombre completo"
-                                    required
-                                />
-                            )}
-
-                            {/* Input oculto cuando se seleccionó de sugeridos */}
-                            {data.reportante_nombre && !nombreManual && sugeridos.length === 0 && (
-                                <input type="hidden" name="reportante_nombre" value={data.reportante_nombre} />
-                            )}
-
-                            {!nombreManual && !busquedaHecha && data.numero_empleado.length < 3 && (
-                                <p className="text-xs text-gray-400">Ingresa el número de empleado para buscar el nombre.</p>
+                            {!empleadoValido && !empleadoNoEncontrado && data.numero_empleado.length < 3 && (
+                                <p className="text-xs text-gray-400">Ingresa el número de empleado para buscar tus datos.</p>
                             )}
                             <InputError message={errors.reportante_nombre} />
                         </div>
@@ -282,17 +182,9 @@ export default function Create({ areas }: Props) {
                             Correo electrónico <span className="text-red-500">*</span>
                         </Label>
 
-                        {/* Email ya seleccionado de sugerencias (chip) */}
-                        {data.email_reportante && !emailManual ? (
+                        {data.email_reportante && empleadoValido ? (
                             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
                                 <span className="flex-1 text-gray-900">{data.email_reportante}</span>
-                                <button
-                                    type="button"
-                                    onClick={activarEmailManual}
-                                    className="text-xs text-gray-400 hover:text-gray-600"
-                                >
-                                    Cambiar
-                                </button>
                             </div>
                         ) : (
                             <Input
@@ -303,6 +195,8 @@ export default function Create({ areas }: Props) {
                                 onChange={(e) => setData('email_reportante', e.target.value)}
                                 placeholder="correo@ejemplo.com"
                                 required
+                                disabled
+                                className="bg-gray-100"
                             />
                         )}
 
@@ -314,25 +208,13 @@ export default function Create({ areas }: Props) {
                         <div className="grid gap-2">
                             <Label>Tipo de empleado <span className="text-red-500">*</span></Label>
 
-                            {/* Tipo ya seleccionado de sugerencias (chip) */}
-                            {data.tipo_empleado && !tipoManual ? (
-                                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
-                                    <span className="flex-1 text-gray-900 capitalize">{data.tipo_empleado}</span>
-                                    <button
-                                        type="button"
-                                        onClick={activarTipoManual}
-                                        className="text-xs text-gray-400 hover:text-gray-600"
-                                    >
-                                        Cambiar
-                                    </button>
+                            {data.tipo_empleado && empleadoValido ? (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm capitalize">
+                                    <span className="flex-1 text-gray-900">{data.tipo_empleado}</span>
                                 </div>
                             ) : (
-                                <Select
-                                    value={data.tipo_empleado}
-                                    onValueChange={(v) => setData('tipo_empleado', v)}
-                                    required={nombreManual || !data.tipo_empleado}
-                                >
-                                    <SelectTrigger>
+                                <Select value={data.tipo_empleado} onValueChange={(v) => setData('tipo_empleado', v)} disabled required>
+                                    <SelectTrigger className="bg-gray-100">
                                         <SelectValue placeholder="Selecciona..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -370,33 +252,33 @@ export default function Create({ areas }: Props) {
 
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="grid md:grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="fecha_incidencia">Fecha de la incidencia <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="fecha_incidencia"
-                                    name="fecha_incidencia"
-                                    type="date"
-                                    value={data.fecha_incidencia}
-                                    max={new Date().toISOString().split('T')[0]}
-                                    onChange={(e) => setData('fecha_incidencia', e.target.value)}
-                                    required
-                                />
-                                <InputError message={errors.fecha_incidencia} />
-                            </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="fecha_incidencia">Fecha de la incidencia <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="fecha_incidencia"
+                                        name="fecha_incidencia"
+                                        type="date"
+                                        value={data.fecha_incidencia}
+                                        max={new Date().toISOString().split('T')[0]}
+                                        onChange={(e) => setData('fecha_incidencia', e.target.value)}
+                                        required
+                                    />
+                                    <InputError message={errors.fecha_incidencia} />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="hora_incidencia">Hora de la incidencia (opcional)</Label>
-                                <Input
-                                    id="hora_incidencia"
-                                    name="hora_incidencia"
-                                    type="time"
-                                    value={data.hora_incidencia}
-                                    onChange={(e) => setData('hora_incidencia', e.target.value)}
-                                />
-                                <p className="text-xs text-gray-500">Si no se especifica, solo se registrará la fecha.</p>
-                                <InputError message={errors.hora_incidencia} />
+                                <div className="grid gap-2">
+                                    <Label htmlFor="hora_incidencia">Hora de la incidencia (opcional)</Label>
+                                    <Input
+                                        id="hora_incidencia"
+                                        name="hora_incidencia"
+                                        type="time"
+                                        value={data.hora_incidencia}
+                                        onChange={(e) => setData('hora_incidencia', e.target.value)}
+                                    />
+                                    <p className="text-xs text-gray-500">Si no se especifica, solo se registrará la fecha.</p>
+                                    <InputError message={errors.hora_incidencia} />
+                                </div>
                             </div>
-                        </div>
 
                             <div className="grid gap-2">
                                 <Label>Tipo de incidencia <span className="text-red-500">*</span></Label>
@@ -477,9 +359,9 @@ export default function Create({ areas }: Props) {
                         <InputError message={errors.archivos} />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={processing}>
+                    <Button type="submit" className="w-full" disabled={processing || !empleadoValido}>
                         {processing && <Spinner />}
-                        Enviar incidencia
+                        {empleadoValido ? 'Enviar incidencia' : 'Ingresa un número de empleado válido'}
                     </Button>
                 </form>
             </div>

@@ -17,12 +17,18 @@ class Empleado extends Model
         'nombre',
         'email',
         'tipo',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected function casts(): array
     {
         return [
             'tipo' => TipoSolicitante::class,
+            'password' => 'hashed',
         ];
     }
 }

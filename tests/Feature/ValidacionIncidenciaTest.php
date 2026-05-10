@@ -20,12 +20,20 @@ function crearAreaYOpciones(): array
         'activa' => true,
     ]);
 
+    Empleado::create([
+        'numero_empleado' => '90099',
+        'nombre' => 'Empleado Test',
+        'email' => 'test@example.com',
+        'tipo' => 'administrativo',
+    ]);
+
     return [
         'area' => $area,
         'dataBase' => [
             'numero_empleado' => '90099',
             'reportante_nombre' => 'Empleado Test',
             'email_reportante' => 'test@example.com',
+            'tipo_empleado' => 'administrativo',
             'area_id' => $area->id,
             'fecha_incidencia' => Carbon::now()->toDateString(),
             'tipo_incidencia' => 'permiso_economico',
@@ -100,6 +108,7 @@ test('se rechaza retardo de 31 o más minutos', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Retardo 31',
         'email_reportante' => 'retardo31@example.com',
+        'tipo_empleado' => 'administrativo',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'retardo',
@@ -132,6 +141,7 @@ test('se permite retardo de 30 minutos', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Retardo 30',
         'email_reportante' => 'retardo30@example.com',
+        'tipo_empleado' => 'administrativo',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'retardo',
@@ -207,6 +217,7 @@ test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Retardo Many',
         'email_reportante' => 'retardomany@example.com',
+        'tipo_empleado' => 'administrativo',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'retardo',
@@ -273,6 +284,7 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Retardo Quincena 2',
         'email_reportante' => 'retardoq2@example.com',
+        'tipo_empleado' => 'administrativo',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-20',
         'tipo_incidencia' => 'retardo',
@@ -338,6 +350,7 @@ test('se rechaza permiso economico cuando ya hay 3 en el mes', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'PermisoEconomico 3',
         'email_reportante' => 'pe3@example.com',
+        'tipo_empleado' => 'docente',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'permiso_economico',
@@ -392,6 +405,7 @@ test('puede registrar muchos permisos sindicales sin limite', function () {
         'numero_empleado' => $empleadoNum,
         'reportante_nombre' => 'Permiso Sindical',
         'email_reportante' => 'ps@example.com',
+        'tipo_empleado' => 'docente',
         'area_id' => $area->id,
         'fecha_incidencia' => '2026-04-15',
         'tipo_incidencia' => 'permiso_sindical',

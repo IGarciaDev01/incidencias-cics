@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Enums\TipoIncidencia;
 use App\Enums\TipoSolicitante;
-use App\Models\Empleado;
 use App\Services\ArchivoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -22,36 +21,10 @@ class StoreIncidenciaPublicaRequest extends FormRequest
         $maxKb = ArchivoService::TAMANIO_MAX_MB * 1024;
 
         return [
-            'numero_empleado' => ['required', 'string', 'max:20'],
+            'numero_empleado' => ['required', 'string', 'max:20', 'exists:empleados,numero_empleado'],
             'reportante_nombre' => ['required', 'string', 'max:150'],
-            'email_reportante' => ['required', 'email', 'max:150', function ($attribute, $value, $fail) {
-                $email = strtolower(trim((string) $value));
-                $numeroEmpleado = (string) $this->input('numero_empleado');
-
-                $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
-
-                if ($empleadoExistente && strtolower($empleadoExistente->email ?? '') === $email) {
-                    return;
-                }
-
-                $existeConOtroEmpleado = Empleado::whereRaw('LOWER(email) = ?', [$email])
-                    ->where('numero_empleado', '!=', $numeroEmpleado)
-                    ->exists();
-
-                if ($existeConOtroEmpleado) {
-                    $fail('Este correo electrónico ya está registrado en el sistema con otro número de empleado.');
-                }
-            }],
-            'tipo_empleado' => [
-                Rule::requiredIf(function () {
-                    $numero = (string) $this->input('numero_empleado');
-
-                    $empleado = Empleado::where('numero_empleado', $numero)->first();
-
-                    return ! $empleado || ! $empleado->tipo;
-                }),
-                new Enum(TipoSolicitante::class),
-            ],
+            'email_reportante' => ['required', 'email', 'max:150'],
+            'tipo_empleado' => ['required', new Enum(TipoSolicitante::class)],
             'area_id' => ['required', 'integer', 'exists:areas,id'],
             'fecha_incidencia' => ['required', 'date', 'before_or_equal:today'],
             'hora_incidencia' => ['nullable', 'date_format:H:i'],
@@ -73,6 +46,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
     {
         return [
             'numero_empleado.required' => 'El número de empleado es obligatorio.',
+            'numero_empleado.exists' => 'El empleado no está registrado en el sistema. Contacta a Capital Humano o Subdirección.',
             'reportante_nombre.required' => 'El nombre del empleado es obligatorio.',
             'email_reportante.required' => 'El correo electrónico es obligatorio para recibir notificaciones.',
             'email_reportante.email' => 'Ingresa un correo electrónico válido.',

@@ -9,11 +9,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { dashboard } from '@/routes/panel';
-import { index as chEmpleados,   show as chShow }   from '@/routes/panel/capital_humano/empleados';
+import { index as chEmpleados,   show as chShow,   edit as chEdit }   from '@/routes/panel/capital_humano/empleados';
 import { show as chVerIncidencia }   from '@/routes/panel/capital_humano/incidencias';
 import { index as jefeEmpleados, show as jefeShow } from '@/routes/panel/jefe_inmediato/empleados';
 import { show as jefeVerIncidencia } from '@/routes/panel/jefe_inmediato/incidencias';
-import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
+import { index as subdirEmpleados, show as subdirShow, edit as subdirEdit } from '@/routes/panel/subdireccion/empleados';
 import { show as subdirVerIncidencia } from '@/routes/panel/subdireccion/incidencias';
 import { formatDateOnly } from '@/utils/date';
 
@@ -77,23 +77,23 @@ const TIPO_SOLICITANTE_LABELS: Record<string, string> = {
     administrativo: 'Administrativo',
 };
 
-function useRolBackUrl() {
+function useRolBackUrl(numeroEmpleado?: string) {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
     const rol = auth.user?.rol ?? '';
 
     if (rol === 'jefe_inmediato') {
-return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: jefeShow.url };
+return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: jefeShow.url, editUrl: undefined, puedeEditar: false };
 }
 
     if (rol === 'capital_humano') {
-return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url };
+return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url, editUrl: numeroEmpleado ? chEdit.url({ numeroEmpleado }) : undefined, puedeEditar: true };
 }
 
-    return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url };
+    return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url, editUrl: numeroEmpleado ? subdirEdit.url({ numeroEmpleado }) : undefined, puedeEditar: true };
 }
 
 export default function Show({ empleado, incidencias, filtros, estados, tipos, permiso_economico_stats }: Props) {
-    const { back: backUrl, verIncidencia: verIncidenciaRoute, showUrl } = useRolBackUrl();
+    const { back: backUrl, verIncidencia: verIncidenciaRoute, showUrl, editUrl, puedeEditar } = useRolBackUrl(empleado.numero_empleado);
 
     function handleFiltro(key: string, value: string) {
         router.get(showUrl(empleado.numero_empleado), { ...filtros, [key]: value || undefined }, { preserveState: true, replace: true });
@@ -133,9 +133,18 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
                                 )}
                             </div>
                         </div>
-                        <Link href={backUrl} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                            Volver a empleados
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            {puedeEditar && editUrl && (
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={editUrl}>
+                                        Editar empleado
+                                    </Link>
+                                </Button>
+                            )}
+                            <Link href={backUrl} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                                Volver a empleados
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">

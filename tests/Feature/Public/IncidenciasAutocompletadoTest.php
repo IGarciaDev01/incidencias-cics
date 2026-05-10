@@ -2,6 +2,7 @@
 
 use App\Models\Area;
 use App\Models\Empleado;
+use App\Models\Incidencia;
 use Illuminate\Support\Facades\Mail;
 
 test('buscar empleado autocompleta desde la tabla empleados', function () {
@@ -30,7 +31,12 @@ test('al crear incidencia registra el empleado para futuros autocompletados', fu
         'activa' => true,
     ]);
 
-    expect(Empleado::where('numero_empleado', '77777')->exists())->toBeFalse();
+    Empleado::create([
+        'numero_empleado' => '77777',
+        'nombre' => 'Maria Lopez',
+        'email' => 'maria@example.com',
+        'tipo' => 'administrativo',
+    ]);
 
     $this->post(route('incidencias.store'), [
         'numero_empleado' => '77777',
@@ -43,9 +49,8 @@ test('al crear incidencia registra el empleado para futuros autocompletados', fu
         'descripcion' => 'Solicitud de permiso.',
     ])->assertRedirect();
 
-    $empleado = Empleado::where('numero_empleado', '77777')->first();
+    $incidencia = Incidencia::where('numero_empleado', '77777')->latest('id')->first();
 
-    expect($empleado)->not->toBeNull();
-    expect($empleado->nombre)->toBe('Maria Lopez');
-    expect($empleado->email)->toBe('maria@example.com');
+    expect($incidencia)->not->toBeNull();
+    expect($incidencia->reportante_nombre)->toBe('Maria Lopez');
 });

@@ -1,12 +1,15 @@
 <?php
 
 use App\Models\Area;
+use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Mail;
 
 test('el jefe inmediato solo puede acceder a incidencias de su area', function () {
     Mail::fake();
+    $this->withoutMiddleware(PreventRequestForgery::class);
 
     $areaA = Area::create([
         'nombre' => 'Area A',
@@ -20,6 +23,13 @@ test('el jefe inmediato solo puede acceder a incidencias de su area', function (
         'slug' => 'area-b',
         'descripcion' => null,
         'activa' => true,
+    ]);
+
+    Empleado::create([
+        'numero_empleado' => '20001',
+        'nombre' => 'Empleado Prueba',
+        'email' => 'empleado@example.com',
+        'tipo' => 'administrativo',
     ]);
 
     $this->post(route('incidencias.store'), [
@@ -52,12 +62,20 @@ test('el jefe inmediato solo puede acceder a incidencias de su area', function (
 
 test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function () {
     Mail::fake();
+    $this->withoutMiddleware(PreventRequestForgery::class);
 
     $area = Area::create([
         'nombre' => 'Area Flujo',
         'slug' => 'area-flujo',
         'descripcion' => null,
         'activa' => true,
+    ]);
+
+    Empleado::create([
+        'numero_empleado' => '30001',
+        'nombre' => 'Empleado Prueba',
+        'email' => 'empleado@example.com',
+        'tipo' => 'administrativo',
     ]);
 
     $this->post(route('incidencias.store'), [

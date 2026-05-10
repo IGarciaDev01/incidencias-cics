@@ -40,17 +40,17 @@ Route::get('/nueva-incidencia/buscar-empleado', [IncidenciaPublicaController::cl
 Route::get('/seguimiento', [SeguimientoController::class, 'index'])
     ->name('seguimiento.index');
 
-Route::post('/seguimiento', [SeguimientoController::class, 'buscar'])
-    ->name('seguimiento.buscar');
+Route::post('/seguimiento', [SeguimientoController::class, 'login'])
+    ->name('seguimiento.login');
+
+Route::get('/seguimiento/panel', [SeguimientoController::class, 'panel'])
+    ->name('seguimiento.panel');
+
+Route::post('/seguimiento/logout', [SeguimientoController::class, 'logout'])
+    ->name('seguimiento.logout');
 
 Route::get('/seguimiento/{folio}', [SeguimientoController::class, 'show'])
     ->name('seguimiento.show');
-
-Route::post('/seguimiento/{folio}/comentar', [SeguimientoController::class, 'comentar'])
-    ->name('seguimiento.comentar');
-
-Route::post('/seguimiento/{folio}/adjuntar', [SeguimientoController::class, 'adjuntar'])
-    ->name('seguimiento.adjuntar');
 
 Route::get('/comprobante/{folio}', [ComprobanteController::class, 'descargar'])
     ->name('comprobante.descargar');
@@ -104,6 +104,8 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
             Route::prefix('empleados')->name('empleados.')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
+                Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
+                Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');
             });
         });
 
@@ -126,7 +128,11 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
 
             Route::prefix('empleados')->name('empleados.')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
+                Route::get('/crear', [EmpleadoController::class, 'create'])->name('create');
+                Route::post('/crear', [EmpleadoController::class, 'store'])->name('store');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
+                Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
+                Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');
             });
         });
 
@@ -154,7 +160,11 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
 
             Route::prefix('empleados')->name('empleados.')->group(function () {
                 Route::get('/', [EmpleadoController::class, 'index'])->name('index');
+                Route::get('/crear', [EmpleadoController::class, 'create'])->name('create');
+                Route::post('/crear', [EmpleadoController::class, 'store'])->name('store');
                 Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
+                Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
+                Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');
             });
 
             Route::prefix('admin')->name('admin.')->group(function () {

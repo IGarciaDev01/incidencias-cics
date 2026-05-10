@@ -74,7 +74,7 @@ export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, 
                         Descargar comprobante PDF
                     </Button>
                     <Button asChild>
-                        <Link href={`${seguimientoIndex.url()}?folio=${folio}`}>
+                        <Link href={seguimientoIndex.url()}>
                             Dar seguimiento
                         </Link>
                     </Button>

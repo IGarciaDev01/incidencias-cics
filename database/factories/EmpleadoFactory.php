@@ -22,6 +22,7 @@ class EmpleadoFactory extends Factory
             'nombre' => 'Empleado '.$counter,
             'email' => 'empleado'.$counter.'@test.com',
             'tipo' => 'administrativo',
+            'password' => bcrypt('password'),
         ];
     }
 }

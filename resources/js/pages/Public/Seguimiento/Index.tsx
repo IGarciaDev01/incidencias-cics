@@ -1,71 +1,65 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { buscar } from '@/routes/seguimiento';
+import { create as nuevaIncidencia } from '@/routes/incidencias';
+import { login } from '@/routes/seguimiento';
+
 export default function Index() {
+    const { flash } = usePage().props as { flash?: { success?: string } };
+
     return (
         <>
-            <Head title="Seguimiento de incidencia" />
+            <Head title="Iniciar sesión" />
+
+            {flash?.success && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    {flash.success}
+                </div>
+            )}
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Consultar estado de incidencia</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Consulta tus incidencias</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                        Ingresa tu folio y número de empleado o correo electrónico para ver el estado de tu reporte.
+                        Ingresa tu número de empleado y contraseña para ver el historial de tus incidencias.
                     </p>
                 </div>
 
-                <Form {...buscar.form()} className="space-y-5">
+                <Form {...login.form()} className="space-y-5">
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="folio">Número de folio <span className="text-red-500">*</span></Label>
+                                <Label htmlFor="numero_empleado">Número de empleado <span className="text-red-500">*</span></Label>
                                 <Input
-                                    id="folio"
-                                    name="folio"
-                                    placeholder="Ej. INC-2024-001"
+                                    id="numero_empleado"
+                                    name="numero_empleado"
+                                    placeholder="Ej. 12345"
                                     required
                                     autoFocus
+                                    autoComplete="username"
                                 />
-                                <InputError message={errors.folio} />
+                                <InputError message={errors.numero_empleado} />
                             </div>
 
-                            <div className="relative flex items-center gap-3">
-                                <div className="flex-1 border-t border-gray-200" />
-                                <span className="text-xs text-gray-400 uppercase tracking-wide">Verificación (elige una)</span>
-                                <div className="flex-1 border-t border-gray-200" />
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="numero_empleado">Número de empleado</Label>
-                                    <Input
-                                        id="numero_empleado"
-                                        name="numero_empleado"
-                                        placeholder="Ej. 12345"
-                                        autoComplete="off"
-                                    />
-                                    <InputError message={errors.numero_empleado} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Correo electrónico</Label>
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        placeholder="correo@ejemplo.com"
-                                        autoComplete="email"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Contraseña <span className="text-red-500">*</span></Label>
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    placeholder="Tu contraseña"
+                                    required
+                                    autoComplete="current-password"
+                                />
+                                <InputError message={errors.password} />
                             </div>
 
                             <Button type="submit" className="w-full" disabled={processing}>
                                 {processing && <Spinner />}
-                                Consultar incidencia
+                                Consultar mis incidencias
                             </Button>
                         </>
                     )}
@@ -74,11 +68,10 @@ export default function Index() {
 
             <div className="mt-4 text-center text-sm text-gray-500">
                 ¿Necesitas reportar una incidencia?{' '}
-                <Link href="/nueva-incidencia" className="text-primary hover:underline font-medium">
+                <Link href={nuevaIncidencia.url()} className="text-primary hover:underline font-medium">
                     Haz clic aquí para reportarla
                 </Link>
             </div>
         </>
     );
 }
-

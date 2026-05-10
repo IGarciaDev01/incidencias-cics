@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoAccionHistorial;
-use App\Enums\TipoSolicitante;
 use App\Exceptions\LimiteIncidenciaExcepcion;
 use App\Models\Empleado;
 use App\Models\Incidencia;
@@ -30,12 +29,11 @@ class IncidenciaService
     {
         $numeroEmpleado = (string) $data['numero_empleado'];
 
-        $empleadoExistente = Empleado::where('numero_empleado', $numeroEmpleado)->first();
+        $empleado = Empleado::where('numero_empleado', $numeroEmpleado)->firstOrFail();
 
-        $tipo = $empleadoExistente?->tipo
-            ?? (isset($data['tipo_empleado']) ? TipoSolicitante::from($data['tipo_empleado']) : null);
+        $tipo = $empleado->tipo;
 
-        abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
+        abort_if(! $tipo, 422, 'El empleado no tiene un tipo asignado. Contacta a Capital Humano.');
 
         $resultado = DB::transaction(function () use ($data, $numeroEmpleado, $tipo) {
             $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
@@ -68,15 +66,6 @@ class IncidenciaService
                 'token_seguimiento' => Str::random(64),
                 'motivo_rechazo' => $esLimitExcedido ? $razon : null,
             ]);
-
-            Empleado::updateOrCreate(
-                ['numero_empleado' => $numeroEmpleado],
-                [
-                    'nombre' => $data['reportante_nombre'],
-                    'email' => $data['email_reportante'] ?? null,
-                    'tipo' => $tipo,
-                ],
-            );
 
             $this->historialService->registrar(
                 incidencia: $incidencia,

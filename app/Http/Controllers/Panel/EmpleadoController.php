@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Panel;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreEmpleadoRequest;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -157,5 +159,71 @@ class EmpleadoController extends Controller
             'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
             'permiso_economico_stats' => $permisoEconomicoStats,
         ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        $this->authorizeCreate($request->user());
+
+        return Inertia::render('Panel/Empleados/Create');
+    }
+
+    public function store(StoreEmpleadoRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        Empleado::create($data);
+
+        $rol = $request->user()->rol->value;
+
+        $route = match ($rol) {
+            'capital_humano' => 'panel.capital_humano.empleados.index',
+            default => 'panel.subdireccion.empleados.index',
+        };
+
+        return redirect()->route($route)->with('success', 'Empleado creado correctamente.');
+    }
+
+    public function edit(Request $request, string $numeroEmpleado): Response
+    {
+        $this->authorizeCreate($request->user());
+
+        $empleado = Empleado::where('numero_empleado', $numeroEmpleado)->firstOrFail();
+
+        return Inertia::render('Panel/Empleados/Edit', [
+            'empleado' => [
+                'numero_empleado' => $empleado->numero_empleado,
+                'nombre' => $empleado->nombre,
+                'email' => $empleado->email,
+                'tipo' => $empleado->tipo?->value,
+            ],
+        ]);
+    }
+
+    public function update(StoreEmpleadoRequest $request, string $numeroEmpleado): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $empleado = Empleado::where('numero_empleado', $numeroEmpleado)->firstOrFail();
+
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+
+        $empleado->update($data);
+
+        $rol = $request->user()->rol->value;
+
+        $route = match ($rol) {
+            'capital_humano' => 'panel.capital_humano.empleados.index',
+            default => 'panel.subdireccion.empleados.index',
+        };
+
+        return redirect()->route($route)->with('success', 'Empleado actualizado correctamente.');
+    }
+
+    private function authorizeCreate($user): void
+    {
+        abort_unless($user && ($user->esCapitalHumano() || $user->esSubdirector()), 403, 'No tienes permiso para realizar esta acción.');
     }
 }

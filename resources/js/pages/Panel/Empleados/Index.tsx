@@ -2,9 +2,9 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
-import { index as chEmpleados,   show as chShow }     from '@/routes/panel/capital_humano/empleados';
-import { index as jefeEmpleados, show as jefeShow }   from '@/routes/panel/jefe_inmediato/empleados';
-import { index as subdirEmpleados, show as subdirShow } from '@/routes/panel/subdireccion/empleados';
+import { index as chEmpleados,   show as chShow,   create as chCreate }    from '@/routes/panel/capital_humano/empleados';
+import { index as jefeEmpleados, show as jefeShow }                        from '@/routes/panel/jefe_inmediato/empleados';
+import { index as subdirEmpleados, show as subdirShow, create as subdirCreate } from '@/routes/panel/subdireccion/empleados';
 import { formatDateOnly } from '@/utils/date';
 
 type Empleado = {
@@ -34,18 +34,18 @@ function useRolRoutes() {
     const rol = auth.user?.rol ?? '';
 
     if (rol === 'jefe_inmediato')         {
-return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url };
+return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url, createUrl: undefined, puedeCrear: false };
 }
 
     if (rol === 'capital_humano')         {
-return { indexUrl: chEmpleados.url, showUrl: chShow.url };
+return { indexUrl: chEmpleados.url, showUrl: chShow.url, createUrl: chCreate.url(), puedeCrear: true };
 }
 
-    return { indexUrl: subdirEmpleados.url, showUrl: subdirShow.url };
+    return { indexUrl: subdirEmpleados.url, showUrl: subdirShow.url, createUrl: subdirCreate.url(), puedeCrear: true };
 }
 
 export default function Index({ empleados, filtros }: Props) {
-    const { indexUrl, showUrl } = useRolRoutes();
+    const { indexUrl, showUrl, createUrl, puedeCrear } = useRolRoutes();
 
     function handleBuscar(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -58,9 +58,18 @@ export default function Index({ empleados, filtros }: Props) {
             <Head title="Empleados" />
 
             <div className="p-4 md:p-6 space-y-5">
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Empleados</h2>
-                    <p className="text-sm text-gray-500">Historial de incidencias por empleado.</p>
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Empleados</h2>
+                        <p className="text-sm text-gray-500">Historial de incidencias por empleado.</p>
+                    </div>
+                    {puedeCrear && createUrl && (
+                        <Button asChild>
+                            <Link href={createUrl}>
+                                Nuevo empleado
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Buscador */}
