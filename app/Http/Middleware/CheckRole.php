@@ -13,11 +13,11 @@ class CheckRole
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
-        if (!$user->activo) {
+        if (! $user->activo) {
             auth()->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -27,11 +27,11 @@ class CheckRole
         }
 
         $permitidos = array_map(
-            static fn(string $r) => RolUsuario::from($r),
+            static fn (string $r) => RolUsuario::from($r),
             $roles
         );
 
-        if (!$user->tieneRol(...$permitidos)) {
+        if (! $user->tieneRol(...$permitidos)) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 

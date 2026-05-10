@@ -103,7 +103,6 @@ export default function Show({ incidencia }: Props) {
 
     const puedeAprobar  = incidencia.estado === 'pendiente_capital_humano';
     const puedeRechazar = incidencia.estado === 'pendiente_capital_humano';
-    const esFinal       = ['aprobada', 'rechazada'].includes(incidencia.estado);
 
     return (
         <>

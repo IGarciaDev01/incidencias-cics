@@ -2,7 +2,7 @@ export type User = {
     id: number;
     nombre: string;
     email: string;
-    rol: 'admin' | 'subdirector' | null;
+    rol: 'jefe_inmediato' | 'capital_humano' | 'subdirector' | null;
     area: { id: number } | null;
 };
 

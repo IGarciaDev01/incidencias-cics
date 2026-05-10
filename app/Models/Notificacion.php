@@ -25,9 +25,9 @@ class Notificacion extends Model
     protected function casts(): array
     {
         return [
-            'tipo'       => TipoNotificacion::class,
+            'tipo' => TipoNotificacion::class,
             'enviada_at' => 'datetime',
-            'leida_at'   => 'datetime',
+            'leida_at' => 'datetime',
             'created_at' => 'datetime',
         ];
     }

@@ -22,7 +22,7 @@ class ComentarSeguimientoRequest extends FormRequest
     {
         return [
             'comentario.required' => 'El comentario es obligatorio.',
-            'comentario.min'      => 'El comentario debe tener al menos 10 caracteres.',
+            'comentario.min' => 'El comentario debe tener al menos 10 caracteres.',
         ];
     }
 }

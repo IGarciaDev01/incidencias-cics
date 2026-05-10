@@ -4,12 +4,13 @@ namespace App\Mail;
 
 use App\Models\Incidencia;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class IncidenciaSolicitudInfoMail extends Mailable
+class IncidenciaSolicitudInfoMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -30,9 +31,9 @@ class IncidenciaSolicitudInfoMail extends Mailable
         return new Content(
             markdown: 'emails.incidencias.solicitud-info',
             with: [
-                'folio'          => $this->incidencia->folio,
-                'titulo'         => $this->incidencia->titulo,
-                'mensaje'        => $this->mensaje,
+                'folio' => $this->incidencia->folio,
+                'titulo' => $this->incidencia->titulo,
+                'mensaje' => $this->mensaje,
                 'urlSeguimiento' => route('seguimiento.show', $this->incidencia->folio),
             ],
         );

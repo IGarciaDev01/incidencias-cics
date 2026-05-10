@@ -24,15 +24,24 @@ class ArchivoService
 
     public function almacenar(UploadedFile $file, Incidencia $incidencia, ?int $subidoPorId = null): ArchivoAdjunto
     {
+        if (! in_array($file->getMimeType(), self::MIME_PERMITIDOS, true)) {
+            abort(422, 'El tipo de archivo no está permitido.');
+        }
+
+        $maxBytes = self::TAMANIO_MAX_MB * 1024 * 1024;
+
+        if ($file->getSize() > $maxBytes) {
+            abort(422, 'El archivo no puede superar los '.self::TAMANIO_MAX_MB.' MB.');
+        }
         $ruta = $file->store("incidencias/{$incidencia->folio}", 'public');
 
         return ArchivoAdjunto::create([
-            'incidencia_id'  => $incidencia->id,
+            'incidencia_id' => $incidencia->id,
             'nombre_original' => $file->getClientOriginalName(),
-            'ruta_storage'   => $ruta,
-            'mime_type'      => $file->getMimeType(),
-            'tamanio_bytes'  => $file->getSize(),
-            'subido_por'     => $subidoPorId,
+            'ruta_storage' => $ruta,
+            'mime_type' => $file->getMimeType(),
+            'tamanio_bytes' => $file->getSize(),
+            'subido_por' => $subidoPorId,
         ]);
     }
 

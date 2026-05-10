@@ -16,7 +16,6 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $response = $this->post(route('login'), [
-        'numero_empleado' => $user->numero_empleado,
         'rol' => 'subdirector',
         'password' => 'password',
     ]);
@@ -61,7 +60,6 @@ test('users can not authenticate with invalid password', function () {
     ]);
 
     $this->post(route('login'), [
-        'numero_empleado' => $user->numero_empleado,
         'rol' => 'subdirector',
         'password' => 'wrong-password',
     ]);

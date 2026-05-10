@@ -9,7 +9,6 @@ type Categoria = {
     nombre: string;
     slug: string;
     descripcion: string | null;
-    prioridad_defecto: string;
     activa: boolean;
     incidencias_count: number;
 };
@@ -27,14 +26,6 @@ type Paginado<T> = {
 type Props = {
     categorias: Paginado<Categoria>;
     filtros: { buscar?: string };
-    prioridades: string[];
-};
-
-const PRIORIDAD_LABELS: Record<string, string> = { alta: 'Alta', media: 'Media', baja: 'Baja' };
-const PRIORIDAD_COLORS: Record<string, string> = {
-    alta: 'bg-red-100 text-red-800',
-    media: 'bg-yellow-100 text-yellow-800',
-    baja: 'bg-green-100 text-green-800',
 };
 
 export default function Index({ categorias, filtros }: Props) {
@@ -42,8 +33,8 @@ export default function Index({ categorias, filtros }: Props) {
 
     function handleDelete(id: number, nombre: string) {
         if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) {
-return;
-}
+            return;
+        }
 
         router.delete(destroy.url(id));
     }
@@ -96,7 +87,6 @@ return;
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prioridad defecto</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Incidencias</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                                 <th className="px-4 py-3" />
@@ -113,11 +103,6 @@ return;
                                 categorias.data.map((cat) => (
                                     <tr key={cat.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">{cat.nombre}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLORS[cat.prioridad_defecto] ?? 'bg-gray-100 text-gray-800'}`}>
-                                                {PRIORIDAD_LABELS[cat.prioridad_defecto] ?? cat.prioridad_defecto}
-                                            </span>
-                                        </td>
                                         <td className="px-4 py-3 text-gray-600">{cat.incidencias_count}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cat.activa ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>

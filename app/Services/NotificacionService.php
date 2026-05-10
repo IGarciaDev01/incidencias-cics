@@ -15,6 +15,7 @@ use App\Models\User;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
 
 class NotificacionService
 {
@@ -132,10 +133,11 @@ class NotificacionService
     private function enviar(Notificacion $notificacion, Mailable $mail): void
     {
         try {
-            Mail::to($notificacion->destinatario_email)->send($mail);
+            Mail::to($notificacion->destinatario_email)->queue($mail);
             $notificacion->update(['enviada_at' => now()]);
         } catch (\Throwable $e) {
-            Log::error("Error enviando notificación [{$notificacion->id}]: {$e->getMessage()}");
+            Log::error("Error encolando notificación [{$notificacion->id}]: {$e->getMessage()}");
+            Session::flash('warning', 'No se pudo enviar la notificación por correo electrónico.');
         }
     }
 }

@@ -47,33 +47,22 @@ class AuthController extends Controller
                 return back()->withErrors(['area_id' => 'Selecciona tu área.'])->onlyInput('rol');
             }
 
-            $jefe = User::whereExists(fn ($q) => $q->from('area_user')
+            $user = User::whereExists(fn ($q) => $q->from('area_user')
                 ->join('areas', 'area_user.area_id', '=', 'areas.id')
                 ->whereColumn('area_user.user_id', 'users.id')
                 ->where('area_user.area_id', $areaId)
                 ->where('area_user.es_jefe', true)
             )->where('rol', $rolEnum)->where('activo', true)->first();
 
-            if (! $jefe) {
-                return back()->withErrors(['area_id' => 'No hay un jefe asignado a esta área, si se trata de un error acude a subdirección administrativa.'])->onlyInput('rol');
+            if (! $user) {
+                return back()->withErrors(['area_id' => 'No hay un jefe asignado a esta área.'])->onlyInput('rol');
             }
+        } else {
+            $user = User::where('rol', $rolEnum)->where('activo', true)->first();
 
-            if (! Hash::check($password, $jefe->password)) {
-                return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->onlyInput('rol');
+            if (! $user) {
+                return back()->withErrors(['rol' => 'No se encontró un usuario activo para este rol.'])->onlyInput('rol');
             }
-
-            Auth::login($jefe, $request->boolean('remember'));
-            $request->session()->regenerate(true);
-            $request->session()->put('area_id', $areaId);
-            $request->session()->save();
-
-            return redirect()->to($this->destino($jefe->rol));
-        }
-
-        $user = User::where('rol', $rolEnum)->where('activo', true)->first();
-
-        if (! $user) {
-            return back()->withErrors(['rol' => 'No se encontró un usuario activo para este rol.'])->onlyInput('rol');
         }
 
         if (! Hash::check($password, $user->password)) {
@@ -83,11 +72,16 @@ class AuthController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
+        if ($rolEnum === RolUsuario::JefeInmediato) {
+            $request->session()->put('area_id', $areaId);
+        }
+
         return redirect()->to($this->destino($user->rol));
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        $request->session()->forget('area_id');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -20,25 +20,25 @@ return new class extends Migration
 
         DB::table('sla_configuracion')->insert([
             [
-                'prioridad'               => 'alta',
+                'prioridad' => 'alta',
                 'horas_primera_respuesta' => 24,
-                'horas_resolucion'        => 72,
-                'activa'                  => true,
-                'updated_at'              => now(),
+                'horas_resolucion' => 72,
+                'activa' => true,
+                'updated_at' => now(),
             ],
             [
-                'prioridad'               => 'media',
+                'prioridad' => 'media',
                 'horas_primera_respuesta' => 72,
-                'horas_resolucion'        => 168,
-                'activa'                  => true,
-                'updated_at'              => now(),
+                'horas_resolucion' => 168,
+                'activa' => true,
+                'updated_at' => now(),
             ],
             [
-                'prioridad'               => 'baja',
+                'prioridad' => 'baja',
                 'horas_primera_respuesta' => 168,
-                'horas_resolucion'        => 336,
-                'activa'                  => true,
-                'updated_at'              => now(),
+                'horas_resolucion' => 336,
+                'activa' => true,
+                'updated_at' => now(),
             ],
         ]);
     }

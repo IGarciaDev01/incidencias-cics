@@ -57,7 +57,7 @@ type SubdireccionStats = {
 
 type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
-    rol: 'admin' | 'jefe_inmediato' | 'capital_humano' | 'subdirector';
+    rol: 'jefe_inmediato' | 'capital_humano' | 'subdirector';
     areaNombre?: string;
 };
 

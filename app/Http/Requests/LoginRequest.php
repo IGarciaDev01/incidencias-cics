@@ -23,9 +23,6 @@ class LoginRequest extends FormRequest
 
         if ($rol === 'jefe_inmediato') {
             $rules['area_id'] = ['required', 'integer', 'exists:areas,id'];
-        } else {
-            $rules['numero_empleado'] = ['nullable', 'string', 'max:20'];
-            $rules['area_id'] = ['nullable'];
         }
 
         return $rules;
@@ -39,7 +36,6 @@ class LoginRequest extends FormRequest
             'password.required' => 'La contraseña es obligatoria.',
             'area_id.required' => 'Selecciona tu área.',
             'area_id.exists' => 'El área seleccionada no es válida.',
-            'numero_empleado.required' => 'El número de empleado es obligatorio.',
         ];
     }
 }

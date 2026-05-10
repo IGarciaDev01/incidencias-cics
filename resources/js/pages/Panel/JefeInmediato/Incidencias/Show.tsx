@@ -101,7 +101,6 @@ export default function Show({ incidencia }: Props) {
 
     const puedeAprobar  = incidencia.estado === 'pendiente_jefe';
     const puedeRechazar = incidencia.estado === 'pendiente_jefe';
-    const esFinal       = ['aprobada', 'rechazada'].includes(incidencia.estado);
 
     return (
         <>

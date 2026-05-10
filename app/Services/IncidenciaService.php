@@ -37,21 +37,21 @@ class IncidenciaService
 
         abort_if(! $tipo, 422, 'Debes indicar el tipo de empleado.');
 
-        $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
-        $fechaIncidencia = Carbon::parse($data['fecha_incidencia'])->startOfDay();
-        $tipoIncidencia = (string) $data['tipo_incidencia'];
+        $resultado = DB::transaction(function () use ($data, $numeroEmpleado, $tipo) {
+            $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
+            $fechaIncidencia = Carbon::parse($data['fecha_incidencia'])->startOfDay();
+            $tipoIncidencia = (string) $data['tipo_incidencia'];
 
-        $razon = $this->validacionIncidenciaService->obtenerRazonRechazo(
-            $numeroEmpleado,
-            $tipo,
-            $fechaIncidencia,
-            $minutosRetardo,
-            $tipoIncidencia
-        );
+            $razon = $this->validacionIncidenciaService->obtenerRazonRechazo(
+                $numeroEmpleado,
+                $tipo,
+                $fechaIncidencia,
+                $minutosRetardo,
+                $tipoIncidencia
+            );
 
-        $esLimitExcedido = $razon !== null;
+            $esLimitExcedido = $razon !== null;
 
-        $incidencia = DB::transaction(function () use ($data, $numeroEmpleado, $tipo, $esLimitExcedido, $razon) {
             $incidencia = Incidencia::create([
                 'folio' => $this->folioService->generar(),
                 'numero_empleado' => $numeroEmpleado,
@@ -83,17 +83,20 @@ class IncidenciaService
                 tipo: TipoAccionHistorial::Creada,
             );
 
-            $this->notificacionService->enviarConfirmacion($incidencia);
+            if ($esLimitExcedido) {
+                $this->notificacionService->enviarRechazoPorLimite($incidencia, $razon);
+            } else {
+                $this->notificacionService->enviarConfirmacion($incidencia);
+            }
 
-            return $incidencia;
+            return ['incidencia' => $incidencia, 'esLimitExcedido' => $esLimitExcedido, 'razon' => $razon];
         });
 
-        if ($esLimitExcedido) {
-            $this->notificacionService->enviarRechazoPorLimite($incidencia, $razon);
-            throw new LimiteIncidenciaExcepcion($razon);
+        if ($resultado['esLimitExcedido']) {
+            throw new LimiteIncidenciaExcepcion($resultado['razon']);
         }
 
-        return $incidencia;
+        return $resultado['incidencia'];
     }
 
     // ─── Flujo de aprobación — Jefe Inmediato ────────────────────────────────
@@ -180,13 +183,21 @@ class IncidenciaService
 
     // ─── Rechazo (cualquier nivel) ───────────────────────────────────────────
 
-    public function rechazar(Incidencia $incidencia, User $revisor, string $motivo): void
+    public function rechazar(Incidencia $incidencia, User $revisor, string $motivo, EstadoIncidencia ...$esperados): void
     {
         abort_if(
             $incidencia->estado->esFinal(),
             422,
             'La incidencia ya se encuentra en un estado final.'
         );
+
+        if (! empty($esperados)) {
+            abort_if(
+                ! in_array($incidencia->estado, $esperados, true),
+                422,
+                'No puedes rechazar una incidencia en el estado actual.'
+            );
+        }
 
         DB::transaction(function () use ($incidencia, $revisor, $motivo) {
             $incidencia->update([

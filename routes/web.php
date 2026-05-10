@@ -34,7 +34,8 @@ Route::get('/nueva-incidencia/enviada/{folio}', [IncidenciaPublicaController::cl
     ->name('incidencias.confirmacion');
 
 Route::get('/nueva-incidencia/buscar-empleado', [IncidenciaPublicaController::class, 'buscarEmpleado'])
-    ->name('incidencias.buscar-empleado');
+    ->name('incidencias.buscar-empleado')
+    ->middleware('throttle:30,1');
 
 Route::get('/seguimiento', [SeguimientoController::class, 'index'])
     ->name('seguimiento.index');

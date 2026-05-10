@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ type Area = { id: number; nombre: string; slug: string };
 export default function Login({ status, areas }: { status?: string; areas?: Area[] }) {
     const { props } = usePage();
     const errors = (props.errors as Record<string, string>) || {};
-    const { data, setData, processing } = useForm({
+    const { data, setData, post, processing } = useForm({
         rol: 'subdirector' as string,
         area_id: null as number | null,
         password: '',
@@ -28,19 +28,7 @@ export default function Login({ status, areas }: { status?: string; areas?: Area
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-
-        const payload = {
-            rol: data.rol,
-            password: data.password,
-            remember: data.remember,
-            area_id: data.area_id
-        };
-
-        if (data.rol === 'jefe_inmediato' && data.area_id) {
-            payload.area_id = data.area_id;
-        }
-
-        router.post('/login', payload);
+        post('/login');
     }
 
     return (

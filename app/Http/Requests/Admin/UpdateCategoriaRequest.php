@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\Prioridad;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 
 class UpdateCategoriaRequest extends FormRequest
 {
@@ -22,7 +20,6 @@ class UpdateCategoriaRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:150'],
             'slug' => ['required', 'string', 'max:150', Rule::unique('categorias', 'slug')->ignore($categoriaId), 'regex:/^[a-z0-9-]+$/'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
-            'prioridad_defecto' => ['required', new Enum(Prioridad::class)],
             'activa' => ['boolean'],
         ];
     }

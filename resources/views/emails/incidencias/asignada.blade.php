@@ -7,13 +7,12 @@ Se te ha asignado la siguiente incidencia para su atención:
 |--------------|-------|
 | **Folio**    | {{ $folio }} |
 | **Asunto**   | {{ $titulo }} |
-| **Prioridad** | {{ $prioridad }} |
-@if($fechaLimite)
-| **Fecha límite** | {{ $fechaLimite }} |
+@if($area)
+| **Área**     | {{ $area }} |
 @endif
 
-@component('mail::button', ['url' => $urlPanel, 'color' => 'primary'])
-Ver en el panel
+@component('mail::button', ['url' => $urlSeguimiento, 'color' => 'primary'])
+Ver seguimiento
 @endcomponent
 
 Gracias,<br>

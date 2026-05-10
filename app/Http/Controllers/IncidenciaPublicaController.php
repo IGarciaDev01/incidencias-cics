@@ -31,7 +31,7 @@ class IncidenciaPublicaController extends Controller
         try {
             $incidencia = $this->incidenciaService->crear($request->validated());
         } catch (LimiteIncidenciaExcepcion $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
         if ($request->hasFile('archivos')) {

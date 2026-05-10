@@ -102,7 +102,6 @@ export default function Show({ incidencia }: Props) {
 
     const puedeAprobar  = incidencia.estado === 'pendiente_subdireccion';
     const puedeRechazar = incidencia.estado === 'pendiente_subdireccion';
-    const esFinal       = ['aprobada', 'rechazada'].includes(incidencia.estado);
 
     return (
         <>

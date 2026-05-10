@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AdjuntarArchivoRequest;
 use App\Http\Requests\BuscarSeguimientoRequest;
+use App\Http\Requests\ComentarSeguimientoRequest;
 use App\Models\Incidencia;
 use App\Services\IncidenciaService;
 use Illuminate\Http\RedirectResponse;
@@ -62,10 +63,9 @@ class SeguimientoController extends Controller
         ]);
     }
 
-    public function comentar(Request $request, string $folio): RedirectResponse
+    public function comentar(ComentarSeguimientoRequest $request, string $folio): RedirectResponse
     {
         $incidencia = $this->resolverIncidenciaVerificada($request, $folio);
-        $request->validate(['comentario' => ['required', 'string', 'min:10', 'max:2000']]);
 
         abort_if($incidencia->estado->esFinal(), 422, 'No se pueden agregar comentarios a incidencias finalizadas.');
 

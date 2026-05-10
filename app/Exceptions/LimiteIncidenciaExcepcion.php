@@ -18,6 +18,6 @@ class LimiteIncidenciaExcepcion extends HttpException
             return response()->json(['error' => $this->getMessage(), 'tipo' => 'limite_incidencia'], 422);
         }
 
-        return redirect()->back()->with('error', $this->getMessage())->withInput();
+        return redirect()->back()->with('error', $this->getMessage());
     }
 }

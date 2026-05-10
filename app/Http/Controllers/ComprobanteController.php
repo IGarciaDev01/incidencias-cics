@@ -49,8 +49,18 @@ class ComprobanteController extends Controller
 
     private function puedeVerificar(Request $request, Incidencia $incidencia): bool
     {
-        if ($request->user()) {
-            return true;
+        $user = $request->user();
+
+        if ($user) {
+            if ($user->esSubdirector() || $user->esCapitalHumano()) {
+                return true;
+            }
+
+            if ($user->esJefeInmediato()) {
+                $areaId = $user->area_id;
+
+                return $areaId && (int) $incidencia->area_id === $areaId;
+            }
         }
 
         if ($request->session()->has('seguimiento_verificado') && $request->session()->get('seguimiento_verificado') === $incidencia->folio) {

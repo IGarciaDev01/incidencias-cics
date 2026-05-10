@@ -78,7 +78,10 @@ class DashboardController extends Controller
     private function statsJefe(User $jefe): array
     {
         $areaId = $jefe->area_id;
-        $base = Incidencia::when($areaId, fn ($q) => $q->where('area_id', $areaId));
+
+        abort_if(! $areaId, 403, 'No tienes un área asignada.');
+
+        $base = Incidencia::where('area_id', $areaId);
         $total = (clone $base)->count();
         $aprobadas = (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count();
 
@@ -196,9 +199,14 @@ class DashboardController extends Controller
 
     private function solicitudesPorMes(?int $areaId = null, int $months = 6): array
     {
+        $driver = DB::connection()->getDriverName();
+        $dateFormat = $driver === 'sqlite'
+            ? "strftime('%%Y-%%m', fecha_incidencia)"
+            : "DATE_FORMAT(fecha_incidencia, '%Y-%m')";
+
         $query = Incidencia::query()
             ->select(
-                DB::raw("DATE_FORMAT(fecha_incidencia, '%Y-%m') as mes"),
+                DB::raw("{$dateFormat} as mes"),
                 DB::raw('count(*) as total')
             )
             ->where('fecha_incidencia', '>=', now()->timezone('America/Mexico_City')->subMonths($months)->startOfMonth());

@@ -18,11 +18,11 @@ class HistorialService
     ): HistorialIncidencia {
         return HistorialIncidencia::create([
             'incidencia_id' => $incidencia->id,
-            'user_id'       => $userId,
-            'tipo_accion'   => $tipo,
-            'comentario'    => $comentario,
-            'es_interno'    => $esInterno,
-            'metadata'      => $metadata,
+            'user_id' => $userId,
+            'tipo_accion' => $tipo,
+            'comentario' => $comentario,
+            'es_interno' => $esInterno,
+            'metadata' => $metadata,
         ]);
     }
 }

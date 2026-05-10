@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\Prioridad;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 
 class StoreCategoriaRequest extends FormRequest
 {
@@ -19,7 +17,6 @@ class StoreCategoriaRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:150'],
             'slug' => ['required', 'string', 'max:150', 'unique:categorias,slug', 'regex:/^[a-z0-9-]+$/'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
-            'prioridad_defecto' => ['required', new Enum(Prioridad::class)],
             'activa' => ['boolean'],
         ];
     }
@@ -31,7 +28,6 @@ class StoreCategoriaRequest extends FormRequest
             'slug.required' => 'El slug es obligatorio.',
             'slug.unique' => 'Este slug ya está en uso.',
             'slug.regex' => 'El slug solo puede contener letras minúsculas, números y guiones.',
-            'prioridad_defecto.required' => 'Debes indicar la prioridad por defecto.',
         ];
     }
 }

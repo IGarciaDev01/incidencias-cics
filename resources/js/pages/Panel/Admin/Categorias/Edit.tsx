@@ -4,13 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
 import { index, update } from '@/routes/panel/subdireccion/admin/categorias';
@@ -20,23 +13,18 @@ type Categoria = {
     nombre: string;
     slug: string;
     descripcion: string | null;
-    prioridad_defecto: string;
     activa: boolean;
 };
 
 type Props = {
     categoria: Categoria;
-    prioridades: string[];
 };
 
-const PRIORIDAD_LABELS: Record<string, string> = { alta: 'Alta', media: 'Media', baja: 'Baja' };
-
-export default function Edit({ categoria, prioridades }: Props) {
+export default function Edit({ categoria }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         nombre: categoria.nombre,
         slug: categoria.slug,
         descripcion: categoria.descripcion ?? '',
-        prioridad_defecto: categoria.prioridad_defecto,
         activa: categoria.activa,
     });
 
@@ -88,21 +76,6 @@ export default function Edit({ categoria, prioridades }: Props) {
                             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         />
                         <InputError message={errors.descripcion} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label>Prioridad por defecto</Label>
-                        <Select value={data.prioridad_defecto} onValueChange={(v) => setData('prioridad_defecto', v)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {prioridades.map((p) => (
-                                    <SelectItem key={p} value={p}>{PRIORIDAD_LABELS[p] ?? p}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.prioridad_defecto} />
                     </div>
 
                     <div className="flex items-center gap-2">

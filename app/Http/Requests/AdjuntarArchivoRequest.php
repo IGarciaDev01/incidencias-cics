@@ -21,7 +21,7 @@ class AdjuntarArchivoRequest extends FormRequest
                 'required',
                 'file',
                 "max:{$maxKb}",
-                'mimetypes:' . implode(',', ArchivoService::MIME_PERMITIDOS),
+                'mimetypes:'.implode(',', ArchivoService::MIME_PERMITIDOS),
             ],
         ];
     }
@@ -29,8 +29,8 @@ class AdjuntarArchivoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'archivo.required'  => 'Debes seleccionar un archivo.',
-            'archivo.max'       => 'El archivo no puede superar ' . ArchivoService::TAMANIO_MAX_MB . ' MB.',
+            'archivo.required' => 'Debes seleccionar un archivo.',
+            'archivo.max' => 'El archivo no puede superar '.ArchivoService::TAMANIO_MAX_MB.' MB.',
             'archivo.mimetypes' => 'El tipo de archivo no está permitido.',
         ];
     }

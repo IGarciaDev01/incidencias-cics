@@ -96,26 +96,26 @@ class User extends Authenticatable
     }
 
     public function getAreaIdAttribute(): ?int
-{
-    if (! $this->esJefeInmediato()) {
-        return null;
-    }
-
-    // En contexto web: leer el área seleccionada al hacer login
-    try {
-        if (! app()->runningInConsole()) {
-            $sessionAreaId = session('area_id');
-            if ($sessionAreaId && $this->isJefeOfArea((int) $sessionAreaId)) {
-                return (int) $sessionAreaId;
-            }
+    {
+        if (! $this->esJefeInmediato()) {
+            return null;
         }
-    } catch (\Throwable) {
-        // Sin sesión activa (CLI, tests, etc.) → fallback
-    }
 
-    // Fallback: primera área asignada (orden de la DB)
-    return $this->areasJefatura()->value('areas.id');
-}
+        // En contexto web: leer el área seleccionada al hacer login
+        try {
+            if (! app()->runningInConsole()) {
+                $sessionAreaId = session('area_id');
+                if ($sessionAreaId && $this->isJefeOfArea((int) $sessionAreaId)) {
+                    return (int) $sessionAreaId;
+                }
+            }
+        } catch (\Throwable) {
+            // Sin sesión activa (CLI, tests, etc.) → fallback
+        }
+
+        // Fallback: primera área asignada (orden de la DB)
+        return $this->areasJefatura()->value('areas.id');
+    }
 
     public function primerAreaJefaturaId(): ?int
     {

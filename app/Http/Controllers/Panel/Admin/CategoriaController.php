@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Panel\Admin;
 
-use App\Enums\Prioridad;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoriaRequest;
 use App\Http\Requests\Admin\UpdateCategoriaRequest;
@@ -18,20 +17,20 @@ class CategoriaController extends Controller
     {
         return Inertia::render('Panel/Admin/Categorias/Index', [
             'categorias' => Categoria::withCount('incidencias')
-                ->when($request->filled('buscar'), fn ($q) => $q->where('nombre', 'like', "%{$request->buscar}%"))
+                ->when($request->filled('buscar'), function ($q) use ($request) {
+                    $buscar = addcslashes($request->buscar, '%_');
+                    $q->where('nombre', 'like', "%{$buscar}%");
+                })
                 ->orderBy('nombre')
                 ->paginate(20)
                 ->withQueryString(),
             'filtros' => $request->only(['buscar']),
-            'prioridades' => Prioridad::cases(),
         ]);
     }
 
     public function create(): Response
     {
-        return Inertia::render('Panel/Admin/Categorias/Create', [
-            'prioridades' => Prioridad::cases(),
-        ]);
+        return Inertia::render('Panel/Admin/Categorias/Create');
     }
 
     public function store(StoreCategoriaRequest $request): RedirectResponse
@@ -46,7 +45,6 @@ class CategoriaController extends Controller
     {
         return Inertia::render('Panel/Admin/Categorias/Edit', [
             'categoria' => $categoria,
-            'prioridades' => Prioridad::cases(),
         ]);
     }
 

@@ -14,8 +14,8 @@ class ComentarIncidenciaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'comentario'  => ['required', 'string', 'min:5', 'max:2000'],
-            'es_interno'  => ['boolean'],
+            'comentario' => ['required', 'string', 'min:5', 'max:2000'],
+            'es_interno' => ['boolean'],
         ];
     }
 
@@ -23,7 +23,7 @@ class ComentarIncidenciaRequest extends FormRequest
     {
         return [
             'comentario.required' => 'El comentario es obligatorio.',
-            'comentario.min'      => 'El comentario debe tener al menos 5 caracteres.',
+            'comentario.min' => 'El comentario debe tener al menos 5 caracteres.',
         ];
     }
 }

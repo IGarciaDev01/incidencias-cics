@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Panel\JefeInmediato;
 
 use App\Enums\EstadoIncidencia;
-use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Panel\Concerns\IncidenciasFiltrosTrait;
 use App\Http\Requests\ComentarIncidenciaRequest;
 use App\Http\Requests\JefeInmediato\AprobarIncidenciaRequest;
 use App\Http\Requests\JefeInmediato\RechazarIncidenciaRequest;
@@ -17,6 +17,8 @@ use Inertia\Response;
 
 class IncidenciaController extends Controller
 {
+    use IncidenciasFiltrosTrait;
+
     public function __construct(private readonly IncidenciaService $incidenciaService) {}
 
     public function index(Request $request): Response
@@ -28,44 +30,17 @@ class IncidenciaController extends Controller
         $queryAreaId = $request->query('area');
         $areaId = $queryAreaId ? (int) $queryAreaId : (int) $user->area_id;
 
-        $query = Incidencia::with(['area:id,nombre'])
-            ->where('area_id', $areaId)
-            ->when($request->filled('fecha_inicio'), fn ($q) => $q->whereDate('fecha_incidencia', '>=', $request->fecha_inicio))
-            ->when($request->filled('fecha_fin'), fn ($q) => $q->whereDate('fecha_incidencia', '<=', $request->fecha_fin))
-            ->when($request->string('estado')->isNotEmpty(), function ($q) use ($request) {
-                $q->where('estado', $request->estado);
-            })
-            ->when($request->string('tipo')->isNotEmpty(), function ($q) use ($request) {
-                $q->where('tipo_incidencia', $request->tipo);
-            })
-            ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($q2) => $q2->where('folio', 'like', "%{$request->buscar}%")
-                ->orWhere('numero_empleado', 'like', "%{$request->buscar}%")
-                ->orWhere('reportante_nombre', 'like', "%{$request->buscar}%")
-            )
-            )
-            ->latest();
-
-        return Inertia::render('Panel/JefeInmediato/Incidencias/Index', [
-            'incidencias' => $query->paginate(20)->withQueryString(),
-            'filtros' => $request->only(['estado', 'tipo', 'buscar', 'fecha_inicio', 'fecha_fin']),
-            'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
-            'tipos' => array_map(fn ($t) => ['value' => $t->value, 'name' => $t->name], TipoIncidencia::cases()),
-        ]);
+        return Inertia::render('Panel/JefeInmediato/Incidencias/Index',
+            $this->listadoIncidencias($request, $areaId),
+        );
     }
 
     public function show(Request $request, Incidencia $incidencia): Response
     {
         $this->authorizeArea($request, $incidencia);
 
-        $incidencia->load([
-            'area:id,nombre',
-            'revisadoPor:id,nombre',
-            'historial.user:id,nombre',
-            'archivos',
-        ]);
-
         return Inertia::render('Panel/JefeInmediato/Incidencias/Show', [
-            'incidencia' => $incidencia,
+            'incidencia' => $this->incidenciaConRelaciones($incidencia),
         ]);
     }
 
@@ -84,7 +59,7 @@ class IncidenciaController extends Controller
     {
         $this->authorizeArea($request, $incidencia);
 
-        $this->incidenciaService->rechazar($incidencia, $request->user(), $request->motivo);
+        $this->incidenciaService->rechazar($incidencia, $request->user(), $request->motivo, EstadoIncidencia::PendienteJefe);
 
         return redirect()
             ->route('panel.jefe_inmediato.incidencias.show', $incidencia)

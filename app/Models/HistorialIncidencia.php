@@ -24,9 +24,9 @@ class HistorialIncidencia extends Model
     {
         return [
             'tipo_accion' => TipoAccionHistorial::class,
-            'es_interno'  => 'boolean',
-            'metadata'    => 'array',
-            'created_at'  => 'datetime',
+            'es_interno' => 'boolean',
+            'metadata' => 'array',
+            'created_at' => 'datetime',
         ];
     }
 
