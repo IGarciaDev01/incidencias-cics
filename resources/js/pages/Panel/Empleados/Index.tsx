@@ -6,6 +6,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
 import { index as chEmpleados,   show as chShow,   create as chCreate,   plantilla as chPlantilla,   importar as chImportar }    from '@/routes/panel/capital_humano/empleados';
 import { index as jefeEmpleados, show as jefeShow }                        from '@/routes/panel/jefe_inmediato/empleados';
+import { index as sindicatoEmpleados, show as sindicatoShow, create as sindicatoCreate, plantilla as sindicatoPlantilla, importar as sindicatoImportar } from '@/routes/panel/sindicato/empleados';
 import { index as subdirEmpleados, show as subdirShow, create as subdirCreate, plantilla as subdirPlantilla, importar as subdirImportar } from '@/routes/panel/subdireccion/empleados';
 import { formatDateOnly } from '@/utils/date';
 
@@ -48,6 +49,10 @@ return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url, createUrl: undefine
 
     if (rol === 'capital_humano') {
 return { indexUrl: chEmpleados.url, showUrl: chShow.url, createUrl: chCreate.url(), plantillaUrl: chPlantilla.url(), importarUrl: chImportar.url(), puedeCrear: true };
+}
+
+    if (rol === 'sindicato') {
+return { indexUrl: sindicatoEmpleados.url, showUrl: sindicatoShow.url, createUrl: sindicatoCreate.url(), plantillaUrl: sindicatoPlantilla.url(), importarUrl: sindicatoImportar.url(), puedeCrear: true };
 }
 
     return { indexUrl: subdirEmpleados.url, showUrl: subdirShow.url, createUrl: subdirCreate.url(), plantillaUrl: subdirPlantilla.url(), importarUrl: subdirImportar.url(), puedeCrear: true };

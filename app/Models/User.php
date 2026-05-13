@@ -85,6 +85,11 @@ class User extends Authenticatable
         return $this->rol === RolUsuario::CapitalHumano;
     }
 
+    public function esSindicato(): bool
+    {
+        return $this->rol === RolUsuario::Sindicato;
+    }
+
     public function esSubdirector(): bool
     {
         return $this->rol === RolUsuario::Subdirector;

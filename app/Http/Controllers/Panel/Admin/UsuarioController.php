@@ -57,6 +57,10 @@ class UsuarioController extends Controller
                 return ! User::where('rol', RolUsuario::CapitalHumano)->exists();
             }
 
+            if ($rol === RolUsuario::Sindicato) {
+                return ! User::where('rol', RolUsuario::Sindicato)->exists();
+            }
+
             return true;
         })->values();
 

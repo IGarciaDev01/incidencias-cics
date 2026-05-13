@@ -13,7 +13,7 @@ class StoreEmpleadoRequest extends FormRequest
     {
         $user = $this->user();
 
-        return $user && ($user->esCapitalHumano() || $user->esSubdirector());
+        return $user && ($user->esCapitalHumano() || $user->esSindicato() || $user->esSubdirector());
     }
 
     public function rules(): array

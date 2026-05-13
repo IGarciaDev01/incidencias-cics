@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('nombre', 150);
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('rol', ['admin', 'jefe_inmediato', 'capital_humano', 'subdirector'])->default('jefe_inmediato');
+            $table->enum('rol', ['sindicato', 'jefe_inmediato', 'capital_humano', 'subdirector'])->default('jefe_inmediato');
             $table->boolean('activo')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();

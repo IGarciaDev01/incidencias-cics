@@ -2,8 +2,10 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
+import { index as chIndex } from '@/routes/panel/capital_humano/areas';
 import { index as subdirIndex, create, destroy, edit } from '@/routes/panel/subdireccion/admin/areas';
 import { index as incidenciasIndex } from '@/routes/panel/subdireccion/incidencias';
+import { index as chIncidenciasIndex } from '@/routes/panel/capital_humano/incidencias';
 
 type Area = {
     id: number;
@@ -29,7 +31,23 @@ type Props = {
     filtros: { buscar?: string };
 };
 
+function useAreaRoutes() {
+    const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
+    const isCh = auth.user?.rol === 'capital_humano';
+
+    return {
+        listUrl: isCh ? chIndex.url : subdirIndex.url,
+        incidenciasUrl: (isCh ? chIncidenciasIndex.url : incidenciasIndex.url) as (opts?: Record<string, any>) => string,
+        createUrl: create.url(),
+        destroyUrl: (id: number) => destroy.url(id),
+        editUrl: (id: number) => edit.url(id),
+    };
+}
+
 export default function Index({ areas, filtros }: Props) {
+    const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
+    const isCh = auth.user?.rol === 'capital_humano';
+    const r = useAreaRoutes();
     const { flash } = usePage().props as { flash?: { success?: string } };
 
     function handleDelete(id: number, nombre: string) {
@@ -37,7 +55,7 @@ export default function Index({ areas, filtros }: Props) {
 return;
 }
 
-        router.delete(destroy.url(id));
+        router.delete(r.destroyUrl(id));
     }
 
     return (
@@ -56,23 +74,25 @@ return;
                         <h2 className="text-xl font-semibold text-gray-900">Áreas</h2>
                         <p className="text-sm text-gray-500">{areas.total} registros</p>
                     </div>
-                    <Button asChild>
-                        <Link href={create.url()}>Nueva área</Link>
-                    </Button>
+                    {!isCh && (
+                        <Button asChild>
+                            <Link href={r.createUrl}>Nueva área</Link>
+                        </Button>
+                    )}
                 </div>
 
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
                         const fd = new FormData(e.currentTarget);
-                        router.get(subdirIndex.url(), { buscar: fd.get('buscar') as string || undefined }, { replace: true });
+                        router.get(r.listUrl(), { buscar: fd.get('buscar') as string || undefined }, { replace: true });
                     }}
                     className="flex gap-2"
                 >
                     <Input name="buscar" defaultValue={filtros.buscar} placeholder="Buscar área..." className="w-64" />
                     <Button type="submit" variant="outline" size="sm">Buscar</Button>
                     {filtros.buscar && (
-                        <Button variant="ghost" size="sm" onClick={() => router.get(subdirIndex.url())}>Limpiar</Button>
+                        <Button variant="ghost" size="sm" onClick={() => router.get(r.listUrl())}>Limpiar</Button>
                     )}
                 </form>
 
@@ -113,21 +133,24 @@ return;
                                         <td className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button variant="ghost" size="sm" asChild>
-                                                    <Link href={incidenciasIndex.url({ query: { area_id: String(area.id) } })}>Ver incidencias</Link>
+                                                    <Link href={r.incidenciasUrl({ query: { area_id: String(area.id) } })}>Ver incidencias</Link>
                                                 </Button>
-                                                <Button variant="outline" size="sm" asChild>
-                                                    <Link href={edit.url(area.id)}>Editar</Link>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-red-600 hover:text-red-700"
-                                                    onClick={() => handleDelete(area.id, area.nombre)}
-                                                    disabled={area.incidencias_count > 0 || area.usuarios_count > 0}
-                                                >
-                                                    Eliminar
-                                                </Button>
-                                            </div>
+                                                {!isCh && (
+                                                    <>
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={r.editUrl(area.id)}>Editar</Link>
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-700"
+                                                            onClick={() => handleDelete(area.id, area.nombre)}
+                                                            disabled={area.incidencias_count > 0 || area.usuarios_count > 0}
+                                                        >
+                                                             Eliminar
+                                                         </Button>
+                                                     </>)}
+                                             </div>
                                         </td>
                                     </tr>
                                 ))
@@ -160,6 +183,6 @@ return;
 Index.layout = {
     breadcrumbs: [
         { title: 'Panel Principal', href: dashboard.url() },
-        { title: 'Áreas', href: subdirIndex.url() },
+        { title: 'Áreas' },
     ],
 };

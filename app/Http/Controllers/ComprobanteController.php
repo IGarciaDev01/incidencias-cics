@@ -52,7 +52,7 @@ class ComprobanteController extends Controller
         $user = $request->user();
 
         if ($user) {
-            if ($user->esSubdirector() || $user->esCapitalHumano()) {
+            if ($user->esSubdirector() || $user->esCapitalHumano() || $user->esSindicato()) {
                 return true;
             }
 

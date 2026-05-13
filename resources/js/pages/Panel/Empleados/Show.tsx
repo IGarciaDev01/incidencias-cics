@@ -13,6 +13,8 @@ import { index as chEmpleados,   show as chShow,   edit as chEdit }   from '@/ro
 import { show as chVerIncidencia }   from '@/routes/panel/capital_humano/incidencias';
 import { index as jefeEmpleados, show as jefeShow } from '@/routes/panel/jefe_inmediato/empleados';
 import { show as jefeVerIncidencia } from '@/routes/panel/jefe_inmediato/incidencias';
+import { index as sindicatoEmpleados, show as sindicatoShow, edit as sindicatoEdit } from '@/routes/panel/sindicato/empleados';
+import { show as sindicatoVerIncidencia } from '@/routes/panel/sindicato/incidencias';
 import { index as subdirEmpleados, show as subdirShow, edit as subdirEdit } from '@/routes/panel/subdireccion/empleados';
 import { show as subdirVerIncidencia } from '@/routes/panel/subdireccion/incidencias';
 import { formatDateOnly } from '@/utils/date';
@@ -87,6 +89,10 @@ return { back: jefeEmpleados.url(), verIncidencia: jefeVerIncidencia, showUrl: j
 
     if (rol === 'capital_humano') {
 return { back: chEmpleados.url(), verIncidencia: chVerIncidencia, showUrl: chShow.url, editUrl: numeroEmpleado ? chEdit.url({ numeroEmpleado }) : undefined, puedeEditar: true };
+}
+
+    if (rol === 'sindicato') {
+return { back: sindicatoEmpleados.url(), verIncidencia: sindicatoVerIncidencia, showUrl: sindicatoShow.url, editUrl: numeroEmpleado ? sindicatoEdit.url({ numeroEmpleado }) : undefined, puedeEditar: true };
 }
 
     return { back: subdirEmpleados.url(), verIncidencia: subdirVerIncidencia, showUrl: subdirShow.url, editUrl: numeroEmpleado ? subdirEdit.url({ numeroEmpleado }) : undefined, puedeEditar: true };

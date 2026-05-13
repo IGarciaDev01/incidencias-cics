@@ -18,7 +18,12 @@ class ReporteController extends Controller
 
         $base = Incidencia::whereBetween('incidencias.created_at', [$desde->startOfDay(), $hasta->endOfDay()]);
 
-        return Inertia::render('Panel/Subdireccion/Reportes/Index', [
+        $user = $request->user();
+        $view = $user && $user->esCapitalHumano()
+            ? 'Panel/CapitalHumano/Reportes/Index'
+            : 'Panel/Subdireccion/Reportes/Index';
+
+        return Inertia::render($view, [
             'filtros' => [
                 'desde' => $desde->toDateString(),
                 'hasta' => $hasta->toDateString(),

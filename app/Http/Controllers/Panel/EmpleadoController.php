@@ -15,7 +15,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EmpleadoController extends Controller
 {
@@ -181,6 +183,7 @@ class EmpleadoController extends Controller
 
         $route = match ($rol) {
             'capital_humano' => 'panel.capital_humano.empleados.index',
+            'sindicato' => 'panel.sindicato.empleados.index',
             default => 'panel.subdireccion.empleados.index',
         };
 
@@ -219,25 +222,26 @@ class EmpleadoController extends Controller
 
         $route = match ($rol) {
             'capital_humano' => 'panel.capital_humano.empleados.index',
+            'sindicato' => 'panel.sindicato.empleados.index',
             default => 'panel.subdireccion.empleados.index',
         };
 
         return redirect()->route($route)->with('success', 'Empleado actualizado correctamente.');
     }
 
-    public function descargarPlantilla(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function descargarPlantilla(Request $request): BinaryFileResponse
     {
         $this->authorizeCreate($request->user());
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Plantilla Empleados');
 
         $headers = ['numero_empleado', 'nombre', 'email', 'tipo', 'password'];
         $col = 'A';
         foreach ($headers as $header) {
-            $sheet->setCellValue($col . '1', $header);
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->setCellValue($col.'1', $header);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
             $sheet->getColumnDimension($col)->setAutoSize(true);
             $col++;
         }
@@ -255,7 +259,7 @@ class EmpleadoController extends Controller
         $sheet->setCellValue('E3', '');
 
         $writer = new Xlsx($spreadsheet);
-        $tempPath = tempnam(sys_get_temp_dir(), 'plantilla_empleados_') . '.xlsx';
+        $tempPath = tempnam(sys_get_temp_dir(), 'plantilla_empleados_').'.xlsx';
         $writer->save($tempPath);
 
         return response()->download($tempPath, 'plantilla_empleados.xlsx', [
@@ -282,7 +286,9 @@ class EmpleadoController extends Controller
             $total = count($rows) - 1;
 
             foreach ($rows as $index => $row) {
-                if ($index === 0) continue;
+                if ($index === 0) {
+                    continue;
+                }
 
                 $numeroEmpleado = trim((string) ($row[0] ?? ''));
                 $nombre = trim((string) ($row[1] ?? ''));
@@ -331,6 +337,7 @@ class EmpleadoController extends Controller
                         'nombre' => $nombre ?: '—',
                         'errores' => $rowErrors,
                     ];
+
                     continue;
                 }
 
@@ -347,7 +354,7 @@ class EmpleadoController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al procesar el archivo: ' . $e->getMessage(),
+                'message' => 'Error al procesar el archivo: '.$e->getMessage(),
                 'importados' => 0,
                 'errores' => [],
             ], 422);
@@ -364,6 +371,6 @@ class EmpleadoController extends Controller
 
     private function authorizeCreate($user): void
     {
-        abort_unless($user && ($user->esCapitalHumano() || $user->esSubdirector()), 403, 'No tienes permiso para realizar esta acción.');
+        abort_unless($user && ($user->esCapitalHumano() || $user->esSindicato() || $user->esSubdirector()), 403, 'No tienes permiso para realizar esta acción.');
     }
 }

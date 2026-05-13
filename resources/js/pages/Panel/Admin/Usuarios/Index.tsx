@@ -43,6 +43,7 @@ const ROL_LABELS: Record<string, string> = {
     admin:                  'Administrador',
     jefe_inmediato:         'Jefe Inmediato',
     capital_humano:         'Capital Humano',
+    sindicato:              'Sindicato',
     subdirector: 'Subdirección Académica',
 };
 

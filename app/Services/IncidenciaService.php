@@ -170,6 +170,34 @@ class IncidenciaService
         });
     }
 
+    // ─── Flujo de aprobación — Sindicato ──────────────────────────────────
+
+    public function aprobarSindicato(Incidencia $incidencia, User $sindicato, ?string $comentario = null): void
+    {
+        abort_if(
+            $incidencia->estado->esFinal(),
+            422,
+            'La incidencia ya se encuentra en un estado final.'
+        );
+
+        DB::transaction(function () use ($incidencia, $sindicato, $comentario) {
+            $incidencia->update([
+                'estado' => EstadoIncidencia::Aprobada,
+                'revisado_por' => $sindicato->id,
+            ]);
+
+            $this->historialService->registrar(
+                incidencia: $incidencia,
+                tipo: TipoAccionHistorial::Aprobada,
+                userId: $sindicato->id,
+                comentario: $comentario ?? 'Aprobada por Sindicato.',
+            );
+
+            $this->notificacionService->enviarCambioEstado($incidencia);
+            $this->notificacionService->enviarResolucionFinal($incidencia);
+        });
+    }
+
     // ─── Rechazo (cualquier nivel) ───────────────────────────────────────────
 
     public function rechazar(Incidencia $incidencia, User $revisor, string $motivo, EstadoIncidencia ...$esperados): void

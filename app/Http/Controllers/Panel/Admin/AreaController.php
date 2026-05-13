@@ -47,7 +47,7 @@ class AreaController extends Controller
             $area->usuarios()->attach($jefeId, ['es_jefe' => true]);
         }
 
-        return redirect()->route('panel.subdireccion.admin.areas.index')
+        return redirect()->route($this->areasRoute($request, 'index'))
             ->with('success', 'Área creada correctamente.');
     }
 
@@ -78,7 +78,7 @@ class AreaController extends Controller
             }
         }
 
-        return redirect()->route('panel.subdireccion.admin.areas.index')
+        return redirect()->route($this->areasRoute($request, 'index'))
             ->with('success', 'Área actualizada correctamente.');
     }
 
@@ -92,7 +92,18 @@ class AreaController extends Controller
 
         $area->delete();
 
-        return redirect()->route('panel.subdireccion.admin.areas.index')
+        return redirect()->route($this->areasRoute(request(), 'index'))
             ->with('success', 'Área eliminada.');
+    }
+
+    private function areasRoute(Request $request, string $suffix): string
+    {
+        $rol = $request->user()?->rol?->value;
+
+        if ($rol === 'capital_humano') {
+            return 'panel.capital_humano.areas.'.$suffix;
+        }
+
+        return 'panel.subdireccion.admin.areas.'.$suffix;
     }
 }

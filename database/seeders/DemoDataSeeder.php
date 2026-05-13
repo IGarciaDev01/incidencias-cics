@@ -79,5 +79,17 @@ class DemoDataSeeder extends Seeder
                 'activo' => true,
             ]
         );
+
+        // 1 empleado con rol de sindicato
+        User::firstOrCreate(
+            ['email' => 'sindicato@test.com'],
+            [
+                'nombre' => 'Sindicato Demo',
+                'numero_empleado' => '000003',
+                'password' => bcrypt('11223344'),
+                'rol' => 'sindicato',
+                'activo' => true,
+            ]
+        );
     }
 }

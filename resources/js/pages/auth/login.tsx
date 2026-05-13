@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 
 const ROLES = [
-    { value: 'jefe_inmediato', label: 'Jefe de Área', icon: '👤' },
     { value: 'capital_humano', label: 'Capital Humano', icon: '💼' },
     { value: 'subdirector', label: 'Subdirección Administrativa', icon: '📋' },
+    { value: 'sindicato', label: 'Sindicato', icon: '⚖️' },
+    { value: 'jefe_inmediato', label: 'Jefe de Área', icon: '👤' },
 ];
 
 type Area = { id: number; nombre: string; slug: string };

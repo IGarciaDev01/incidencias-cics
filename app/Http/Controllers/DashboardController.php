@@ -20,6 +20,7 @@ class DashboardController extends Controller
         $stats = match ($user->rol) {
             RolUsuario::JefeInmediato => $this->statsJefe($user),
             RolUsuario::CapitalHumano => $this->statsCapitalHumano(),
+            RolUsuario::Sindicato => $this->statsSindicato(),
             RolUsuario::Subdirector => $this->statsSubdirector(),
         };
 
@@ -62,6 +63,35 @@ class DashboardController extends Controller
 
         return [
             'pendientes' => Incidencia::where('estado', EstadoIncidencia::PendienteCapitalHumano)->count(),
+            'aprobadas' => $aprobadas,
+            'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
+            'total' => $total,
+            'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
+            'charts' => [
+                'por_estado' => $this->countPorEstado(),
+                'por_tipo' => $this->countPorTipo(),
+                'por_area' => $this->countPorArea(),
+                'solicitudes_mes' => $this->solicitudesPorMes(),
+            ],
+        ];
+    }
+
+    private function statsSindicato(): array
+    {
+        $total = Incidencia::whereIn('estado', [
+            EstadoIncidencia::PendienteJefe,
+            EstadoIncidencia::PendienteCapitalHumano,
+            EstadoIncidencia::PendienteSubdireccion,
+            EstadoIncidencia::Aprobada,
+        ])->count();
+        $aprobadas = Incidencia::where('estado', EstadoIncidencia::Aprobada)->count();
+
+        return [
+            'pendientes' => Incidencia::whereIn('estado', [
+                EstadoIncidencia::PendienteJefe,
+                EstadoIncidencia::PendienteCapitalHumano,
+                EstadoIncidencia::PendienteSubdireccion,
+            ])->count(),
             'aprobadas' => $aprobadas,
             'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
             'total' => $total,

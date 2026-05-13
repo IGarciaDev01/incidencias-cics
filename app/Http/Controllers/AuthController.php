@@ -94,6 +94,7 @@ class AuthController extends Controller
         return match ($rol) {
             RolUsuario::JefeInmediato => route('panel.jefe_inmediato.incidencias.index'),
             RolUsuario::CapitalHumano => route('panel.capital_humano.incidencias.index'),
+            RolUsuario::Sindicato => route('panel.sindicato.incidencias.index'),
             RolUsuario::Subdirector => route('panel.subdireccion.incidencias.index'),
         };
     }

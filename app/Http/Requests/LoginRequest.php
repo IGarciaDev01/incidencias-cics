@@ -16,7 +16,7 @@ class LoginRequest extends FormRequest
         $rol = $this->input('rol');
 
         $rules = [
-            'rol' => ['required', 'string', 'in:jefe_inmediato,capital_humano,subdirector'],
+            'rol' => ['required', 'string', 'in:jefe_inmediato,capital_humano,sindicato,subdirector'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ];

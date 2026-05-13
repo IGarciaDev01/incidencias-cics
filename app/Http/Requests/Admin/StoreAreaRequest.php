@@ -10,7 +10,7 @@ class StoreAreaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->esSubdirector();
+        return $this->user()?->esSubdirector() || $this->user()?->esCapitalHumano();
     }
 
     public function rules(): array

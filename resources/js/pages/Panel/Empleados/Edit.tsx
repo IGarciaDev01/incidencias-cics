@@ -13,6 +13,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
 import { index as chEmpleados, show as chShow, update as chUpdate } from '@/routes/panel/capital_humano/empleados';
+import { index as sindicatoEmpleados, show as sindicatoShow, update as sindicatoUpdate } from '@/routes/panel/sindicato/empleados';
 import { index as subdirEmpleados, show as subdirShow, update as subdirUpdate } from '@/routes/panel/subdireccion/empleados';
 
 type Props = {
@@ -37,9 +38,9 @@ export default function Edit({ empleado }: Props) {
 
     const rol = auth.user?.rol ?? '';
 
-    const indexUrl = rol === 'capital_humano' ? chEmpleados.url() : subdirEmpleados.url();
-    const showUrl = rol === 'capital_humano' ? chShow : subdirShow;
-    const updateUrl = rol === 'capital_humano' ? chUpdate.url({ numeroEmpleado: empleado.numero_empleado }) : subdirUpdate.url({ numeroEmpleado: empleado.numero_empleado });
+    const indexUrl = rol === 'capital_humano' ? chEmpleados.url() : rol === 'sindicato' ? sindicatoEmpleados.url() : subdirEmpleados.url();
+    const showUrl = rol === 'capital_humano' ? chShow : rol === 'sindicato' ? sindicatoShow : subdirShow;
+    const updateUrl = rol === 'capital_humano' ? chUpdate.url({ numeroEmpleado: empleado.numero_empleado }) : rol === 'sindicato' ? sindicatoUpdate.url({ numeroEmpleado: empleado.numero_empleado }) : subdirUpdate.url({ numeroEmpleado: empleado.numero_empleado });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

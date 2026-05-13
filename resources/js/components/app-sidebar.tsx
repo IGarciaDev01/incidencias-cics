@@ -21,10 +21,14 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes/panel';
+import { index as chAreas }         from '@/routes/panel/capital_humano/areas';
 import { index as chEmpleados }       from '@/routes/panel/capital_humano/empleados';
 import { index as chIncidencias }     from '@/routes/panel/capital_humano/incidencias';
+import { index as chReportes }        from '@/routes/panel/capital_humano/reportes';
 import { index as jefeEmpleados }     from '@/routes/panel/jefe_inmediato/empleados';
 import { index as jefeIncidencias }   from '@/routes/panel/jefe_inmediato/incidencias';
+import { index as sindicatoEmpleados }   from '@/routes/panel/sindicato/empleados';
+import { index as sindicatoIncidencias } from '@/routes/panel/sindicato/incidencias';
 import { index as adminAreas }        from '@/routes/panel/subdireccion/admin/areas';
 import { index as adminLogs }         from '@/routes/panel/subdireccion/admin/logs';
 import { index as adminUsuarios }     from '@/routes/panel/subdireccion/admin/usuarios';
@@ -52,12 +56,21 @@ const jefeNavItems: NavItem[] = [
 const capitalHumanoNavItems: NavItem[] = [
     { title: 'Dashboard',   href: dashboard.url(),     icon: LayoutGrid },
     { title: 'Incidencias', href: chIncidencias.url(), icon: FileTextIcon },
+    { title: 'Reportes',    href: chReportes.url(),    icon: BarChart2 },
     { title: 'Empleados',   href: chEmpleados.url(),   icon: UserSearch },
+    { title: 'Áreas',       href: chAreas.url(),       icon: Shield },
+];
+
+const sindicatoNavItems: NavItem[] = [
+    { title: 'Dashboard',   href: dashboard.url(),         icon: LayoutGrid },
+    { title: 'Incidencias', href: sindicatoIncidencias.url(), icon: FileTextIcon },
+    { title: 'Empleados',   href: sindicatoEmpleados.url(),   icon: UserSearch },
 ];
 
 const NAV_BY_ROL: Record<string, NavItem[]> = {
     jefe_inmediato: jefeNavItems,
     capital_humano: capitalHumanoNavItems,
+    sindicato:      sindicatoNavItems,
     subdirector:    subdirNavItems,
 };
 

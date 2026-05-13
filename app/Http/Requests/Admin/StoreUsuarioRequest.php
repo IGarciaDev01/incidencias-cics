@@ -35,6 +35,10 @@ class StoreUsuarioRequest extends FormRequest
                     if ($rol === RolUsuario::CapitalHumano && User::where('rol', RolUsuario::CapitalHumano)->exists()) {
                         $fail('Ya existe un usuario capital humano. Solo puede haber uno.');
                     }
+
+                    if ($rol === RolUsuario::Sindicato && User::where('rol', RolUsuario::Sindicato)->exists()) {
+                        $fail('Ya existe un usuario sindicato. Solo puede haber uno.');
+                    }
                 },
             ],
             'area_ids' => ['nullable', 'array'],

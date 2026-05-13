@@ -11,6 +11,7 @@ use App\Http\Controllers\Panel\Admin\UsuarioController;
 use App\Http\Controllers\Panel\CapitalHumano\IncidenciaController as CapitalHumanoIncidenciaController;
 use App\Http\Controllers\Panel\EmpleadoController;
 use App\Http\Controllers\Panel\JefeInmediato\IncidenciaController as JefeIncidenciaController;
+use App\Http\Controllers\Panel\Sindicato\IncidenciaController as SindicatoIncidenciaController;
 use App\Http\Controllers\Panel\Subdireccion\IncidenciaController as SubdirIncidenciaController;
 use App\Http\Controllers\Panel\Subdireccion\ReporteController as SubdirReporteController;
 use App\Http\Controllers\SeguimientoController;
@@ -124,6 +125,44 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/{incidencia}', [CapitalHumanoIncidenciaController::class, 'show'])->name('show');
                 Route::post('/{incidencia}/aprobar', [CapitalHumanoIncidenciaController::class, 'aprobar'])->name('aprobar');
                 Route::post('/{incidencia}/rechazar', [CapitalHumanoIncidenciaController::class, 'rechazar'])->name('rechazar');
+            });
+
+            Route::prefix('empleados')->name('empleados.')->group(function () {
+                Route::get('/', [EmpleadoController::class, 'index'])->name('index');
+                Route::get('/crear', [EmpleadoController::class, 'create'])->name('create');
+                Route::post('/crear', [EmpleadoController::class, 'store'])->name('store');
+                Route::get('/plantilla', [EmpleadoController::class, 'descargarPlantilla'])->name('plantilla');
+                Route::post('/importar', [EmpleadoController::class, 'importarExcel'])->name('importar');
+                Route::get('/{numeroEmpleado}', [EmpleadoController::class, 'show'])->name('show');
+                Route::get('/{numeroEmpleado}/editar', [EmpleadoController::class, 'edit'])->name('edit');
+                Route::patch('/{numeroEmpleado}', [EmpleadoController::class, 'update'])->name('update');
+            });
+
+            Route::prefix('reportes')->name('reportes.')->group(function () {
+                Route::get('/', [SubdirReporteController::class, 'index'])->name('index');
+                Route::get('/exportar', [SubdirReporteController::class, 'exportar'])->name('exportar');
+            });
+
+            Route::prefix('areas')->name('areas.')->group(function () {
+                Route::get('/', [AreaController::class, 'index'])->name('index');
+            });
+        });
+
+    /*
+    |----------------------------------------------------------------------
+    | Sindicato
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('sindicato')
+        ->name('sindicato.')
+        ->middleware('role:sindicato')
+        ->group(function () {
+
+            Route::prefix('incidencias')->name('incidencias.')->group(function () {
+                Route::get('/', [SindicatoIncidenciaController::class, 'index'])->name('index');
+                Route::get('/{incidencia}', [SindicatoIncidenciaController::class, 'show'])->name('show');
+                Route::post('/{incidencia}/aprobar', [SindicatoIncidenciaController::class, 'aprobar'])->name('aprobar');
+                Route::post('/{incidencia}/rechazar', [SindicatoIncidenciaController::class, 'rechazar'])->name('rechazar');
             });
 
             Route::prefix('empleados')->name('empleados.')->group(function () {

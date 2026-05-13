@@ -57,7 +57,7 @@ type SubdireccionStats = {
 
 type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
-    rol: 'jefe_inmediato' | 'capital_humano' | 'subdirector';
+    rol: 'jefe_inmediato' | 'capital_humano' | 'sindicato' | 'subdirector';
     areaNombre?: string;
 };
 
@@ -447,6 +447,7 @@ function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
 const ROL_LABEL: Record<string, string> = {
     jefe_inmediato: 'Jefe Inmediato',
     capital_humano: 'Capital Humano',
+    sindicato:      'Sindicato',
     subdirector:    'Subdirección Administrativa',
 };
 
@@ -466,6 +467,7 @@ export default function Dashboard({ stats, rol, areaNombre }: Props) {
 
                 {rol === 'jefe_inmediato'  && <JefeDashboard stats={stats as JefeStats} areaNombre={areaNombre} />}
                 {rol === 'capital_humano'   && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
+                {rol === 'sindicato'        && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
                 {rol === 'subdirector'      && <SubdireccionDashboard stats={stats as SubdireccionStats} />}
             </div>
         </>
