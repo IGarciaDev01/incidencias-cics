@@ -10,9 +10,13 @@ use Illuminate\Http\Request;
 
 trait IncidenciasFiltrosTrait
 {
-    protected function listadoIncidencias(Request $request, ?int $areaId = null): array
+    protected function listadoIncidencias(Request $request, ?int $areaId = null, ?callable $queryCallback = null): array
     {
         $query = Incidencia::with(['area:id,nombre']);
+
+        if ($queryCallback) {
+            $queryCallback($query);
+        }
 
         if ($areaId) {
             $query->where('area_id', $areaId);

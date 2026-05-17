@@ -6,6 +6,7 @@ use App\Enums\EstadoIncidencia;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Panel\Concerns\IncidenciasFiltrosTrait;
 use App\Http\Requests\CapitalHumano\AprobarIncidenciaRequest;
+use App\Http\Requests\CapitalHumano\EnviarSindicatoIncidenciaRequest;
 use App\Http\Requests\CapitalHumano\RechazarIncidenciaRequest;
 use App\Models\Incidencia;
 use App\Services\IncidenciaService;
@@ -50,5 +51,14 @@ class IncidenciaController extends Controller
         return redirect()
             ->route('panel.capital_humano.incidencias.show', $incidencia)
             ->with('success', "Incidencia {$incidencia->folio} rechazada.");
+    }
+
+    public function enviarSindicato(EnviarSindicatoIncidenciaRequest $request, Incidencia $incidencia): RedirectResponse
+    {
+        $this->incidenciaService->enviarSindicato($incidencia, $request->user(), $request->comentario);
+
+        return redirect()
+            ->route('panel.capital_humano.incidencias.show', $incidencia)
+            ->with('success', "Incidencia {$incidencia->folio} enviada a Sindicato.");
     }
 }

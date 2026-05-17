@@ -46,6 +46,7 @@ type Props = { incidencia: Incidencia };
 const ESTADO_LABELS: Record<string, string> = {
     pendiente_jefe: 'Pendiente (Jefe inmediato)',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
+    pendiente_sindicato: 'Pendiente (Sindicato)',
     pendiente_subdireccion: 'Pendiente (Subdirección)',
     aprobada: 'Aprobada',
     rechazada: 'Rechazada',
@@ -53,6 +54,7 @@ const ESTADO_LABELS: Record<string, string> = {
 const ESTADO_COLORS: Record<string, string> = {
     pendiente_jefe: 'bg-yellow-100 text-yellow-800',
     pendiente_capital_humano: 'bg-orange-100 text-orange-800',
+    pendiente_sindicato: 'bg-purple-100 text-purple-800',
     pendiente_subdireccion: 'bg-blue-100 text-blue-800',
     aprobada: 'bg-green-100 text-green-800',
     rechazada: 'bg-red-100 text-red-800',
@@ -67,7 +69,7 @@ const TIPO_LABELS: Record<string, string> = {
     buena_conducta: 'Buena Conducta',
 };
 const ACCION_LABELS: Record<string, string> = {
-    creada: 'Registrada', aprobada: 'Aprobada', rechazada: 'Rechazada',
+    creada: 'Registrada', aprobada: 'Aprobada', rechazada: 'Rechazada', asignada: 'Asignada',
     comentario: 'Comentario', archivo_adjunto: 'Archivo adjunto',
 };
 
@@ -100,8 +102,7 @@ export default function Show({ incidencia }: Props) {
     const aprobarForm  = useForm({ comentario: '' });
     const rechazarForm = useForm({ motivo: '' });
 
-    const esFinal = ['aprobada', 'rechazada'].includes(incidencia.estado);
-    const puedeActuar = !esFinal;
+    const puedeActuar = incidencia.estado === 'pendiente_sindicato';
 
     return (
         <>
@@ -193,7 +194,7 @@ export default function Show({ incidencia }: Props) {
                 {puedeActuar && (
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
                         <h3 className="font-semibold text-gray-900 mb-4">Acciones — Sindicato</h3>
-                        <p className="text-sm text-gray-500 mb-4">El Sindicato puede aprobar definitivamente o rechazar la incidencia desde cualquier estado del flujo.</p>
+                        <p className="text-sm text-gray-500 mb-4">Esta incidencia fue enviada por Capital Humano para resolución de Sindicato.</p>
                         <div className="flex flex-wrap gap-2 mb-4">
                             <Button size="sm" variant={tab === 'aprobar' ? 'default' : 'outline'} onClick={() => setTab(tab === 'aprobar' ? null : 'aprobar')}>
                                 Aprobar definitivamente

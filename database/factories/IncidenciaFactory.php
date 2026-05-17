@@ -38,6 +38,7 @@ class IncidenciaFactory extends Factory
             'token_seguimiento' => Str::random(32),
             'user_id' => null,
             'revisado_por' => null,
+            'enviado_sindicato_at' => null,
             'motivo_rechazo' => null,
         ];
     }
@@ -60,6 +61,14 @@ class IncidenciaFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'estado' => EstadoIncidencia::PendienteSubdireccion,
+        ]);
+    }
+
+    public function estadoSindicato(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'estado' => EstadoIncidencia::PendienteSindicato,
+            'enviado_sindicato_at' => now(),
         ]);
     }
 

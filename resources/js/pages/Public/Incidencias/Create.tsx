@@ -159,7 +159,7 @@ export default function Create({ areas }: Props) {
 
                             {empleadoNoEncontrado && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                                    Empleado no registrado. Contacta a Capital Humano o Subdirección para registrarte.
+                                    Empleado no registrado. Contacta a Subdirección Administrativa para registrarte.
                                 </div>
                             )}
 

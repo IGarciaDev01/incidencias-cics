@@ -142,6 +142,32 @@ class IncidenciaService
         });
     }
 
+    public function enviarSindicato(Incidencia $incidencia, User $capitalHumano, ?string $comentario = null): void
+    {
+        abort_if(
+            $incidencia->estado !== EstadoIncidencia::PendienteCapitalHumano,
+            422,
+            'La incidencia no está pendiente de revisión de Capital Humano.'
+        );
+
+        DB::transaction(function () use ($incidencia, $capitalHumano, $comentario) {
+            $incidencia->update([
+                'estado' => EstadoIncidencia::PendienteSindicato,
+                'revisado_por' => $capitalHumano->id,
+                'enviado_sindicato_at' => now(),
+            ]);
+
+            $this->historialService->registrar(
+                incidencia: $incidencia,
+                tipo: TipoAccionHistorial::Asignada,
+                userId: $capitalHumano->id,
+                comentario: $comentario ?? 'Enviada a Sindicato por Capital Humano.',
+            );
+
+            $this->notificacionService->enviarCambioEstado($incidencia);
+        });
+    }
+
     // ─── Flujo de aprobación — Subdirección Académica ───────────────────────
 
     public function aprobarSubdireccion(Incidencia $incidencia, User $subdirector, ?string $comentario = null): void
@@ -175,9 +201,9 @@ class IncidenciaService
     public function aprobarSindicato(Incidencia $incidencia, User $sindicato, ?string $comentario = null): void
     {
         abort_if(
-            $incidencia->estado->esFinal(),
+            $incidencia->estado !== EstadoIncidencia::PendienteSindicato,
             422,
-            'La incidencia ya se encuentra en un estado final.'
+            'La incidencia no está pendiente de revisión de Sindicato.'
         );
 
         DB::transaction(function () use ($incidencia, $sindicato, $comentario) {

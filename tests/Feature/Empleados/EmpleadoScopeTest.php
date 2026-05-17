@@ -87,3 +87,67 @@ test('capital humano ve empleados con incidencias de todas las areas', function 
             ->component('Panel/Empleados/Index')
             ->has('empleados.data', 3));
 });
+
+test('sindicato solo ve incidencias enviadas a sindicato en historial de empleado', function () {
+    $empleado = Empleado::factory()->create([
+        'numero_empleado' => '44444',
+        'nombre' => 'Empleado Sindicato',
+        'email' => 'sindicato@example.com',
+    ]);
+
+    $visible = Incidencia::factory()->estadoSindicato()->create([
+        'numero_empleado' => $empleado->numero_empleado,
+        'reportante_nombre' => $empleado->nombre,
+        'email_reportante' => $empleado->email,
+        'tipo_incidencia' => 'retardo',
+    ]);
+
+    Incidencia::factory()->estadoSindicato()->create([
+        'numero_empleado' => $empleado->numero_empleado,
+        'reportante_nombre' => $empleado->nombre,
+        'email_reportante' => $empleado->email,
+        'tipo_incidencia' => 'permiso_economico',
+    ]);
+
+    Incidencia::factory()->estadoCapitalHumano()->create([
+        'numero_empleado' => $empleado->numero_empleado,
+        'reportante_nombre' => $empleado->nombre,
+        'email_reportante' => $empleado->email,
+        'tipo_incidencia' => 'incidencia_medica',
+    ]);
+
+    $sindicato = User::factory()->create([
+        'rol' => 'sindicato',
+        'activo' => true,
+    ]);
+
+    $this->actingAs($sindicato)
+        ->get(route('panel.sindicato.empleados.show', $empleado->numero_empleado))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Panel/Empleados/Show')
+            ->has('incidencias', 1)
+            ->where('incidencias.0.id', $visible->id)
+            ->where('permiso_economico_stats', null)
+            ->where('tipos.1.value', 'comision_oficial'));
+});
+
+test('sindicato no puede abrir empleado sin incidencias visibles para sindicato', function () {
+    $empleado = Empleado::factory()->create([
+        'numero_empleado' => '55555',
+    ]);
+
+    Incidencia::factory()->estadoCapitalHumano()->create([
+        'numero_empleado' => $empleado->numero_empleado,
+        'tipo_incidencia' => 'retardo',
+    ]);
+
+    $sindicato = User::factory()->create([
+        'rol' => 'sindicato',
+        'activo' => true,
+    ]);
+
+    $this->actingAs($sindicato)
+        ->get(route('panel.sindicato.empleados.show', $empleado->numero_empleado))
+        ->assertForbidden();
+});

@@ -124,6 +124,7 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::get('/', [CapitalHumanoIncidenciaController::class, 'index'])->name('index');
                 Route::get('/{incidencia}', [CapitalHumanoIncidenciaController::class, 'show'])->name('show');
                 Route::post('/{incidencia}/aprobar', [CapitalHumanoIncidenciaController::class, 'aprobar'])->name('aprobar');
+                Route::post('/{incidencia}/enviar-sindicato', [CapitalHumanoIncidenciaController::class, 'enviarSindicato'])->name('enviar-sindicato');
                 Route::post('/{incidencia}/rechazar', [CapitalHumanoIncidenciaController::class, 'rechazar'])->name('rechazar');
             });
 

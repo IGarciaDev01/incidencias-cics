@@ -46,6 +46,7 @@ type Props = { incidencia: Incidencia };
 const ESTADO_LABELS: Record<string, string> = {
     pendiente_jefe: 'Pendiente (Jefe Inmediato)',
     pendiente_capital_humano: 'Pendiente (Capital Humano)',
+    pendiente_sindicato: 'Pendiente (Sindicato)',
     pendiente_subdireccion: 'Pendiente de aprobación',
     aprobada: 'Aprobada',
     rechazada: 'Rechazada',
@@ -53,6 +54,7 @@ const ESTADO_LABELS: Record<string, string> = {
 const ESTADO_COLORS: Record<string, string> = {
     pendiente_jefe: 'bg-yellow-100 text-yellow-800',
     pendiente_capital_humano: 'bg-orange-100 text-orange-800',
+    pendiente_sindicato: 'bg-purple-100 text-purple-800',
     pendiente_subdireccion: 'bg-blue-100 text-blue-800',
     aprobada: 'bg-green-100 text-green-800',
     rechazada: 'bg-red-100 text-red-800',

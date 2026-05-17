@@ -48,7 +48,7 @@ return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url, createUrl: undefine
 }
 
     if (rol === 'capital_humano') {
-return { indexUrl: chEmpleados.url, showUrl: chShow.url, createUrl: chCreate.url(), plantillaUrl: chPlantilla.url(), importarUrl: chImportar.url(), puedeCrear: true };
+return { indexUrl: chEmpleados.url, showUrl: chShow.url, createUrl: chCreate.url(), plantillaUrl: chPlantilla.url(), importarUrl: chImportar.url(), puedeCrear: false };
 }
 
     if (rol === 'sindicato') {

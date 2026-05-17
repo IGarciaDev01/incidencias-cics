@@ -33,6 +33,7 @@ class Incidencia extends Model
         'token_seguimiento',
         'user_id',
         'revisado_por',
+        'enviado_sindicato_at',
         'motivo_rechazo',
     ];
 
@@ -43,6 +44,7 @@ class Incidencia extends Model
             'tipo_incidencia' => TipoIncidencia::class,
             'estado' => EstadoIncidencia::class,
             'fecha_incidencia' => 'date',
+            'enviado_sindicato_at' => 'datetime',
         ];
     }
 
@@ -101,6 +103,11 @@ class Incidencia extends Model
     public function scopePorArea(Builder $query, int $areaId): Builder
     {
         return $query->where('area_id', $areaId);
+    }
+
+    public function scopeEnviadasSindicato(Builder $query): Builder
+    {
+        return $query->whereNotNull('enviado_sindicato_at');
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

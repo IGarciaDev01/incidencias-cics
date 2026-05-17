@@ -56,6 +56,7 @@ class DashboardController extends Controller
     {
         $total = Incidencia::whereIn('estado', [
             EstadoIncidencia::PendienteCapitalHumano,
+            EstadoIncidencia::PendienteSindicato,
             EstadoIncidencia::PendienteSubdireccion,
             EstadoIncidencia::Aprobada,
         ])->count();
@@ -78,29 +79,21 @@ class DashboardController extends Controller
 
     private function statsSindicato(): array
     {
-        $total = Incidencia::whereIn('estado', [
-            EstadoIncidencia::PendienteJefe,
-            EstadoIncidencia::PendienteCapitalHumano,
-            EstadoIncidencia::PendienteSubdireccion,
-            EstadoIncidencia::Aprobada,
-        ])->count();
-        $aprobadas = Incidencia::where('estado', EstadoIncidencia::Aprobada)->count();
+        $base = Incidencia::enviadasSindicato();
+        $total = (clone $base)->count();
+        $aprobadas = (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count();
 
         return [
-            'pendientes' => Incidencia::whereIn('estado', [
-                EstadoIncidencia::PendienteJefe,
-                EstadoIncidencia::PendienteCapitalHumano,
-                EstadoIncidencia::PendienteSubdireccion,
-            ])->count(),
+            'pendientes' => (clone $base)->where('estado', EstadoIncidencia::PendienteSindicato)->count(),
             'aprobadas' => $aprobadas,
-            'rechazadas' => Incidencia::where('estado', EstadoIncidencia::Rechazada)->count(),
+            'rechazadas' => (clone $base)->where('estado', EstadoIncidencia::Rechazada)->count(),
             'total' => $total,
             'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
             'charts' => [
-                'por_estado' => $this->countPorEstado(),
-                'por_tipo' => $this->countPorTipo(),
-                'por_area' => $this->countPorArea(),
-                'solicitudes_mes' => $this->solicitudesPorMes(),
+                'por_estado' => $this->countPorEstado(enviadasSindicato: true),
+                'por_tipo' => $this->countPorTipo(enviadasSindicato: true),
+                'por_area' => $this->countPorArea(enviadasSindicato: true),
+                'solicitudes_mes' => $this->solicitudesPorMes(enviadasSindicato: true),
             ],
         ];
     }
@@ -130,9 +123,12 @@ class DashboardController extends Controller
         ];
     }
 
-    private function countPorEstado(?int $areaId = null): array
+    private function countPorEstado(?int $areaId = null, bool $enviadasSindicato = false): array
     {
         $query = Incidencia::query();
+        if ($enviadasSindicato) {
+            $query->enviadasSindicato();
+        }
         if ($areaId) {
             $query->where('area_id', $areaId);
         }
@@ -140,6 +136,7 @@ class DashboardController extends Controller
         $estados = [
             'pendiente_jefe' => 0,
             'pendiente_capital_humano' => 0,
+            'pendiente_sindicato' => 0,
             'pendiente_subdireccion' => 0,
             'aprobada' => 0,
             'rechazada' => 0,
@@ -160,9 +157,12 @@ class DashboardController extends Controller
         return $estados;
     }
 
-    private function countPorTipo(?int $areaId = null): array
+    private function countPorTipo(?int $areaId = null, bool $enviadasSindicato = false): array
     {
         $query = Incidencia::query();
+        if ($enviadasSindicato) {
+            $query->enviadasSindicato();
+        }
         if ($areaId) {
             $query->where('area_id', $areaId);
         }
@@ -192,9 +192,12 @@ class DashboardController extends Controller
         return $tipos;
     }
 
-    private function countPorArea(?int $excludeAreaId = null): array
+    private function countPorArea(?int $excludeAreaId = null, bool $enviadasSindicato = false): array
     {
         $query = Incidencia::query();
+        if ($enviadasSindicato) {
+            $query->enviadasSindicato();
+        }
         if ($excludeAreaId) {
             $query->where('area_id', '!=', $excludeAreaId);
         }
@@ -227,7 +230,7 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function solicitudesPorMes(?int $areaId = null, int $months = 6): array
+    private function solicitudesPorMes(?int $areaId = null, int $months = 6, bool $enviadasSindicato = false): array
     {
         $driver = DB::connection()->getDriverName();
         $dateFormat = $driver === 'sqlite'
@@ -240,6 +243,10 @@ class DashboardController extends Controller
                 DB::raw('count(*) as total')
             )
             ->where('fecha_incidencia', '>=', now()->timezone('America/Mexico_City')->subMonths($months)->startOfMonth());
+
+        if ($enviadasSindicato) {
+            $query->enviadasSindicato();
+        }
 
         if ($areaId) {
             $query->where('area_id', $areaId);

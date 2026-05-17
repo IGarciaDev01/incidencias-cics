@@ -6,6 +6,7 @@ enum EstadoIncidencia: string
 {
     case PendienteJefe = 'pendiente_jefe';
     case PendienteCapitalHumano = 'pendiente_capital_humano';
+    case PendienteSindicato = 'pendiente_sindicato';
     case PendienteSubdireccion = 'pendiente_subdireccion';
     case Aprobada = 'aprobada';
     case Rechazada = 'rechazada';
@@ -15,6 +16,7 @@ enum EstadoIncidencia: string
         return match ($this) {
             self::PendienteJefe => 'Pendiente (Jefe)',
             self::PendienteCapitalHumano => 'Pendiente (Capital Humano)',
+            self::PendienteSindicato => 'Pendiente (Sindicato)',
             self::PendienteSubdireccion => 'Pendiente (Subdirección)',
             self::Aprobada => 'Aprobada',
             self::Rechazada => 'Rechazada',
@@ -26,6 +28,7 @@ enum EstadoIncidencia: string
         return match ($this) {
             self::PendienteJefe => 'yellow',
             self::PendienteCapitalHumano => 'orange',
+            self::PendienteSindicato => 'purple',
             self::PendienteSubdireccion => 'blue',
             self::Aprobada => 'green',
             self::Rechazada => 'red',

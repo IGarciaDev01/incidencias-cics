@@ -16,6 +16,7 @@ type Props = {
 const ESTADO_LABELS: Record<string, string> = {
     pendiente_jefe:             'Pendiente — Jefe',
     pendiente_capital_humano:   'Pendiente — Capital Humano',
+    pendiente_sindicato:        'Pendiente — Sindicato',
     pendiente_subdireccion:     'Pendiente — Subdirección',
     aprobada:                   'Aprobada',
     rechazada:                  'Rechazada',
@@ -23,6 +24,7 @@ const ESTADO_LABELS: Record<string, string> = {
 const ESTADO_COLORS: Record<string, string> = {
     pendiente_jefe:           'bg-yellow-400',
     pendiente_capital_humano: 'bg-orange-400',
+    pendiente_sindicato:      'bg-purple-500',
     pendiente_subdireccion:   'bg-sky-500',
     aprobada:                 'bg-emerald-500',
     rechazada:                'bg-red-500',

@@ -64,6 +64,7 @@ type Props = {
 const ESTADO_LABELS: Record<string, string> = {
     pendiente_jefe: 'Pendiente — Jefe',
     pendiente_capital_humano: 'Pendiente — C.H.',
+    pendiente_sindicato: 'Pendiente — Sindicato',
     pendiente_subdireccion: 'Pendiente — Subdir.',
     aprobada: 'Aprobada',
     rechazada: 'Rechazada',
@@ -72,6 +73,7 @@ const ESTADO_LABELS: Record<string, string> = {
 const ESTADO_COLORS: Record<string, string> = {
     pendiente_jefe: 'bg-yellow-400',
     pendiente_capital_humano: 'bg-orange-400',
+    pendiente_sindicato: 'bg-purple-500',
     pendiente_subdireccion: 'bg-sky-500',
     aprobada: 'bg-emerald-500',
     rechazada: 'bg-red-500',
@@ -384,6 +386,34 @@ function CapitalHumanoDashboard({ stats }: { stats: CapitalHumanoStats }) {
     );
 }
 
+function SindicatoDashboard({ stats }: { stats: CapitalHumanoStats }) {
+    return (
+        <div className="space-y-6">
+            <div>
+                <p className="text-sm text-gray-500 mb-4">Incidencias enviadas por Capital Humano para revisión de Sindicato.</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <StatCard label="Requieren tu revisión" value={stats.pendientes} color="purple" description="Enviadas por Capital Humano" />
+                    <StatCard label="Aprobadas" value={stats.aprobadas} color="green" />
+                    <StatCard label="Rechazadas" value={stats.rechazadas} color="red" />
+                    <StatCard label="Total enviadas" value={stats.total} color="gray" />
+                </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+                <ChartCard title="Por estado">
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Por tipo">
+                    <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
+                </ChartCard>
+                <ChartCard title="Solicitudes por mes">
+                    <TrendChart data={stats.charts.solicitudes_mes} />
+                </ChartCard>
+            </div>
+        </div>
+    );
+}
+
 function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
     return (
         <div className="space-y-6">
@@ -467,7 +497,7 @@ export default function Dashboard({ stats, rol, areaNombre }: Props) {
 
                 {rol === 'jefe_inmediato'  && <JefeDashboard stats={stats as JefeStats} areaNombre={areaNombre} />}
                 {rol === 'capital_humano'   && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
-                {rol === 'sindicato'        && <CapitalHumanoDashboard stats={stats as CapitalHumanoStats} />}
+                {rol === 'sindicato'        && <SindicatoDashboard stats={stats as CapitalHumanoStats} />}
                 {rol === 'subdirector'      && <SubdireccionDashboard stats={stats as SubdireccionStats} />}
             </div>
         </>
