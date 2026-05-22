@@ -12,9 +12,9 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
-import { index as chEmpleados, create as chCreate, store as chStore } from '@/routes/panel/capital_humano/empleados';
-import { index as sindicatoEmpleados, create as sindicatoCreate, store as sindicatoStore } from '@/routes/panel/sindicato/empleados';
-import { index as subdirEmpleados, create as subdirCreate, store as subdirStore } from '@/routes/panel/subdireccion/empleados';
+import { store as chStore } from '@/routes/panel/capital_humano/empleados';
+import { store as sindicatoStore } from '@/routes/panel/sindicato/empleados';
+import { store as subdirStore } from '@/routes/panel/subdireccion/empleados';
 
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
@@ -29,7 +29,6 @@ export default function Create() {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
     const rol = auth.user?.rol ?? '';
 
-    const backUrl = rol === 'capital_humano' ? chEmpleados.url() : rol === 'sindicato' ? sindicatoEmpleados.url() : subdirEmpleados.url();
     const storeUrl = rol === 'capital_humano' ? chStore.url() : rol === 'sindicato' ? sindicatoStore.url() : subdirStore.url();
 
     function handleSubmit(e: React.FormEvent) {

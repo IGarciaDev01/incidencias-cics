@@ -1,6 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { cleanupTheme, initializeTheme } from '@/hooks/use-appearance';
+import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import PublicLayout from '@/layouts/public-layout';
@@ -30,9 +30,6 @@ createInertiaApp({
     },
     progress: {
         color: '#4B5563',
-    },
-    onError(errors) {
-        console.error('Inertia errors:', errors);
     },
 });
 

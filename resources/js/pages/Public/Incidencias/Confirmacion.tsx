@@ -6,13 +6,9 @@ import { index as seguimientoIndex } from '@/routes/seguimiento';
 
 type Props = {
     folio: string;
-    numero_empleado: string;
-    tipo_incidencia: string;
-    fecha_incidencia: string;
-    hora_incidencia: string | null;
 };
 
-export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, fecha_incidencia, hora_incidencia }: Props) {
+export default function Confirmacion({ folio }: Props) {
     const handleDownloadPdf = () => {
         window.location.href = download.descargar.url(folio);
     };
@@ -42,23 +38,9 @@ export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, 
                         <p className="text-xs text-gray-500 mt-1">Guarda este número para dar seguimiento</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">No. empleado</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{numero_empleado}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Tipo</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{tipo_incidencia}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Fecha de la Incidencia</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">
-                                {fecha_incidencia}
-                                {hora_incidencia && <span className="text-gray-500 ml-1">— {hora_incidencia.substring(0, 5)}</span>}
-                            </p>
-                        </div>
-                    </div>
+                    <p className="text-sm text-gray-600 pt-2">
+                        Para consultar el detalle completo y el estado de tus incidencias, ingresa al módulo de seguimiento con tu número de empleado y contraseña.
+                    </p>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 text-sm text-blue-700 text-left">
@@ -88,4 +70,3 @@ export default function Confirmacion({ folio, numero_empleado, tipo_incidencia, 
         </>
     );
 }
-

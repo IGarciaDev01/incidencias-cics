@@ -32,6 +32,7 @@ return new class extends Migration
             $table->enum('estado', [
                 'pendiente_jefe',
                 'pendiente_capital_humano',
+                'pendiente_sindicato',
                 'pendiente_subdireccion',
                 'aprobada',
                 'rechazada',

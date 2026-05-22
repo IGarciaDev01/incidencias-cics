@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\RolUsuario;
-use App\Models\Area;
 use App\Models\User;
 
 test('login screen can be rendered', function () {
@@ -25,19 +24,16 @@ test('users can authenticate using the login screen', function () {
 });
 
 test('login ignores stale intended urls that could cause 403', function () {
-    $area = Area::create([
-        'nombre' => 'Area A',
-        'slug' => 'area-a',
-        'descripcion' => null,
-        'activa' => true,
-    ]);
-
     $user = User::factory()->create([
         'rol' => RolUsuario::JefeInmediato,
         'activo' => true,
     ]);
 
-    $user->areas()->attach($area->id, ['es_jefe' => true]);
+    $area = crearAreaOperativa([
+        'nombre' => 'Area A',
+        'slug' => 'area-a',
+        'descripcion' => null,
+    ], $user);
 
     $response = $this
         ->withSession(['url.intended' => '/panel/subdireccion/incidencias'])
@@ -74,6 +70,19 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect(route('login'));
+});
+
+test('inactive authenticated users cannot access the panel dashboard', function () {
+    $user = User::factory()->create([
+        'rol' => RolUsuario::Subdirector,
+        'activo' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('panel.dashboard'))
+        ->assertRedirect(route('login'));
+
+    $this->assertGuest();
 });
 
 test('users are rate limited', function () {

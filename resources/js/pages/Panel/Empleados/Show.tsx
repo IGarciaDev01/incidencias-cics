@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ESTADO_COLORS, ESTADO_LABELS, TIPO_LABELS, TIPO_SOLICITANTE_LABELS } from '@/lib/incidencias';
 import { dashboard } from '@/routes/panel';
 import { index as chEmpleados,   show as chShow,   edit as chEdit }   from '@/routes/panel/capital_humano/empleados';
 import { show as chVerIncidencia }   from '@/routes/panel/capital_humano/incidencias';
@@ -51,36 +52,6 @@ type Props = {
     } | null;
 };
 
-const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe:           'Pendiente — Jefe',
-    pendiente_capital_humano: 'Pendiente — Capital Humano',
-    pendiente_sindicato:      'Pendiente — Sindicato',
-    pendiente_subdireccion:   'Pendiente — Subdirección',
-    aprobada:                 'Aprobada',
-    rechazada:                'Rechazada',
-};
-const ESTADO_COLORS: Record<string, string> = {
-    pendiente_jefe:           'bg-yellow-100 text-yellow-800',
-    pendiente_capital_humano: 'bg-orange-100 text-orange-800',
-    pendiente_sindicato:      'bg-purple-100 text-purple-800',
-    pendiente_subdireccion:   'bg-blue-100 text-blue-800',
-    aprobada:                 'bg-green-100 text-green-800',
-    rechazada:                'bg-red-100 text-red-800',
-};
-const TIPO_LABELS: Record<string, string> = {
-    retardo:           'Retardo',
-    permiso_economico: 'Permiso Económico',
-    comision_oficial:  'Comisión Oficial',
-    salida_anticipada: 'Salida Anticipada',
-    permiso_sindical:  'Permiso Sindical',
-    incidencia_medica: 'Incidencia Médica',
-    buena_conducta:    'Incidencia de Buena Conducta',
-};
-const TIPO_SOLICITANTE_LABELS: Record<string, string> = {
-    docente:        'Docente',
-    administrativo: 'Administrativo',
-};
-
 function useRolBackUrl(numeroEmpleado?: string) {
     const { auth } = usePage().props as { auth: { user?: { rol?: string } } };
     const rol = auth.user?.rol ?? '';
@@ -115,7 +86,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
     const rechazadas = incidencias.filter((i) => i.estado === 'rechazada').length;
     const pendientes = incidencias.filter((i) => !['aprobada', 'rechazada'].includes(i.estado)).length;
 
-    const hayFiltros = filtros.fecha || filtros.estado || filtros.tipo;
+    const hayFiltros = filtros.fecha || filtros.fecha_fin || filtros.estado || filtros.tipo;
 
     return (
         <>
@@ -294,6 +265,7 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Área</th>
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Fecha</th>
+                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Registrada</th> 
                                     <th className="text-left px-4 py-3 font-medium text-gray-600">Estado</th>
                                     <th className="px-4 py-3" />
                                 </tr>
@@ -315,6 +287,9 @@ export default function Show({ empleado, incidencias, filtros, estados, tipos, p
                                         </td>
                                         <td className="px-4 py-3 text-gray-500">
                                             {formatDateOnly(inc.fecha_incidencia, false)}
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500">
+                                            {formatDateOnly(inc.created_at, true)}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[inc.estado] ?? 'bg-gray-100 text-gray-600'}`}>

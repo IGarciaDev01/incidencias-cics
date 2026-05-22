@@ -5,13 +5,13 @@ namespace App\Services;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoAccionHistorial;
 use App\Exceptions\LimiteIncidenciaExcepcion;
+use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class IncidenciaService
 {
@@ -34,8 +34,13 @@ class IncidenciaService
         $tipo = $empleado->tipo;
 
         abort_if(! $tipo, 422, 'El empleado no tiene un tipo asignado. Contacta a Capital Humano.');
+        abort_if(! $empleado->email, 422, 'El empleado no tiene correo electrónico registrado. Contacta a Capital Humano.');
 
-        $resultado = DB::transaction(function () use ($data, $numeroEmpleado, $tipo) {
+        $area = Area::conJefeOperativo()->whereKey($data['area_id'])->first();
+
+        abort_if(! $area, 422, 'El área seleccionada no está disponible para registrar incidencias.');
+
+        $resultado = DB::transaction(function () use ($data, $empleado, $numeroEmpleado, $tipo, $area) {
             $minutosRetardo = (int) ($data['minutos_retardo'] ?? 0);
             $fechaIncidencia = Carbon::parse($data['fecha_incidencia'])->startOfDay();
             $tipoIncidencia = (string) $data['tipo_incidencia'];
@@ -53,17 +58,16 @@ class IncidenciaService
             $incidencia = Incidencia::create([
                 'folio' => $this->folioService->generar(),
                 'numero_empleado' => $numeroEmpleado,
-                'reportante_nombre' => $data['reportante_nombre'],
-                'email_reportante' => $data['email_reportante'] ?? null,
+                'reportante_nombre' => $empleado->nombre,
+                'email_reportante' => $empleado->email,
                 'tipo_solicitante' => $tipo,
-                'area_id' => $data['area_id'],
+                'area_id' => $area->id,
                 'fecha_incidencia' => $data['fecha_incidencia'],
                 'hora_incidencia' => $data['hora_incidencia'] ?? null,
                 'tipo_incidencia' => $data['tipo_incidencia'],
                 'minutos_retardo' => $data['minutos_retardo'] ?? null,
                 'descripcion' => $data['descripcion'] ?? null,
                 'estado' => $esLimitExcedido ? EstadoIncidencia::Rechazada : EstadoIncidencia::PendienteJefe,
-                'token_seguimiento' => Str::random(64),
                 'motivo_rechazo' => $esLimitExcedido ? $razon : null,
             ]);
 
@@ -168,7 +172,7 @@ class IncidenciaService
         });
     }
 
-    // ─── Flujo de aprobación — Subdirección Académica ───────────────────────
+    // ─── Flujo de aprobación — Subdirección Administrativa ──────────────────
 
     public function aprobarSubdireccion(Incidencia $incidencia, User $subdirector, ?string $comentario = null): void
     {
@@ -188,7 +192,7 @@ class IncidenciaService
                 incidencia: $incidencia,
                 tipo: TipoAccionHistorial::Aprobada,
                 userId: $subdirector->id,
-                comentario: $comentario ?? 'Aprobada por Subdirección Académica.',
+                comentario: $comentario ?? 'Aprobada por Subdirección Administrativa.',
             );
 
             $this->notificacionService->enviarCambioEstado($incidencia);

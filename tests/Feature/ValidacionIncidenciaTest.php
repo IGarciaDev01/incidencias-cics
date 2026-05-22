@@ -3,21 +3,18 @@
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Enums\TipoSolicitante;
-use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Services\ValidacionIncidenciaService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 function crearAreaYOpciones(): array
 {
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area Test',
         'slug' => 'area-test-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     Empleado::create([
@@ -54,11 +51,10 @@ function crearEmpleadoConTipo(string $numero, string $tipo): Empleado
 
 function crearIncidencia(array $override = []): Incidencia
 {
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area '.uniqid(),
         'slug' => 'area-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $numero = $override['numero_empleado'] ?? '90100';
@@ -80,7 +76,6 @@ function crearIncidencia(array $override = []): Incidencia
         'minutos_retardo' => 30,
         'descripcion' => 'Test',
         'estado' => $estado->value,
-        'token_seguimiento' => Str::random(64),
     ]);
 }
 
@@ -89,11 +84,10 @@ function crearIncidencia(array $override = []): Incidencia
 test('se rechaza retardo de 31 o más minutos', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area retardo31',
         'slug' => 'area-retardo31-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90110';
@@ -122,11 +116,10 @@ test('se rechaza retardo de 31 o más minutos', function () {
 test('se permite retardo de 30 minutos', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area retardo30',
         'slug' => 'area-retardo30-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90111';
@@ -168,11 +161,10 @@ test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area retardo2',
         'slug' => 'area-retardo2-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90112';
@@ -195,7 +187,6 @@ test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
         'minutos_retardo' => 15,
         'descripcion' => 'Retardo 1',
         'estado' => EstadoIncidencia::PendienteJefe->value,
-        'token_seguimiento' => Str::random(64),
     ]);
 
     Incidencia::create([
@@ -210,7 +201,6 @@ test('se rechazan retardos cuando ya hay 2 en la quincena', function () {
         'minutos_retardo' => 20,
         'descripcion' => 'Retardo 2',
         'estado' => EstadoIncidencia::Aprobada->value,
-        'token_seguimiento' => Str::random(64),
     ]);
 
     $response = $this->post(route('incidencias.store'), [
@@ -235,11 +225,10 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-20'));
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area retardoq2',
         'slug' => 'area-retardoq2-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90113';
@@ -262,7 +251,6 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
         'minutos_retardo' => 10,
         'descripcion' => 'Retardo 1',
         'estado' => EstadoIncidencia::PendienteJefe->value,
-        'token_seguimiento' => Str::random(64),
     ]);
 
     Incidencia::create([
@@ -277,7 +265,6 @@ test('se permite un tercer retardo en la siguiente quincena', function () {
         'minutos_retardo' => 15,
         'descripcion' => 'Retardo 2',
         'estado' => EstadoIncidencia::Aprobada->value,
-        'token_seguimiento' => Str::random(64),
     ]);
 
     $this->post(route('incidencias.store'), [
@@ -314,11 +301,10 @@ test('se rechaza permiso economico cuando ya hay 3 en el mes', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area pe3',
         'slug' => 'area-pe3-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90114';
@@ -342,7 +328,6 @@ test('se rechaza permiso economico cuando ya hay 3 en el mes', function () {
             'minutos_retardo' => null,
             'descripcion' => 'Permiso '.$i,
             'estado' => EstadoIncidencia::PendienteJefe->value,
-            'token_seguimiento' => Str::random(64),
         ]);
     }
 
@@ -369,11 +354,10 @@ test('puede registrar muchos permisos sindicales sin limite', function () {
     Mail::fake();
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area ps',
         'slug' => 'area-ps-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90115';
@@ -397,7 +381,6 @@ test('puede registrar muchos permisos sindicales sin limite', function () {
             'minutos_retardo' => null,
             'descripcion' => 'Permiso Sindical '.$i,
             'estado' => EstadoIncidencia::PendienteJefe->value,
-            'token_seguimiento' => Str::random(64),
         ]);
     }
 
@@ -427,11 +410,10 @@ test('puede registrar muchos permisos sindicales sin limite', function () {
 test('incidencias rechazadas no cuentan para el limite de permiso economico', function () {
     Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area norechazadas',
         'slug' => 'area-norechazadas-'.uniqid(),
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $empleadoNum = '90116';
@@ -455,7 +437,6 @@ test('incidencias rechazadas no cuentan para el limite de permiso economico', fu
             'minutos_retardo' => null,
             'descripcion' => 'Incidencia '.$i,
             'estado' => EstadoIncidencia::Rechazada->value,
-            'token_seguimiento' => Str::random(64),
         ]);
     }
 

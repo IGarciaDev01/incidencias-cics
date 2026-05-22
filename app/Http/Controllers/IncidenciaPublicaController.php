@@ -22,7 +22,9 @@ class IncidenciaPublicaController extends Controller
     public function create(): Response
     {
         return Inertia::render('Public/Incidencias/Create', [
-            'areas' => Area::where('activa', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'areas' => Area::conJefeOperativo()
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ]);
     }
 
@@ -68,14 +70,12 @@ class IncidenciaPublicaController extends Controller
 
     public function confirmacion(string $folio): Response
     {
+        abort_unless(Session::get('seguimiento_verificado') === $folio, 403, 'No tienes acceso a esta confirmación.');
+
         $incidencia = Incidencia::where('folio', $folio)->firstOrFail();
 
         return Inertia::render('Public/Incidencias/Confirmacion', [
             'folio' => $incidencia->folio,
-            'numero_empleado' => $incidencia->numero_empleado,
-            'tipo_incidencia' => $incidencia->tipo_incidencia->label(),
-            'fecha_incidencia' => $incidencia->fecha_incidencia->format('d/m/Y'),
-            'hora_incidencia' => $incidencia->hora_incidencia,
         ]);
     }
 }

@@ -18,13 +18,7 @@ class AuthController extends Controller
     public function showLogin(): Response
     {
         return Inertia::render('auth/login', [
-            'areas' => Area::where('activa', true)
-                ->whereExists(fn ($q) => $q->from('area_user')
-                    ->join('users', 'area_user.user_id', '=', 'users.id')
-                    ->whereColumn('area_user.area_id', 'areas.id')
-                    ->where('area_user.es_jefe', true)
-                    ->where('users.activo', true)
-                )
+            'areas' => Area::conJefeOperativo()
                 ->orderBy('nombre')
                 ->get(['id', 'nombre', 'slug']),
         ]);
@@ -47,12 +41,21 @@ class AuthController extends Controller
                 return back()->withErrors(['area_id' => 'Selecciona tu área.'])->onlyInput('rol');
             }
 
-            $user = User::whereExists(fn ($q) => $q->from('area_user')
-                ->join('areas', 'area_user.area_id', '=', 'areas.id')
-                ->whereColumn('area_user.user_id', 'users.id')
-                ->where('area_user.area_id', $areaId)
-                ->where('area_user.es_jefe', true)
-            )->where('rol', $rolEnum)->where('activo', true)->first();
+            $area = Area::whereKey($areaId)
+                ->conJefeOperativo()
+                ->first();
+
+            if (! $area) {
+                return back()->withErrors(['area_id' => 'El área seleccionada no tiene jefe asignado.'])->onlyInput('rol');
+            }
+
+            $user = User::whereKey($area->jefe_id)
+                ->whereExists(fn ($q) => $q->from('area_user')
+                    ->join('areas', 'area_user.area_id', '=', 'areas.id')
+                    ->whereColumn('area_user.user_id', 'users.id')
+                    ->where('area_user.area_id', $areaId)
+                    ->where('area_user.es_jefe', true)
+                )->where('rol', $rolEnum)->where('activo', true)->first();
 
             if (! $user) {
                 return back()->withErrors(['area_id' => 'No hay un jefe asignado a esta área.'])->onlyInput('rol');

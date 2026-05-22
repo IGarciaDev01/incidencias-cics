@@ -35,7 +35,7 @@ const ROL_LABELS: Record<string, string> = {
     jefe_inmediato: 'Jefe Inmediato',
     capital_humano: 'Capital Humano',
     sindicato: 'Sindicato',
-    subdirector: 'Subdirección Académica',
+    subdirector: 'Subdirección Administrativa',
 };
 
 export default function Edit({ usuario, roles, areas }: Props) {

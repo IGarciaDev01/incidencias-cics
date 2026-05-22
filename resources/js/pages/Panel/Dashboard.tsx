@@ -1,4 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
+import {
+    ESTADO_CHART_COLORS,
+    ESTADO_LABELS,
+    SOLICITANTE_COLORS,
+    TIPO_COLORS,
+    TIPO_LABELS,
+    TIPO_SOLICITANTE_LABELS,
+} from '@/lib/incidencias';
 import { dashboard } from '@/routes/panel';
 
 type AdminStats = {
@@ -59,62 +67,6 @@ type Props = {
     stats: AdminStats | JefeStats | CapitalHumanoStats | SubdireccionStats;
     rol: 'jefe_inmediato' | 'capital_humano' | 'sindicato' | 'subdirector';
     areaNombre?: string;
-};
-
-const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente — Jefe',
-    pendiente_capital_humano: 'Pendiente — C.H.',
-    pendiente_sindicato: 'Pendiente — Sindicato',
-    pendiente_subdireccion: 'Pendiente — Subdir.',
-    aprobada: 'Aprobada',
-    rechazada: 'Rechazada',
-};
-
-const ESTADO_COLORS: Record<string, string> = {
-    pendiente_jefe: 'bg-yellow-400',
-    pendiente_capital_humano: 'bg-orange-400',
-    pendiente_sindicato: 'bg-purple-500',
-    pendiente_subdireccion: 'bg-sky-500',
-    aprobada: 'bg-emerald-500',
-    rechazada: 'bg-red-500',
-};
-
-const TIPO_LABELS: Record<string, string> = {
-    retardo: 'Retardo',
-    salida_anticipada: 'Salida Anticipada',
-    permiso_economico: 'Permiso Económico',
-    comision_oficial: 'Comisión Oficial',
-    permiso_sindical: 'Permiso Sindical',
-    incidencia_medica: 'Incidencia Médica',
-    buena_conducta: 'Buena Conducta',
-};
-
-const TIPO_COLORS: Record<string, string> = {
-    retardo: 'bg-amber-400',
-    permiso_economico: 'bg-blue-400',
-    comision_oficial: 'bg-violet-400',
-    salida_anticipada: 'bg-rose-400',
-    permiso_sindical: 'bg-green-400',
-    incidencia_medica: 'bg-yellow-400',
-    buena_conducta: 'bg-sky-400',
-};
-
-const SOLICITANTE_LABELS: Record<string, string> = {
-    docente: 'Docente',
-    administrativo: 'Administrativo',
-    paae: 'PAAE',
-};
-
-const SOLICITANTE_COLORS: Record<string, string> = {
-    docente: 'bg-teal-500',
-    administrativo: 'bg-indigo-400',
-    paae: 'bg-rose-400',
-};
-
-const SOLICITANTE_BG: Record<string, string> = {
-    docente: 'bg-teal-50 text-teal-700',
-    administrativo: 'bg-indigo-50 text-indigo-700',
-    paae: 'bg-rose-50 text-rose-700',
 };
 
 function StatCard({
@@ -233,7 +185,7 @@ function TrendChart({ data }: { data: Record<string, { label: string; total: num
     return (
         <div className="space-y-1">
             <div className="flex items-end gap-1 h-24">
-                {Object.entries(data).map(([key, { label, total }]) => {
+                {Object.entries(data).map(([key, { total }]) => {
                     const height = Math.max((total / max) * 100, total > 0 ? 8 : 0);
 
                     return (
@@ -247,7 +199,7 @@ function TrendChart({ data }: { data: Record<string, { label: string; total: num
                 })}
             </div>
             <div className="flex gap-1">
-                {Object.entries(data).map(([key, { label, total }]) => (
+                {Object.entries(data).map(([key, { label }]) => (
                     <div key={key} className="flex-1 text-center">
                         <span className="text-xs text-gray-400">{label}</span>
                     </div>
@@ -281,7 +233,7 @@ function JefeDashboard({ stats, areaNombre }: { stats: JefeStats; areaNombre?: s
 
             <div className="grid md:grid-cols-3 gap-4">
                 <ChartCard title="Por estado">
-                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_CHART_COLORS} labelMap={ESTADO_LABELS} />
                 </ChartCard>
                 <ChartCard title="Por tipo">
                     <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
@@ -293,7 +245,7 @@ function JefeDashboard({ stats, areaNombre }: { stats: JefeStats; areaNombre?: s
 
             <div className="grid md:grid-cols-2 gap-4">
                 <ChartCard title="Por tipo de solicitante">
-                    <DonutChart data={stats.charts.por_solicitante} colorMap={SOLICITANTE_COLORS} labelMap={SOLICITANTE_LABELS} />
+                    <DonutChart data={stats.charts.por_solicitante} colorMap={SOLICITANTE_COLORS} labelMap={TIPO_SOLICITANTE_LABELS} />
                 </ChartCard>
                 <ChartCard title="Tasa de aprobación">
                     <div className="flex flex-col items-center justify-center py-2">
@@ -341,7 +293,7 @@ function CapitalHumanoDashboard({ stats }: { stats: CapitalHumanoStats }) {
 
             <div className="grid md:grid-cols-3 gap-4">
                 <ChartCard title="Por estado">
-                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_CHART_COLORS} labelMap={ESTADO_LABELS} />
                 </ChartCard>
                 <ChartCard title="Por tipo">
                     <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
@@ -401,7 +353,7 @@ function SindicatoDashboard({ stats }: { stats: CapitalHumanoStats }) {
 
             <div className="grid md:grid-cols-3 gap-4">
                 <ChartCard title="Por estado">
-                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_CHART_COLORS} labelMap={ESTADO_LABELS} />
                 </ChartCard>
                 <ChartCard title="Por tipo">
                     <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />
@@ -429,7 +381,7 @@ function SubdireccionDashboard({ stats }: { stats: SubdireccionStats }) {
 
             <div className="grid md:grid-cols-3 gap-4">
                 <ChartCard title="Por estado">
-                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                    <BarChart data={stats.charts.por_estado} colorMap={ESTADO_CHART_COLORS} labelMap={ESTADO_LABELS} />
                 </ChartCard>
                 <ChartCard title="Por tipo">
                     <BarChart data={stats.charts.por_tipo} colorMap={TIPO_COLORS} labelMap={TIPO_LABELS} />

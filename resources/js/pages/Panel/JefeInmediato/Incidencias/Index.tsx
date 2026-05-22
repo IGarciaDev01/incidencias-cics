@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ESTADO_COLORS, ESTADO_LABELS, TIPO_LABELS } from '@/lib/incidencias';
 import { dashboard } from '@/routes/panel';
 import { index, show } from '@/routes/panel/jefe_inmediato/incidencias';
 import { formatDateOnly } from '@/utils/date';
@@ -42,34 +43,6 @@ type Props = {
     filtros: { estado?: string; tipo?: string; buscar?: string; fecha_inicio?: string; fecha_fin?: string };
     estados: EnumItem[];
     tipos: EnumItem[];
-};
-
-const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente de aprobación',
-    pendiente_capital_humano: 'Pendiente (Capital Humano)',
-    pendiente_sindicato: 'Pendiente (Sindicato)',
-    pendiente_subdireccion: 'Pendiente (Subdirección)',
-    aprobada: 'Aprobada',
-    rechazada: 'Rechazada',
-};
-
-const ESTADO_COLORS: Record<string, string> = {
-    pendiente_jefe: 'bg-yellow-100 text-yellow-800',
-    pendiente_capital_humano: 'bg-orange-100 text-orange-800',
-    pendiente_sindicato: 'bg-purple-100 text-purple-800',
-    pendiente_subdireccion: 'bg-blue-100 text-blue-800',
-    aprobada: 'bg-green-100 text-green-800',
-    rechazada: 'bg-red-100 text-red-800',
-};
-
-const TIPO_LABELS: Record<string, string> = {
-    retardo: 'Retardo',
-    permiso_economico: 'Permiso Económico',
-    comision_oficial: 'Comisión Oficial',
-    salida_anticipada: 'Salida Anticipada',
-    permiso_sindical: 'Permiso Sindical',
-    incidencia_medica: 'Incidencia Médica',
-    buena_conducta: 'Buena Conducta',
 };
 
 export function formatDate(d: string, forcedHour: boolean) {

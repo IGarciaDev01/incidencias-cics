@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use App\Enums\RolUsuario;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\Password;
 
@@ -20,7 +21,7 @@ class StoreUsuarioRequest extends FormRequest
         return [
             'nombre' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'numero_empleado' => ['nullable', 'string', 'max:20', 'unique:users,numero_empleado'],
+            'numero_empleado' => [Rule::requiredIf($this->rol === RolUsuario::JefeInmediato->value), 'nullable', 'string', 'max:20', 'unique:users,numero_empleado'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'rol' => [
                 'required',

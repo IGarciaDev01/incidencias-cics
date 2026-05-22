@@ -24,7 +24,7 @@ const ROL_LABELS: Record<string, string> = {
     jefe_inmediato: 'Jefe Inmediato',
     capital_humano: 'Capital Humano',
     sindicato: 'Sindicato',
-    subdirector: 'Subdirección Académica',
+    subdirector: 'Subdirección Administrativa',
 };
 
 export default function Create({ roles, areas }: Props) {
@@ -109,8 +109,9 @@ export default function Create({ roles, areas }: Props) {
                             value={data.numero_empleado}
                             onChange={(e) => setData('numero_empleado', e.target.value)}
                             placeholder="Número de empleado"
-                            required
+                            required={data.rol === 'jefe_inmediato'}
                         />
+                        <p className="text-xs text-gray-500">Obligatorio solo para jefes de área.</p>
                         <InputError message={errors.numero_empleado} />
                     </div>
 

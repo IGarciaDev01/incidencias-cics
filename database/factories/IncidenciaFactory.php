@@ -9,7 +9,6 @@ use App\Models\Area;
 use App\Models\Incidencia;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Incidencia>
@@ -35,7 +34,6 @@ class IncidenciaFactory extends Factory
             'minutos_retardo' => null,
             'descripcion' => null,
             'estado' => EstadoIncidencia::PendienteJefe,
-            'token_seguimiento' => Str::random(32),
             'user_id' => null,
             'revisado_por' => null,
             'enviado_sindicato_at' => null,

@@ -80,7 +80,9 @@ export default function Index({ empleados, filtros }: Props) {
     }
 
     async function handleImportar() {
-        if (!archivo || !importarUrl) return;
+        if (!archivo || !importarUrl) {
+            return;
+        }
 
         setImportando(true);
         setProgreso(0);
@@ -145,6 +147,7 @@ export default function Index({ empleados, filtros }: Props) {
             xhr.setRequestHeader('Accept', 'application/json');
 
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
             if (token) {
                 xhr.setRequestHeader('X-CSRF-TOKEN', token);
             }
@@ -158,7 +161,10 @@ export default function Index({ empleados, filtros }: Props) {
         setArchivo(null);
         setProgreso(0);
         setResultado(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
 
     return (

@@ -4,7 +4,6 @@ use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function crearAreaSimple(string $nombre, string $slug): Area
@@ -37,7 +36,6 @@ function crearEmpleadoConIncidencia(Area $area, string $numero, string $nombre, 
         'minutos_retardo' => null,
         'descripcion' => 'Test',
         'estado' => 'pendiente_jefe',
-        'token_seguimiento' => Str::random(64),
     ]);
 }
 

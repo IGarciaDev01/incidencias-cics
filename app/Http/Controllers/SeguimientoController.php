@@ -75,6 +75,17 @@ class SeguimientoController extends Controller
             $query->where('tipo_incidencia', $request->tipo);
         }
 
+        $statsQuery = clone $query;
+
+        $estadisticas = [
+            'total' => (clone $statsQuery)->count(),
+            'pendientes' => (clone $statsQuery)
+                ->whereNotIn('estado', [EstadoIncidencia::Aprobada->value, EstadoIncidencia::Rechazada->value])
+                ->count(),
+            'aprobadas' => (clone $statsQuery)->where('estado', EstadoIncidencia::Aprobada)->count(),
+            'rechazadas' => (clone $statsQuery)->where('estado', EstadoIncidencia::Rechazada)->count(),
+        ];
+
         $incidencias = $query->orderByDesc('created_at')->paginate(15)->withQueryString()->through(fn ($i) => [
             'id' => $i->id,
             'folio' => $i->folio,
@@ -88,10 +99,6 @@ class SeguimientoController extends Controller
             'archivos_count' => $i->archivos_count,
         ]);
 
-        $aprobadas = $incidencias->getCollection()->filter(fn ($i) => $i['estado'] === 'aprobada')->count();
-        $rechazadas = $incidencias->getCollection()->filter(fn ($i) => $i['estado'] === 'rechazada')->count();
-        $pendientes = $incidencias->getCollection()->filter(fn ($i) => ! in_array($i['estado'], ['aprobada', 'rechazada'], true))->count();
-
         return Inertia::render('Public/Seguimiento/Show', [
             'empleado' => [
                 'numero_empleado' => $empleado->numero_empleado,
@@ -101,12 +108,7 @@ class SeguimientoController extends Controller
             ],
             'incidencias' => $incidencias,
             'filtros' => $request->only(['fecha', 'fecha_fin', 'estado', 'tipo']),
-            'estadisticas' => [
-                'total' => $incidencias->total(),
-                'pendientes' => $pendientes,
-                'aprobadas' => $aprobadas,
-                'rechazadas' => $rechazadas,
-            ],
+            'estadisticas' => $estadisticas,
             'estados' => collect(EstadoIncidencia::cases())->map(fn ($e) => ['value' => $e->value, 'label' => $e->label(), 'color' => $e->color()]),
             'tipos' => collect(TipoIncidencia::cases())->map(fn ($t) => ['value' => $t->value, 'label' => $t->label()]),
         ]);

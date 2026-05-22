@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\RolUsuario;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -22,9 +23,27 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'nombre' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'numero_empleado' => ['nullable', 'string', 'max:20', Rule::unique('users', 'numero_empleado')->ignore($userId)],
+            'numero_empleado' => [Rule::requiredIf($this->rol === RolUsuario::JefeInmediato->value), 'nullable', 'string', 'max:20', Rule::unique('users', 'numero_empleado')->ignore($userId)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'rol' => ['required', new Enum(RolUsuario::class)],
+            'rol' => [
+                'required',
+                new Enum(RolUsuario::class),
+                function ($attribute, $value, $fail) use ($userId) {
+                    $rol = RolUsuario::from($value);
+
+                    if (! in_array($rol, [RolUsuario::Subdirector, RolUsuario::CapitalHumano, RolUsuario::Sindicato], true)) {
+                        return;
+                    }
+
+                    $exists = User::where('rol', $rol)
+                        ->whereKeyNot($userId)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('Ya existe un usuario con este rol. Solo puede haber uno.');
+                    }
+                },
+            ],
             'area_ids' => ['nullable', 'array'],
             'area_ids.*' => ['integer', 'exists:areas,id'],
             'activo' => ['boolean'],

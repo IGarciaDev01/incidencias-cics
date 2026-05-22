@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\RolUsuario;
 use App\Enums\TipoIncidencia;
 use App\Enums\TipoSolicitante;
 use App\Services\ArchivoService;
@@ -25,7 +26,23 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             'reportante_nombre' => ['required', 'string', 'max:150'],
             'email_reportante' => ['required', 'email', 'max:150'],
             'tipo_empleado' => ['required', new Enum(TipoSolicitante::class)],
-            'area_id' => ['required', 'integer', 'exists:areas,id'],
+            'area_id' => [
+                'required',
+                'integer',
+                Rule::exists('areas', 'id')->where(fn ($query) => $query
+                    ->where('activa', true)
+                    ->whereNotNull('jefe_id')
+                    ->whereExists(fn ($q) => $q->from('users')
+                        ->whereColumn('users.id', 'areas.jefe_id')
+                        ->where('users.rol', RolUsuario::JefeInmediato->value)
+                        ->where('users.activo', true)
+                    )
+                    ->whereExists(fn ($q) => $q->from('area_user')
+                        ->whereColumn('area_user.area_id', 'areas.id')
+                        ->whereColumn('area_user.user_id', 'areas.jefe_id')
+                        ->where('area_user.es_jefe', true)
+                    )),
+            ],
             'fecha_incidencia' => ['required', 'date', 'before_or_equal:today'],
             'hora_incidencia' => ['nullable', 'date_format:H:i'],
             'tipo_incidencia' => ['required', new Enum(TipoIncidencia::class)],
@@ -52,7 +69,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             'email_reportante.email' => 'Ingresa un correo electrónico válido.',
             'tipo_empleado.required' => 'Debes indicar el tipo de empleado.',
             'area_id.required' => 'El área de adscripción es obligatoria.',
-            'area_id.exists' => 'El área seleccionada no es válida.',
+            'area_id.exists' => 'El área seleccionada no está disponible para registrar incidencias.',
             'fecha_incidencia.required' => 'La fecha de la incidencia es obligatoria.',
             'fecha_incidencia.before_or_equal' => 'La fecha no puede ser posterior a hoy.',
             'tipo_incidencia.required' => 'El tipo de incidencia es obligatorio.',

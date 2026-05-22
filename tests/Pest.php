@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Area;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +49,22 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function crearAreaOperativa(array $attributes = [], ?User $jefe = null): Area
+{
+    $jefe ??= User::factory()->create([
+        'rol' => 'jefe_inmediato',
+        'activo' => true,
+    ]);
+
+    $area = Area::factory()->create([
+        ...$attributes,
+        'activa' => $attributes['activa'] ?? true,
+        'jefe_id' => $jefe->id,
+    ]);
+
+    $area->usuarios()->attach($jefe->id, ['es_jefe' => true]);
+
+    return $area;
 }

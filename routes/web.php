@@ -5,7 +5,6 @@ use App\Http\Controllers\ComprobanteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncidenciaPublicaController;
 use App\Http\Controllers\Panel\Admin\AreaController;
-use App\Http\Controllers\Panel\Admin\CategoriaController;
 use App\Http\Controllers\Panel\Admin\LogController;
 use App\Http\Controllers\Panel\Admin\UsuarioController;
 use App\Http\Controllers\Panel\CapitalHumano\IncidenciaController as CapitalHumanoIncidenciaController;
@@ -80,7 +79,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
+Route::prefix('panel')->name('panel.')->middleware(['auth', 'active'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -215,8 +214,6 @@ Route::prefix('panel')->name('panel.')->middleware('auth')->group(function () {
                 Route::resource('usuarios', UsuarioController::class)->except(['show']);
                 Route::patch('usuarios/{usuario}/toggle-activo', [UsuarioController::class, 'toggleActivo'])
                     ->name('usuarios.toggleActivo');
-
-                Route::resource('categorias', CategoriaController::class)->except(['show']);
 
                 Route::resource('areas', AreaController::class)->except(['show']);
 

@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboard } from '@/routes/panel';
 import { index as chIndex } from '@/routes/panel/capital_humano/areas';
+import { index as chIncidenciasIndex } from '@/routes/panel/capital_humano/incidencias';
 import { index as subdirIndex, create, destroy, edit } from '@/routes/panel/subdireccion/admin/areas';
 import { index as incidenciasIndex } from '@/routes/panel/subdireccion/incidencias';
-import { index as chIncidenciasIndex } from '@/routes/panel/capital_humano/incidencias';
 
 type Area = {
     id: number;

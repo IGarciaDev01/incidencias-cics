@@ -12,6 +12,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { TIPO_LABELS } from '@/lib/incidencias';
 import { store, buscarEmpleado } from '@/routes/incidencias';
 
 type Area = { id: number; nombre: string };
@@ -19,13 +20,13 @@ type Area = { id: number; nombre: string };
 type Props = { areas: Area[] };
 
 const TIPOS_INCIDENCIA = [
-    { value: 'retardo',           label: 'Retardo',                   descripcion: 'De 11 a 30 min, máximo 2 a la quincena', requiereMinutos: true },
-    { value: 'permiso_economico', label: 'Permiso Económico',         descripcion: 'Máx 3 al mes, 12 al año',               requiereMinutos: false },
-    { value: 'comision_oficial',  label: 'Comisión Oficial',           descripcion: '',                                    requiereMinutos: false },
-    { value: 'salida_anticipada', label: 'Salida Anticipada',         descripcion: 'Exclusivo PAAE',                         requiereMinutos: false },
-    { value: 'permiso_sindical',  label: 'Permiso Sindical',          descripcion: '',                                    requiereMinutos: false },
-    { value: 'incidencia_medica', label: 'Médica',                     descripcion: '',                                    requiereMinutos: false },
-    { value: 'buena_conducta',   label: 'Buena Conducta',             descripcion: '',                                     requiereMinutos: false },
+    { value: 'retardo',           descripcion: 'De 11 a 30 min, máximo 2 a la quincena', requiereMinutos: true },
+    { value: 'permiso_economico', descripcion: 'Máx 3 al mes, 12 al año',               requiereMinutos: false },
+    { value: 'comision_oficial',  descripcion: '',                                    requiereMinutos: false },
+    { value: 'salida_anticipada', descripcion: '',                                    requiereMinutos: false },
+    { value: 'permiso_sindical',  descripcion: '',                                    requiereMinutos: false },
+    { value: 'incidencia_medica', descripcion: '',                                    requiereMinutos: false },
+    { value: 'buena_conducta',    descripcion: '',                                    requiereMinutos: false },
 ];
 
 export default function Create({ areas }: Props) {
@@ -47,15 +48,19 @@ export default function Create({ areas }: Props) {
     const [validando, setValidando] = useState(false);
     const [empleadoValido, setEmpleadoValido] = useState(false);
     const [empleadoNoEncontrado, setEmpleadoNoEncontrado] = useState(false);
+    const [empleadoIncompleto, setEmpleadoIncompleto] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     function handleNumeroChange(value: string) {
         setData('numero_empleado', value);
         setEmpleadoValido(false);
         setEmpleadoNoEncontrado(false);
+        setEmpleadoIncompleto(false);
 
         if (value.trim().length >= 3) {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
 
             timeoutRef.current = setTimeout(() => buscarEmpleadoExacto(value.trim()), 500);
         }
@@ -70,12 +75,16 @@ export default function Create({ areas }: Props) {
                 { headers: { Accept: 'application/json' } },
             );
 
-            if (!res.ok) return;
+            if (!res.ok) {
+                return;
+            }
 
             const json: { numero_empleado: string; reportante_nombre: string; email_reportante: string | null; tipo_empleado: string | null }[] = await res.json();
             const exacto = json.find((e) => e.numero_empleado === numero);
 
             if (exacto) {
+                const datosCompletos = Boolean(exacto.email_reportante && exacto.tipo_empleado);
+
                 setData((prev) => ({
                     ...prev,
                     numero_empleado: exacto.numero_empleado,
@@ -83,8 +92,9 @@ export default function Create({ areas }: Props) {
                     email_reportante: exacto.email_reportante ?? '',
                     tipo_empleado: exacto.tipo_empleado ?? '',
                 }));
-                setEmpleadoValido(true);
+                setEmpleadoValido(datosCompletos);
                 setEmpleadoNoEncontrado(false);
+                setEmpleadoIncompleto(!datosCompletos);
             } else {
                 setData((prev) => ({
                     ...prev,
@@ -94,10 +104,12 @@ export default function Create({ areas }: Props) {
                 }));
                 setEmpleadoValido(false);
                 setEmpleadoNoEncontrado(true);
+                setEmpleadoIncompleto(false);
             }
         } catch {
             setEmpleadoNoEncontrado(true);
             setEmpleadoValido(false);
+            setEmpleadoIncompleto(false);
         } finally {
             setValidando(false);
         }
@@ -112,11 +124,11 @@ export default function Create({ areas }: Props) {
 
     return (
         <>
-            <Head title="Registrar Nueva Incidencia" />
+            <Head title="Registrar Incidencia" />
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Registrar Nueva Incidencia</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Registrar Incidencia</h2>
                     <p className="text-sm text-gray-500 mt-1">
                         Ingresa tu número de empleado para autocompletar tus datos y registrar tu incidencia.
                     </p>
@@ -140,7 +152,7 @@ export default function Create({ areas }: Props) {
                                     name="numero_empleado"
                                     value={data.numero_empleado}
                                     onChange={(e) => handleNumeroChange(e.target.value)}
-                                    placeholder="Ej. 12345"
+                                    placeholder="123457"
                                     required
                                     autoComplete="off"
                                 />
@@ -160,6 +172,12 @@ export default function Create({ areas }: Props) {
                             {empleadoNoEncontrado && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                                     Empleado no registrado. Contacta a Subdirección Administrativa para registrarte.
+                                </div>
+                            )}
+
+                            {empleadoIncompleto && (
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                                    Tu expediente está incompleto. Contacta a Capital Humano para registrar tu correo y tipo de empleado.
                                 </div>
                             )}
 
@@ -228,7 +246,7 @@ export default function Create({ areas }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Área de adscripción <span className="text-red-500">*</span></Label>
+                            <Label>Área de adscripción de la Incidencia <span className="text-red-500">*</span></Label>
                             <Select value={data.area_id} onValueChange={(v) => setData('area_id', v)} required>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecciona el área" />
@@ -295,7 +313,7 @@ export default function Create({ areas }: Props) {
                                     <SelectContent>
                                         {TIPOS_INCIDENCIA.map((t) => (
                                             <SelectItem key={t.value} value={t.value}>
-                                                <span>{t.label}</span>
+                                                <span>{TIPO_LABELS[t.value] ?? t.value}</span>
                                                 {t.descripcion && (
                                                     <span className="text-xs text-gray-400 ml-1">— {t.descripcion}</span>
                                                 )}
@@ -361,7 +379,7 @@ export default function Create({ areas }: Props) {
 
                     <Button type="submit" className="w-full" disabled={processing || !empleadoValido}>
                         {processing && <Spinner />}
-                        {empleadoValido ? 'Enviar incidencia' : 'Ingresa un número de empleado válido'}
+                        {empleadoValido ? 'Enviar incidencia' : 'Ingresa un número de empleado válido y completo'}
                     </Button>
                 </form>
             </div>

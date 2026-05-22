@@ -42,9 +42,4 @@ enum TipoIncidencia: string
     {
         return $this === self::Retardo;
     }
-
-    public function soloParaPAAE(): bool
-    {
-        return false;
-    }
 }

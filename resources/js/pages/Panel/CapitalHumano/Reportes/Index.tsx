@@ -2,6 +2,14 @@ import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    ESTADO_CHART_COLORS,
+    ESTADO_LABELS,
+    SOLICITANTE_COLORS,
+    TIPO_COLORS,
+    TIPO_LABELS,
+    TIPO_SOLICITANTE_LABELS,
+} from '@/lib/incidencias';
 import { dashboard } from '@/routes/panel';
 import { index, exportar } from '@/routes/panel/capital_humano/reportes';
 
@@ -11,40 +19,6 @@ type Props = {
     porTipoIncidencia: Record<string, number>;
     porTipoSolicitante: Record<string, number>;
     porArea: Record<string, number>;
-};
-
-const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe:             'Pendiente — Jefe',
-    pendiente_capital_humano:   'Pendiente — Capital Humano',
-    pendiente_sindicato:        'Pendiente — Sindicato',
-    pendiente_subdireccion:     'Pendiente — Subdirección',
-    aprobada:                   'Aprobada',
-    rechazada:                  'Rechazada',
-};
-const ESTADO_COLORS: Record<string, string> = {
-    pendiente_jefe:           'bg-yellow-400',
-    pendiente_capital_humano: 'bg-orange-400',
-    pendiente_sindicato:      'bg-purple-500',
-    pendiente_subdireccion:   'bg-sky-500',
-    aprobada:                 'bg-emerald-500',
-    rechazada:                'bg-red-500',
-};
-const TIPO_LABELS: Record<string, string> = {
-    retardo:           'Retardo',
-    permiso_economico: 'Permiso Económico',
-    comision_oficial:  'Comisión Oficial',
-    salida_anticipada: 'Salida Anticipada',
-};
-const TIPO_COLORS: Record<string, string> = {
-    retardo:           'bg-amber-400',
-    permiso_economico: 'bg-blue-400',
-    comision_oficial:  'bg-violet-400',
-    salida_anticipada: 'bg-rose-400',
-};
-const SOLICITANTE_COLORS: Record<string, string> = {
-    docente:        'bg-teal-500',
-    administrativo: 'bg-indigo-400',
-    paae:           'bg-rose-400',
 };
 
 function BarChart({ data, colorMap, labelMap }: {
@@ -139,7 +113,7 @@ export default function Index({ filtros, porEstado, porTipoIncidencia, porTipoSo
                         <h3 className="font-semibold text-gray-900 mb-4">Por estado</h3>
                         {Object.keys(porEstado).length === 0
                             ? <p className="text-sm text-gray-400">Sin datos en el período</p>
-                            : <BarChart data={porEstado} colorMap={ESTADO_COLORS} labelMap={ESTADO_LABELS} />
+                            : <BarChart data={porEstado} colorMap={ESTADO_CHART_COLORS} labelMap={ESTADO_LABELS} />
                         }
                     </div>
 
@@ -158,7 +132,7 @@ export default function Index({ filtros, porEstado, porTipoIncidencia, porTipoSo
                             : <BarChart
                                 data={porTipoSolicitante}
                                 colorMap={SOLICITANTE_COLORS}
-                                labelMap={{ docente: 'Docente', administrativo: 'Administrativo' }}
+                                labelMap={TIPO_SOLICITANTE_LABELS}
                             />
                         }
                     </div>

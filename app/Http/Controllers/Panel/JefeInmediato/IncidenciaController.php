@@ -30,6 +30,8 @@ class IncidenciaController extends Controller
         $queryAreaId = $request->query('area');
         $areaId = $queryAreaId ? (int) $queryAreaId : (int) $user->area_id;
 
+        abort_if(! $user->isJefeOfArea($areaId), 403, 'No tienes permiso para acceder a esta área.');
+
         return Inertia::render('Panel/JefeInmediato/Incidencias/Index',
             $this->listadoIncidencias($request, $areaId),
         );

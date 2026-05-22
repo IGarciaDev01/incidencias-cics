@@ -3,16 +3,16 @@
 use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 test('al crear incidencia requiere empleado existente en la base de datos', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area X',
         'slug' => 'area-x',
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     $this->post(route('incidencias.store'), [
@@ -29,11 +29,10 @@ test('al crear incidencia requiere empleado existente en la base de datos', func
 test('tipo_empleado se guarda en empleado y se usa en la incidencia', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area Y',
         'slug' => 'area-y',
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     Empleado::create([
@@ -64,11 +63,10 @@ test('tipo_empleado se guarda en empleado y se usa en la incidencia', function (
 test('si el empleado ya existe con tipo, no requiere tipo_empleado en el request', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Area Z',
         'slug' => 'area-z',
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     Empleado::create([
@@ -88,4 +86,64 @@ test('si el empleado ya existe con tipo, no requiere tipo_empleado en el request
         'tipo_incidencia' => 'permiso_economico',
         'descripcion' => 'Test',
     ])->assertRedirect();
+});
+
+test('rechaza areas con jefe inactivo aunque mantengan la relacion historica', function () {
+    Mail::fake();
+
+    $jefe = User::factory()->create(['rol' => 'jefe_inmediato', 'activo' => false]);
+    $area = Area::factory()->create([
+        'nombre' => 'Area Jefe Inactivo',
+        'slug' => 'area-jefe-inactivo',
+        'jefe_id' => $jefe->id,
+        'activa' => true,
+    ]);
+    $area->usuarios()->attach($jefe->id, ['es_jefe' => true]);
+
+    Empleado::create([
+        'numero_empleado' => '90005',
+        'nombre' => 'Persona Jefe Inactivo',
+        'email' => 'jefeinactivo@example.com',
+        'tipo' => 'administrativo',
+    ]);
+
+    $this->post(route('incidencias.store'), [
+        'numero_empleado' => '90005',
+        'reportante_nombre' => 'Persona Jefe Inactivo',
+        'email_reportante' => 'jefeinactivo@example.com',
+        'tipo_empleado' => 'administrativo',
+        'area_id' => $area->id,
+        'fecha_incidencia' => now()->toDateString(),
+        'tipo_incidencia' => 'permiso_economico',
+        'descripcion' => 'Test',
+    ])->assertSessionHasErrors(['area_id']);
+});
+
+test('no permite registrar incidencias en areas sin jefe asignado', function () {
+    Mail::fake();
+
+    $area = Area::create([
+        'nombre' => 'Area Sin Jefe',
+        'slug' => 'area-sin-jefe',
+        'descripcion' => null,
+        'activa' => true,
+    ]);
+
+    Empleado::create([
+        'numero_empleado' => '90004',
+        'nombre' => 'Persona Sin Jefe',
+        'email' => 'sinjefe@example.com',
+        'tipo' => 'administrativo',
+    ]);
+
+    $this->post(route('incidencias.store'), [
+        'numero_empleado' => '90004',
+        'reportante_nombre' => 'Persona Sin Jefe',
+        'email_reportante' => 'sinjefe@example.com',
+        'tipo_empleado' => 'administrativo',
+        'area_id' => $area->id,
+        'fecha_incidencia' => now()->toDateString(),
+        'tipo_incidencia' => 'permiso_economico',
+        'descripcion' => 'Test',
+    ])->assertSessionHasErrors(['area_id']);
 });

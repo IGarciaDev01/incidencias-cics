@@ -78,13 +78,12 @@ class UsuarioController extends Controller
     {
         $data = $request->validated();
         $areaIds = $data['area_ids'] ?? [];
-        $esJefe = $request->boolean('es_jefe');
         unset($data['area_ids'], $data['es_jefe']);
 
         $user = User::create($data);
 
         if ($user->esJefeInmediato() && ! empty($areaIds)) {
-            $user->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => $esJefe]));
+            $user->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => true]));
             Area::whereIn('id', $areaIds)->update(['jefe_id' => $user->id]);
         }
 
@@ -120,19 +119,19 @@ class UsuarioController extends Controller
     public function update(UpdateUsuarioRequest $request, User $usuario): RedirectResponse
     {
         $data = $request->validated();
+        $oldJefeAreaIds = $usuario->areas()->wherePivot('es_jefe', true)->pluck('areas.id')->toArray();
 
         if (empty($data['password'])) {
             unset($data['password']);
         }
 
         $areaIds = $data['area_ids'] ?? [];
-        $esJefe = $request->boolean('es_jefe');
         unset($data['area_ids'], $data['es_jefe']);
 
         $usuario->update($data);
 
         if ($usuario->esJefeInmediato()) {
-            $currentJefeAreaIds = $usuario->areas()->wherePivot('es_jefe', true)->pluck('areas.id')->toArray();
+            $currentJefeAreaIds = $oldJefeAreaIds;
             $newAreaIds = $areaIds;
 
             $toRemove = array_diff($currentJefeAreaIds, $newAreaIds);
@@ -140,8 +139,11 @@ class UsuarioController extends Controller
                 Area::whereIn('id', $toRemove)->update(['jefe_id' => null]);
             }
             $usuario->areas()->detach();
-            $usuario->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => $esJefe]));
+            $usuario->areas()->attach(array_fill_keys($areaIds, ['es_jefe' => true]));
             Area::whereIn('id', $areaIds)->update(['jefe_id' => $usuario->id]);
+        } elseif (! empty($oldJefeAreaIds)) {
+            Area::whereIn('id', $oldJefeAreaIds)->update(['jefe_id' => null]);
+            $usuario->areas()->detach();
         }
 
         return redirect()->route('panel.subdireccion.admin.usuarios.index')

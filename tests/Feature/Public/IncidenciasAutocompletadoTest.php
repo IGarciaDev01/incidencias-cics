@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use Illuminate\Support\Facades\Mail;
@@ -24,11 +23,10 @@ test('buscar empleado autocompleta desde la tabla empleados', function () {
 test('al crear incidencia registra el empleado para futuros autocompletados', function () {
     Mail::fake();
 
-    $area = Area::create([
+    $area = crearAreaOperativa([
         'nombre' => 'Recursos Humanos',
         'slug' => 'recursos-humanos',
         'descripcion' => null,
-        'activa' => true,
     ]);
 
     Empleado::create([

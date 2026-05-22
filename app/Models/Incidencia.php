@@ -30,7 +30,6 @@ class Incidencia extends Model
         'minutos_retardo',
         'descripcion',
         'estado',
-        'token_seguimiento',
         'user_id',
         'revisado_por',
         'enviado_sindicato_at',

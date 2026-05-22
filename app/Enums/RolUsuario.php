@@ -15,7 +15,7 @@ enum RolUsuario: string
             self::JefeInmediato => 'Jefe de Área',
             self::CapitalHumano => 'Capital Humano',
             self::Sindicato => 'Sindicato',
-            self::Subdirector => 'Subdirector',
+            self::Subdirector => 'Subdirección Administrativa',
         };
     }
 }

@@ -41,7 +41,7 @@ class IncidenciaController extends Controller
 
         return redirect()
             ->route('panel.capital_humano.incidencias.show', $incidencia)
-            ->with('success', "Incidencia {$incidencia->folio} aprobada y enviada a la Subdirección Académica.");
+            ->with('success', "Incidencia {$incidencia->folio} aprobada y enviada a la Subdirección Administrativa.");
     }
 
     public function rechazar(RechazarIncidenciaRequest $request, Incidencia $incidencia): RedirectResponse

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Area;
 use App\Models\Empleado;
 use App\Models\Incidencia;
 use App\Models\User;
@@ -12,19 +11,22 @@ test('el jefe inmediato solo puede acceder a incidencias de su area', function (
     Mail::fake();
     $this->withoutMiddleware(PreventRequestForgery::class);
 
-    $areaA = Area::create([
+    $areaA = crearAreaOperativa([
         'nombre' => 'Area A',
         'slug' => 'area-a',
         'descripcion' => null,
-        'activa' => true,
     ]);
 
-    $areaB = Area::create([
+    $jefeB = User::factory()->create([
+        'rol' => 'jefe_inmediato',
+        'activo' => true,
+    ]);
+
+    $areaB = crearAreaOperativa([
         'nombre' => 'Area B',
         'slug' => 'area-b',
         'descripcion' => null,
-        'activa' => true,
-    ]);
+    ], $jefeB);
 
     Empleado::create([
         'numero_empleado' => '20001',
@@ -46,14 +48,12 @@ test('el jefe inmediato solo puede acceder a incidencias de su area', function (
 
     $incidencia = Incidencia::latest('id')->firstOrFail();
 
-    $jefeB = User::factory()->create([
-        'rol' => 'jefe_inmediato',
-        'activo' => true,
-    ]);
-    $jefeB->areas()->attach($areaB->id, ['es_jefe' => true]);
-
     $this->actingAs($jefeB)
         ->get(route('panel.jefe_inmediato.incidencias.show', $incidencia))
+        ->assertForbidden();
+
+    $this->actingAs($jefeB)
+        ->get(route('panel.jefe_inmediato.incidencias.index', ['area' => $areaA->id]))
         ->assertForbidden();
 
     $this->actingAs($jefeB)
@@ -65,12 +65,16 @@ test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function (
     Mail::fake();
     $this->withoutMiddleware(PreventRequestForgery::class);
 
-    $area = Area::create([
+    $jefe = User::factory()->create([
+        'rol' => 'jefe_inmediato',
+        'activo' => true,
+    ]);
+
+    $area = crearAreaOperativa([
         'nombre' => 'Area Flujo',
         'slug' => 'area-flujo',
         'descripcion' => null,
-        'activa' => true,
-    ]);
+    ], $jefe);
 
     Empleado::create([
         'numero_empleado' => '30001',
@@ -91,12 +95,6 @@ test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function (
     ])->assertRedirect();
 
     $incidencia = Incidencia::latest('id')->firstOrFail();
-
-    $jefe = User::factory()->create([
-        'rol' => 'jefe_inmediato',
-        'activo' => true,
-    ]);
-    $jefe->areas()->attach($area->id, ['es_jefe' => true]);
 
     $capitalHumano = User::factory()->create([
         'rol' => 'capital_humano',
