@@ -4,10 +4,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes/panel';
-import { index as chEmpleados,   show as chShow,   create as chCreate,   plantilla as chPlantilla,   importar as chImportar }    from '@/routes/panel/capital_humano/empleados';
-import { index as jefeEmpleados, show as jefeShow }                        from '@/routes/panel/jefe_inmediato/empleados';
-import { index as sindicatoEmpleados, show as sindicatoShow, create as sindicatoCreate, plantilla as sindicatoPlantilla, importar as sindicatoImportar } from '@/routes/panel/sindicato/empleados';
-import { index as subdirEmpleados, show as subdirShow, create as subdirCreate, plantilla as subdirPlantilla, importar as subdirImportar } from '@/routes/panel/subdireccion/empleados';
+import {
+    index as chEmpleados,
+    show as chShow,
+    create as chCreate,
+    plantilla as chPlantilla,
+    importar as chImportar,
+} from '@/routes/panel/capital_humano/empleados';
+import {
+    index as jefeEmpleados,
+    show as jefeShow,
+} from '@/routes/panel/jefe_inmediato/empleados';
+import {
+    index as sindicatoEmpleados,
+    show as sindicatoShow,
+    create as sindicatoCreate,
+    plantilla as sindicatoPlantilla,
+    importar as sindicatoImportar,
+} from '@/routes/panel/sindicato/empleados';
+import {
+    index as subdirEmpleados,
+    show as subdirShow,
+    create as subdirCreate,
+    plantilla as subdirPlantilla,
+    importar as subdirImportar,
+} from '@/routes/panel/subdireccion/empleados';
 import { formatDateOnly } from '@/utils/date';
 
 type Empleado = {
@@ -44,27 +65,66 @@ function useRolRoutes() {
     const rol = auth.user?.rol ?? '';
 
     if (rol === 'jefe_inmediato') {
-return { indexUrl: jefeEmpleados.url, showUrl: jefeShow.url, createUrl: undefined, plantillaUrl: undefined, importarUrl: undefined, puedeCrear: false };
-}
+        return {
+            indexUrl: jefeEmpleados.url,
+            showUrl: jefeShow.url,
+            createUrl: undefined,
+            plantillaUrl: undefined,
+            importarUrl: undefined,
+            puedeCrear: false,
+        };
+    }
 
     if (rol === 'capital_humano') {
-return { indexUrl: chEmpleados.url, showUrl: chShow.url, createUrl: chCreate.url(), plantillaUrl: chPlantilla.url(), importarUrl: chImportar.url(), puedeCrear: false };
-}
+        return {
+            indexUrl: chEmpleados.url,
+            showUrl: chShow.url,
+            createUrl: chCreate.url(),
+            plantillaUrl: chPlantilla.url(),
+            importarUrl: chImportar.url(),
+            puedeCrear: false,
+        };
+    }
 
     if (rol === 'sindicato') {
-return { indexUrl: sindicatoEmpleados.url, showUrl: sindicatoShow.url, createUrl: sindicatoCreate.url(), plantillaUrl: sindicatoPlantilla.url(), importarUrl: sindicatoImportar.url(), puedeCrear: true };
-}
+        return {
+            indexUrl: sindicatoEmpleados.url,
+            showUrl: sindicatoShow.url,
+            createUrl: sindicatoCreate.url(),
+            plantillaUrl: sindicatoPlantilla.url(),
+            importarUrl: sindicatoImportar.url(),
+            puedeCrear: true,
+        };
+    }
 
-    return { indexUrl: subdirEmpleados.url, showUrl: subdirShow.url, createUrl: subdirCreate.url(), plantillaUrl: subdirPlantilla.url(), importarUrl: subdirImportar.url(), puedeCrear: true };
+    return {
+        indexUrl: subdirEmpleados.url,
+        showUrl: subdirShow.url,
+        createUrl: subdirCreate.url(),
+        plantillaUrl: subdirPlantilla.url(),
+        importarUrl: subdirImportar.url(),
+        puedeCrear: true,
+    };
 }
 
 export default function Index({ empleados, filtros }: Props) {
-    const { indexUrl, showUrl, createUrl, plantillaUrl, importarUrl, puedeCrear } = useRolRoutes();
+    const {
+        indexUrl,
+        showUrl,
+        createUrl,
+        plantillaUrl,
+        importarUrl,
+        puedeCrear,
+    } = useRolRoutes();
     const [modalAbierto, setModalAbierto] = useState(false);
     const [archivo, setArchivo] = useState<File | null>(null);
     const [importando, setImportando] = useState(false);
     const [progreso, setProgreso] = useState(0);
-    const [resultado, setResultado] = useState<{ type: 'success' | 'error'; message: string; errores: ErrorFila[] } | null>(null);
+    const [resultado, setResultado] = useState<{
+        type: 'success' | 'error';
+        message: string;
+        errores: ErrorFila[];
+    } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     function handleBuscar(e: React.FormEvent<HTMLFormElement>) {
@@ -117,7 +177,8 @@ export default function Index({ empleados, filtros }: Props) {
                     } else {
                         setResultado({
                             type: 'error',
-                            message: resp.message || 'Error al procesar el archivo.',
+                            message:
+                                resp.message || 'Error al procesar el archivo.',
                             errores: resp.errores ?? [],
                         });
                     }
@@ -146,7 +207,9 @@ export default function Index({ empleados, filtros }: Props) {
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Accept', 'application/json');
 
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
 
             if (token) {
                 xhr.setRequestHeader('X-CSRF-TOKEN', token);
@@ -171,35 +234,42 @@ export default function Index({ empleados, filtros }: Props) {
         <>
             <Head title="Empleados" />
 
-            <div className="p-4 md:p-6 space-y-5">
+            <div className="space-y-5 p-4 md:p-6">
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Empleados</h2>
-                        <p className="text-sm text-gray-500">Historial de incidencias por empleado.</p>
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            Empleados
+                        </h2>
+                        <p className="text-sm text-gray-500">
+                            Historial de incidencias por empleado.
+                        </p>
                     </div>
                     {puedeCrear && createUrl && (
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" onClick={() => setModalAbierto(true)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setModalAbierto(true)}
+                            >
                                 Cargar desde Excel
                             </Button>
                             <Button asChild>
-                                <Link href={createUrl}>
-                                    Nuevo empleado
-                                </Link>
+                                <Link href={createUrl}>Nuevo empleado</Link>
                             </Button>
                         </div>
                     )}
                 </div>
 
                 {/* Buscador */}
-                <form onSubmit={handleBuscar} className="flex gap-2 max-w-md">
+                <form onSubmit={handleBuscar} className="flex max-w-md gap-2">
                     <Input
                         name="buscar"
                         defaultValue={filtros.buscar}
                         placeholder="Buscar por nombre o número de empleado..."
                         className="h-9"
                     />
-                    <Button type="submit" size="sm" className="h-9">Buscar</Button>
+                    <Button type="submit" size="sm" className="h-9">
+                        Buscar
+                    </Button>
                     {filtros.buscar && (
                         <Button
                             type="button"
@@ -214,7 +284,7 @@ export default function Index({ empleados, filtros }: Props) {
                 </form>
 
                 {/* Tabla */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     {empleados.data.length === 0 ? (
                         <div className="p-8 text-center text-sm text-gray-500">
                             {filtros.buscar
@@ -222,46 +292,84 @@ export default function Index({ empleados, filtros }: Props) {
                                 : 'No hay registros de empleados aún.'}
                         </div>
                     ) : (
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">No. Empleado</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600">Nombre</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Correo</th>
-                                    <th className="text-center px-4 py-3 font-medium text-gray-600">Incidencias</th>
-                                    <th className="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Última</th>
-                                    <th className="px-4 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {empleados.data.map((emp) => (
-                                    <tr key={emp.numero_empleado} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-4 py-3 font-mono text-gray-700">{emp.numero_empleado}</td>
-                                        <td className="px-4 py-3 font-medium text-gray-900">{emp.reportante_nombre}</td>
-                                        <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
-                                            {emp.email_reportante ?? <span className="text-gray-300 italic">Sin correo</span>}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                                {emp.total_incidencias}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
-                                            {emp.ultima_incidencia
-                                                ? formatDateOnly(emp.ultima_incidencia, true)
-                                                : <span className="text-gray-300 italic">—</span>}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={showUrl(emp.numero_empleado)}>
-                                                    Ver historial
-                                                </Link>
-                                            </Button>
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[760px] text-sm">
+                                <thead className="border-b border-gray-200 bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-medium text-gray-600">
+                                            No. Empleado
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-medium text-gray-600">
+                                            Nombre
+                                        </th>
+                                        <th className="hidden px-4 py-3 text-left font-medium text-gray-600 md:table-cell">
+                                            Correo
+                                        </th>
+                                        <th className="px-4 py-3 text-center font-medium text-gray-600">
+                                            Incidencias
+                                        </th>
+                                        <th className="hidden px-4 py-3 text-left font-medium text-gray-600 md:table-cell">
+                                            Última
+                                        </th>
+                                        <th className="px-4 py-3" />
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {empleados.data.map((emp) => (
+                                        <tr
+                                            key={emp.numero_empleado}
+                                            className="transition-colors hover:bg-gray-50"
+                                        >
+                                            <td className="px-4 py-3 font-mono text-gray-700">
+                                                {emp.numero_empleado}
+                                            </td>
+                                            <td className="px-4 py-3 font-medium text-gray-900">
+                                                {emp.reportante_nombre}
+                                            </td>
+                                            <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
+                                                {emp.email_reportante ?? (
+                                                    <span className="text-gray-300 italic">
+                                                        Sin correo
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                                    {emp.total_incidencias}
+                                                </span>
+                                            </td>
+                                            <td className="hidden px-4 py-3 text-xs text-gray-500 md:table-cell">
+                                                {emp.ultima_incidencia ? (
+                                                    formatDateOnly(
+                                                        emp.ultima_incidencia,
+                                                        true,
+                                                    )
+                                                ) : (
+                                                    <span className="text-gray-300 italic">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={showUrl(
+                                                            emp.numero_empleado,
+                                                        )}
+                                                    >
+                                                        Ver historial
+                                                    </Link>
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 
@@ -273,12 +381,12 @@ export default function Index({ empleados, filtros }: Props) {
                                 key={i}
                                 disabled={!link.url}
                                 onClick={() => link.url && router.get(link.url)}
-                                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                                className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
                                     link.active
                                         ? 'bg-primary text-primary-foreground'
                                         : link.url
-                                            ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                                            : 'bg-white border border-gray-200 text-gray-300 cursor-not-allowed'
+                                          ? 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                          : 'cursor-not-allowed border border-gray-200 bg-white text-gray-300'
                                 }`}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />
@@ -286,23 +394,41 @@ export default function Index({ empleados, filtros }: Props) {
                     </div>
                 )}
 
-                <p className="text-xs text-gray-400 text-center">{empleados.total} empleado(s) encontrado(s)</p>
+                <p className="text-center text-xs text-gray-400">
+                    {empleados.total} empleado(s) encontrado(s)
+                </p>
             </div>
 
             {/* Modal de importación */}
             {modalAbierto && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={cerrarModal}>
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                    onClick={cerrarModal}
+                >
+                    <div
+                        className="mx-4 w-full max-w-lg space-y-5 rounded-xl bg-white p-6 shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900">Cargar empleados desde Excel</h3>
-                            <button type="button" onClick={cerrarModal} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Cargar empleados desde Excel
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={cerrarModal}
+                                className="text-xl leading-none text-gray-400 hover:text-gray-600"
+                            >
+                                &times;
+                            </button>
                         </div>
 
                         {!resultado && (
                             <>
                                 <p className="text-sm text-gray-500">
-                                    Selecciona un archivo Excel (.xlsx, .xls, .csv) con las columnas en este orden:
-                                    numero_empleado, nombre, email, tipo (docente/administrativo), password.
+                                    Selecciona un archivo Excel (.xlsx, .xls,
+                                    .csv) con las columnas en este orden:
+                                    numero_empleado, nombre, email, tipo
+                                    (docente/administrativo), password.
                                 </p>
 
                                 <div className="space-y-3">
@@ -320,26 +446,44 @@ export default function Index({ empleados, filtros }: Props) {
                                                 <span>Subiendo archivo...</span>
                                                 <span>{progreso}%</span>
                                             </div>
-                                            <div className="w-full bg-gray-100 rounded-full h-2">
-                                                <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progreso}%` }} />
+                                            <div className="h-2 w-full rounded-full bg-gray-100">
+                                                <div
+                                                    className="h-2 rounded-full bg-primary transition-all duration-300"
+                                                    style={{
+                                                        width: `${progreso}%`,
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="flex items-center gap-3 pt-2">
-                                    <Button onClick={handleImportar} disabled={!archivo || importando}>
+                                    <Button
+                                        onClick={handleImportar}
+                                        disabled={!archivo || importando}
+                                    >
                                         {importando && <Spinner />}
-                                        {importando ? 'Importando...' : 'Importar'}
+                                        {importando
+                                            ? 'Importando...'
+                                            : 'Importar'}
                                     </Button>
                                     {plantillaUrl && (
                                         <Button variant="outline" asChild>
-                                            <a href={plantillaUrl} target="_blank" rel="noopener noreferrer">
+                                            <a
+                                                href={plantillaUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
                                                 Descargar plantilla
                                             </a>
                                         </Button>
                                     )}
-                                    <Button variant="ghost" type="button" onClick={cerrarModal}>
+                                    <Button
+                                        variant="ghost"
+                                        type="button"
+                                        onClick={cerrarModal}
+                                    >
                                         Cancelar
                                     </Button>
                                 </div>
@@ -348,23 +492,32 @@ export default function Index({ empleados, filtros }: Props) {
 
                         {resultado && (
                             <div className="space-y-4">
-                                <div className={`p-4 rounded-lg text-sm ${
-                                    resultado.type === 'success'
-                                        ? 'bg-green-50 border border-green-200 text-green-700'
-                                        : 'bg-red-50 border border-red-200 text-red-700'
-                                }`}>
+                                <div
+                                    className={`rounded-lg p-4 text-sm ${
+                                        resultado.type === 'success'
+                                            ? 'border border-green-200 bg-green-50 text-green-700'
+                                            : 'border border-red-200 bg-red-50 text-red-700'
+                                    }`}
+                                >
                                     {resultado.message}
                                 </div>
 
                                 {resultado.errores.length > 0 && (
-                                    <div className="max-h-64 overflow-y-auto space-y-2">
-                                        <p className="text-sm font-medium text-gray-700">Errores por fila:</p>
+                                    <div className="max-h-64 space-y-2 overflow-y-auto">
+                                        <p className="text-sm font-medium text-gray-700">
+                                            Errores por fila:
+                                        </p>
                                         {resultado.errores.map((err, i) => (
-                                            <div key={i} className="p-3 bg-red-50 border border-red-100 rounded-lg text-sm">
+                                            <div
+                                                key={i}
+                                                className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm"
+                                            >
                                                 <p className="font-medium text-red-700">
-                                                    Fila {err.fila} — {err.numero_empleado} ({err.nombre})
+                                                    Fila {err.fila} —{' '}
+                                                    {err.numero_empleado} (
+                                                    {err.nombre})
                                                 </p>
-                                                <ul className="list-disc list-inside text-red-600 mt-1 text-xs space-y-0.5">
+                                                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-red-600">
                                                     {err.errores.map((e, j) => (
                                                         <li key={j}>{e}</li>
                                                     ))}
@@ -374,7 +527,10 @@ export default function Index({ empleados, filtros }: Props) {
                                     </div>
                                 )}
 
-                                <Button onClick={cerrarModal} className="w-full">
+                                <Button
+                                    onClick={cerrarModal}
+                                    className="w-full"
+                                >
                                     Cerrar
                                 </Button>
                             </div>

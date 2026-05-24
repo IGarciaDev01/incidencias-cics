@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Panel\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\RolUsuario;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUsuarioRequest;
 use App\Http\Requests\Admin\UpdateUsuarioRequest;
 use App\Models\Area;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +17,8 @@ use Inertia\Response;
 
 class UsuarioController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function index(Request $request): Response
     {
         $query = User::with('areas:id,nombre')
@@ -87,6 +91,13 @@ class UsuarioController extends Controller
             Area::whereIn('id', $areaIds)->update(['jefe_id' => $user->id]);
         }
 
+        $this->auditLogService->record(
+            action: AuditAction::UsuarioCreado,
+            description: "Usuario {$user->nombre} creado.",
+            subject: $user,
+            metadata: ['rol' => $user->rol->value, 'area_ids' => $areaIds],
+        );
+
         return redirect()->route('panel.subdireccion.admin.usuarios.index')
             ->with('success', 'Usuario creado correctamente.');
     }
@@ -146,6 +157,17 @@ class UsuarioController extends Controller
             $usuario->areas()->detach();
         }
 
+        $this->auditLogService->record(
+            action: AuditAction::UsuarioActualizado,
+            description: "Usuario {$usuario->nombre} actualizado.",
+            subject: $usuario,
+            metadata: [
+                'cambios' => $usuario->getChanges(),
+                'area_ids' => $areaIds,
+                'old_jefe_area_ids' => $oldJefeAreaIds,
+            ],
+        );
+
         return redirect()->route('panel.subdireccion.admin.usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
     }
@@ -153,6 +175,13 @@ class UsuarioController extends Controller
     public function destroy(User $usuario): RedirectResponse
     {
         abort_if($usuario->id === auth()->id(), 422, 'No puedes eliminar tu propia cuenta.');
+
+        $this->auditLogService->record(
+            action: AuditAction::UsuarioEliminado,
+            description: "Usuario {$usuario->nombre} eliminado.",
+            subject: $usuario,
+            metadata: ['email' => $usuario->email, 'rol' => $usuario->rol->value],
+        );
 
         $usuario->delete();
 
@@ -167,6 +196,13 @@ class UsuarioController extends Controller
         $usuario->update(['activo' => ! $usuario->activo]);
 
         $estado = $usuario->activo ? 'activado' : 'desactivado';
+
+        $this->auditLogService->record(
+            action: $usuario->activo ? AuditAction::UsuarioActivado : AuditAction::UsuarioDesactivado,
+            description: "Usuario {$usuario->nombre} {$estado}.",
+            subject: $usuario,
+            metadata: ['activo' => $usuario->activo],
+        );
 
         return back()->with('success', "Usuario {$estado} correctamente.");
     }

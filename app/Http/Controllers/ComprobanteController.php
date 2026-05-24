@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
 use App\Models\ArchivoAdjunto;
 use App\Models\Incidencia;
+use App\Services\AuditLogService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -11,6 +13,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ComprobanteController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function descargar(Request $request, string $folio): Response
     {
         $incidencia = Incidencia::where('folio', $folio)->firstOrFail();
@@ -24,6 +28,15 @@ class ComprobanteController extends Controller
         ]);
 
         $nombreArchivo = "comprobante-{$incidencia->folio}.pdf";
+
+        $this->auditLogService->record(
+            action: AuditAction::ComprobanteDescargado,
+            description: "Comprobante de la incidencia {$incidencia->folio} descargado.",
+            subject: $incidencia,
+            metadata: ['archivo' => $nombreArchivo],
+            actorType: $request->user() ? null : $this->actorTypeFromSession($request),
+            actorIdentifier: $request->user() ? null : $this->actorIdentifierFromSession($request),
+        );
 
         return $pdf->download($nombreArchivo);
     }
@@ -44,7 +57,30 @@ class ComprobanteController extends Controller
 
         abort_unless(file_exists($ruta), 404, 'Archivo no encontrado.');
 
+        $this->auditLogService->record(
+            action: AuditAction::ArchivoConsultado,
+            description: "Archivo de la incidencia {$incidencia->folio} consultado.",
+            subject: $archivo,
+            metadata: [
+                'folio' => $incidencia->folio,
+                'nombre_original' => $archivo->nombre_original,
+            ],
+            incidencia: $incidencia,
+            actorType: $request->user() ? null : $this->actorTypeFromSession($request),
+            actorIdentifier: $request->user() ? null : $this->actorIdentifierFromSession($request),
+        );
+
         return response()->file($ruta);
+    }
+
+    private function actorTypeFromSession(Request $request): ?string
+    {
+        return $request->session()->has('empleado_auth') ? 'empleado' : null;
+    }
+
+    private function actorIdentifierFromSession(Request $request): ?string
+    {
+        return $request->session()->get('empleado_auth');
     }
 
     private function puedeVerificar(Request $request, Incidencia $incidencia): bool

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Panel\Subdireccion;
 
+use App\Enums\AuditAction;
 use App\Http\Controllers\Controller;
 use App\Models\Incidencia;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -11,6 +13,8 @@ use Inertia\Response;
 
 class ReporteController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function index(Request $request): Response
     {
         $desde = $request->filled('desde') ? $request->date('desde') : now()->startOfMonth();
@@ -64,6 +68,16 @@ class ReporteController extends Controller
             ->get();
 
         $csv = $this->generarCsv($incidencias);
+
+        $this->auditLogService->record(
+            action: AuditAction::ReporteExportado,
+            description: 'Reporte de incidencias exportado.',
+            metadata: [
+                'desde' => $desde->toDateString(),
+                'hasta' => $hasta->toDateString(),
+                'total_incidencias' => $incidencias->count(),
+            ],
+        );
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',

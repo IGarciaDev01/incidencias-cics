@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Panel\Admin;
 
+use App\Enums\AuditAction;
 use App\Enums\RolUsuario;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAreaRequest;
 use App\Http\Requests\Admin\UpdateAreaRequest;
 use App\Models\Area;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +17,8 @@ use Inertia\Response;
 
 class AreaController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function index(Request $request): Response
     {
         return Inertia::render('Panel/Admin/Areas/Index', [
@@ -47,6 +51,13 @@ class AreaController extends Controller
             $area->usuarios()->attach($jefeId, ['es_jefe' => true]);
         }
 
+        $this->auditLogService->record(
+            action: AuditAction::AreaCreada,
+            description: "Área {$area->nombre} creada.",
+            subject: $area,
+            metadata: ['jefe_id' => $jefeId],
+        );
+
         return redirect()->route($this->areasRoute($request, 'index'))
             ->with('success', 'Área creada correctamente.');
     }
@@ -78,6 +89,17 @@ class AreaController extends Controller
             }
         }
 
+        $this->auditLogService->record(
+            action: AuditAction::AreaActualizada,
+            description: "Área {$area->nombre} actualizada.",
+            subject: $area,
+            metadata: [
+                'cambios' => $area->getChanges(),
+                'old_jefe_id' => $oldJefeId,
+                'new_jefe_id' => $newJefeId,
+            ],
+        );
+
         return redirect()->route($this->areasRoute($request, 'index'))
             ->with('success', 'Área actualizada correctamente.');
     }
@@ -88,6 +110,13 @@ class AreaController extends Controller
             $area->incidencias()->exists() || $area->usuarios()->exists(),
             422,
             'No se puede eliminar un área con incidencias o usuarios asociados.'
+        );
+
+        $this->auditLogService->record(
+            action: AuditAction::AreaEliminada,
+            description: "Área {$area->nombre} eliminada.",
+            subject: $area,
+            metadata: ['slug' => $area->slug],
         );
 
         $area->delete();

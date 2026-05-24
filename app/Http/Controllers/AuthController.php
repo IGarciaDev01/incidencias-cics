@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
 use App\Enums\RolUsuario;
 use App\Http\Requests\LoginRequest;
 use App\Models\Area;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +17,8 @@ use Inertia\Response;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function showLogin(): Response
     {
         return Inertia::render('auth/login', [
@@ -79,11 +83,31 @@ class AuthController extends Controller
             $request->session()->put('area_id', $areaId);
         }
 
+        $this->auditLogService->record(
+            action: AuditAction::Login,
+            description: "Inicio de sesión interno como {$user->rol->label()}.",
+            subject: $user,
+            metadata: ['rol' => $user->rol->value, 'area_id' => $areaId],
+            actor: $user,
+        );
+
         return redirect()->to($this->destino($user->rol));
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user) {
+            $this->auditLogService->record(
+                action: AuditAction::Logout,
+                description: "Cierre de sesión interno de {$user->nombre}.",
+                subject: $user,
+                metadata: ['rol' => $user->rol->value],
+                actor: $user,
+            );
+        }
+
         $request->session()->forget('area_id');
         Auth::logout();
         $request->session()->invalidate();

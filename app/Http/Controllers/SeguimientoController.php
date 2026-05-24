@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditAction;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Http\Requests\LoginSeguimientoRequest;
 use App\Models\Empleado;
 use App\Models\Incidencia;
+use App\Services\AuditLogService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +18,8 @@ use Inertia\Response;
 
 class SeguimientoController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function index(): Response|RedirectResponse
     {
         $numeroEmpleado = session('empleado_auth');
@@ -40,6 +44,15 @@ class SeguimientoController extends Controller
         }
 
         $request->session()->put('empleado_auth', $empleado->numero_empleado);
+
+        $this->auditLogService->record(
+            action: AuditAction::SeguimientoLogin,
+            description: "Inicio de sesión en seguimiento del empleado {$empleado->numero_empleado}.",
+            subject: $empleado,
+            metadata: ['numero_empleado' => $empleado->numero_empleado],
+            actorType: 'empleado',
+            actorIdentifier: $empleado->numero_empleado,
+        );
 
         return redirect()->route('seguimiento.panel');
     }
@@ -167,6 +180,18 @@ class SeguimientoController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $numeroEmpleado = (string) $request->session()->get('empleado_auth');
+
+        if ($numeroEmpleado !== '') {
+            $this->auditLogService->record(
+                action: AuditAction::SeguimientoLogout,
+                description: "Cierre de sesión en seguimiento del empleado {$numeroEmpleado}.",
+                metadata: ['numero_empleado' => $numeroEmpleado],
+                actorType: 'empleado',
+                actorIdentifier: $numeroEmpleado,
+            );
+        }
+
         $request->session()->forget('empleado_auth');
 
         return redirect()->route('seguimiento.index')->with('success', 'Sesión cerrada correctamente.');

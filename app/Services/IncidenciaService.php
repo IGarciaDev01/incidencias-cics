@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AuditAction;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoAccionHistorial;
 use App\Exceptions\LimiteIncidenciaExcepcion;
@@ -21,6 +22,7 @@ class IncidenciaService
         private readonly NotificacionService $notificacionService,
         private readonly ArchivoService $archivoService,
         private readonly ValidacionIncidenciaService $validacionIncidenciaService,
+        private readonly AuditLogService $auditLogService,
     ) {}
 
     // ─── Creación pública ────────────────────────────────────────────────────
@@ -76,6 +78,18 @@ class IncidenciaService
                 tipo: TipoAccionHistorial::Creada,
             );
 
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaCreada,
+                description: "Incidencia {$incidencia->folio} creada desde el formulario público.",
+                subject: $incidencia,
+                metadata: [
+                    'estado' => $incidencia->estado->value,
+                    'numero_empleado' => $incidencia->numero_empleado,
+                    'tipo_incidencia' => $incidencia->tipo_incidencia->value,
+                    'rechazo_automatico' => $esLimitExcedido,
+                ],
+            );
+
             if ($esLimitExcedido) {
                 $this->notificacionService->enviarRechazoPorLimite($incidencia, $razon);
             } else {
@@ -115,6 +129,14 @@ class IncidenciaService
                 comentario: $comentario ?? 'Aprobada por jefe inmediato.',
             );
 
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaAprobada,
+                description: "Incidencia {$incidencia->folio} aprobada por jefe inmediato.",
+                subject: $incidencia,
+                metadata: ['nuevo_estado' => $incidencia->estado->value],
+                actor: $jefe,
+            );
+
             $this->notificacionService->enviarCambioEstado($incidencia);
         });
     }
@@ -142,6 +164,14 @@ class IncidenciaService
                 comentario: $comentario ?? 'Aprobada por Capital Humano.',
             );
 
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaAprobada,
+                description: "Incidencia {$incidencia->folio} aprobada por Capital Humano.",
+                subject: $incidencia,
+                metadata: ['nuevo_estado' => $incidencia->estado->value],
+                actor: $capitalHumano,
+            );
+
             $this->notificacionService->enviarCambioEstado($incidencia);
         });
     }
@@ -166,6 +196,14 @@ class IncidenciaService
                 tipo: TipoAccionHistorial::Asignada,
                 userId: $capitalHumano->id,
                 comentario: $comentario ?? 'Enviada a Sindicato por Capital Humano.',
+            );
+
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaEnviadaSindicato,
+                description: "Incidencia {$incidencia->folio} enviada a Sindicato.",
+                subject: $incidencia,
+                metadata: ['nuevo_estado' => $incidencia->estado->value],
+                actor: $capitalHumano,
             );
 
             $this->notificacionService->enviarCambioEstado($incidencia);
@@ -195,6 +233,14 @@ class IncidenciaService
                 comentario: $comentario ?? 'Aprobada por Subdirección Administrativa.',
             );
 
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaAprobada,
+                description: "Incidencia {$incidencia->folio} aprobada por Subdirección.",
+                subject: $incidencia,
+                metadata: ['nuevo_estado' => $incidencia->estado->value],
+                actor: $subdirector,
+            );
+
             $this->notificacionService->enviarCambioEstado($incidencia);
             $this->notificacionService->enviarResolucionFinal($incidencia);
         });
@@ -221,6 +267,14 @@ class IncidenciaService
                 tipo: TipoAccionHistorial::Aprobada,
                 userId: $sindicato->id,
                 comentario: $comentario ?? 'Aprobada por Sindicato.',
+            );
+
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaAprobada,
+                description: "Incidencia {$incidencia->folio} aprobada por Sindicato.",
+                subject: $incidencia,
+                metadata: ['nuevo_estado' => $incidencia->estado->value],
+                actor: $sindicato,
             );
 
             $this->notificacionService->enviarCambioEstado($incidencia);
@@ -260,6 +314,14 @@ class IncidenciaService
                 comentario: $motivo,
             );
 
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaRechazada,
+                description: "Incidencia {$incidencia->folio} rechazada.",
+                subject: $incidencia,
+                metadata: ['motivo' => $motivo],
+                actor: $revisor,
+            );
+
             $this->notificacionService->enviarCambioEstado($incidencia);
             $this->notificacionService->enviarResolucionFinal($incidencia);
         });
@@ -280,6 +342,14 @@ class IncidenciaService
             comentario: $comentario,
             esInterno: $esInterno,
         );
+
+        $this->auditLogService->record(
+            action: AuditAction::IncidenciaComentada,
+            description: "Comentario agregado a la incidencia {$incidencia->folio}.",
+            subject: $incidencia,
+            metadata: ['es_interno' => $esInterno],
+            actor: $user,
+        );
     }
 
     public function adjuntarArchivo(Incidencia $incidencia, UploadedFile $file, ?User $user = null): void
@@ -292,6 +362,18 @@ class IncidenciaService
                 tipo: TipoAccionHistorial::ArchivoAdjunto,
                 userId: $user?->id,
                 comentario: "Archivo adjunto: {$file->getClientOriginalName()}",
+            );
+
+            $this->auditLogService->record(
+                action: AuditAction::IncidenciaArchivoAdjuntado,
+                description: "Archivo adjuntado a la incidencia {$incidencia->folio}.",
+                subject: $incidencia,
+                metadata: [
+                    'nombre_original' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'tamanio_bytes' => $file->getSize(),
+                ],
+                actor: $user,
             );
         });
     }

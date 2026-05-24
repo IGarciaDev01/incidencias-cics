@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Panel;
 
+use App\Enums\AuditAction;
 use App\Enums\EstadoIncidencia;
 use App\Enums\TipoIncidencia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEmpleadoRequest;
 use App\Models\Empleado;
 use App\Models\Incidencia;
+use App\Services\AuditLogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +23,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EmpleadoController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLogService) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -207,7 +211,14 @@ class EmpleadoController extends Controller
     {
         $data = $request->validated();
 
-        Empleado::create($data);
+        $empleado = Empleado::create($data);
+
+        $this->auditLogService->record(
+            action: AuditAction::EmpleadoCreado,
+            description: "Empleado {$empleado->numero_empleado} creado.",
+            subject: $empleado,
+            metadata: ['numero_empleado' => $empleado->numero_empleado, 'tipo' => $empleado->tipo?->value],
+        );
 
         $rol = $request->user()->rol->value;
 
@@ -247,6 +258,16 @@ class EmpleadoController extends Controller
         }
 
         $empleado->update($data);
+
+        $this->auditLogService->record(
+            action: AuditAction::EmpleadoActualizado,
+            description: "Empleado {$empleado->numero_empleado} actualizado.",
+            subject: $empleado,
+            metadata: [
+                'numero_empleado' => $empleado->numero_empleado,
+                'cambios' => $empleado->getChanges(),
+            ],
+        );
 
         $rol = $request->user()->rol->value;
 
@@ -389,6 +410,17 @@ class EmpleadoController extends Controller
                 'errores' => [],
             ], 422);
         }
+
+        $this->auditLogService->record(
+            action: AuditAction::EmpleadosImportados,
+            description: "Importación de empleados finalizada con {$importados} registros importados.",
+            metadata: [
+                'importados' => $importados,
+                'total' => $total,
+                'errores' => count($errores),
+                'archivo' => $file?->getClientOriginalName(),
+            ],
+        );
 
         return response()->json([
             'success' => true,
