@@ -1,21 +1,23 @@
-@component('mail::message')
-# Tu incidencia ha sido registrada
+<x-mail::message>
+# Incidencia registrada correctamente
 
-Hemos recibido tu reporte de incidencia correctamente. Aquí están los datos de tu seguimiento:
+Hemos recibido tu solicitud en el **Sistema de Gestion de Incidencias del CICS UST - IPN**. Conserva estos datos para consultar el avance del tramite.
 
-@component('mail::table')
+<x-mail::table>
 | | |
 | -------- | ------- |
 | **Folio** | {{ $folio }} |
 | **Asunto** | {{ $titulo }} |
-@endcomponent
+</x-mail::table>
 
-Puedes dar seguimiento a tu incidencia usando tu **número de empleado** o tu **correo electrónico** junto con el folio.
+<x-mail::panel>
+Para dar seguimiento, ingresa con tu **numero de empleado** o **correo electronico** y el folio mostrado arriba.
+</x-mail::panel>
 
-@component('mail::button', ['url' => $urlSeguimiento, 'color' => 'primary'])
+<x-mail::button :url="$urlSeguimiento" color="primary">
 Ver estado de mi incidencia
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

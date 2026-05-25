@@ -1,18 +1,26 @@
-@component('mail::message')
-# Incidencia rechazada por límite excedido – {{ $folio }}
+<x-mail::message>
+# Incidencia rechazada por limite excedido
 
-Tu solicitud de **{{ $tipoIncidencia }}** con fecha **{{ $fechaIncidencia }}** ha sido rechazada automáticamente.
+Tu solicitud fue validada conforme a las reglas institucionales y se rechazo automaticamente por exceder el limite permitido.
 
-@component('mail::panel')
+<x-mail::table>
+| | |
+| -------- | ------- |
+| **Folio** | {{ $folio }} |
+| **Tipo de incidencia** | {{ $tipoIncidencia }} |
+| **Fecha de incidencia** | {{ $fechaIncidencia }} |
+</x-mail::table>
+
+<x-mail::panel>
 **Motivo:** {{ $razon }}
-@endcomponent
+</x-mail::panel>
 
-Este rechazo queda registrado en el sistema. Si crees que hay un error, contacta a tu jefe inmediato.
+Este movimiento queda registrado en el sistema. Si consideras que existe un error, contacta a tu jefe inmediato o al area correspondiente.
 
-@component('mail::button', ['url' => $urlSeguimiento])
+<x-mail::button :url="$urlSeguimiento" color="red">
 Ver mi incidencia
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

@@ -20,6 +20,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
     public function rules(): array
     {
         $maxKb = ArchivoService::TAMANIO_MAX_MB * 1024;
+        $fechaMinima = today()->subDays(2)->toDateString();
 
         return [
             'numero_empleado' => ['required', 'string', 'max:20', 'exists:empleados,numero_empleado'],
@@ -43,7 +44,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
                         ->where('area_user.es_jefe', true)
                     )),
             ],
-            'fecha_incidencia' => ['required', 'date', 'before_or_equal:today'],
+            'fecha_incidencia' => ['required', 'date', "after_or_equal:{$fechaMinima}", 'before_or_equal:today'],
             'hora_incidencia' => ['nullable', 'date_format:H:i'],
             'tipo_incidencia' => ['required', new Enum(TipoIncidencia::class)],
             'minutos_retardo' => [
@@ -71,6 +72,7 @@ class StoreIncidenciaPublicaRequest extends FormRequest
             'area_id.required' => 'El área de adscripción es obligatoria.',
             'area_id.exists' => 'El área seleccionada no está disponible para registrar incidencias.',
             'fecha_incidencia.required' => 'La fecha de la incidencia es obligatoria.',
+            'fecha_incidencia.after_or_equal' => 'Solo puedes registrar incidencias ocurridas en los últimos 2 días.',
             'fecha_incidencia.before_or_equal' => 'La fecha no puede ser posterior a hoy.',
             'tipo_incidencia.required' => 'El tipo de incidencia es obligatorio.',
             'minutos_retardo.required' => 'Debes indicar los minutos de retardo.',

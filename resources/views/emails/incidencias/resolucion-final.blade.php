@@ -1,20 +1,26 @@
-@component('mail::message')
-# Resolución final – Incidencia {{ $folio }}
+<x-mail::message>
+# Resolucion final de incidencia
 
-Tu incidencia ha recibido una resolución final.
+Tu incidencia fue revisada y cuenta con una resolucion final registrada en el sistema.
 
-**Estado:** {{ $estado }}
+<x-mail::table>
+| | |
+| -------- | ------- |
+| **Folio** | {{ $folio }} |
+| **Asunto** | {{ $titulo }} |
+| **Estado final** | {{ $estado }} |
+</x-mail::table>
 
 @if($motivoRechazo)
-@component('mail::panel')
+<x-mail::panel>
 **Motivo del rechazo:** {{ $motivoRechazo }}
-@endcomponent
+</x-mail::panel>
 @endif
 
-@component('mail::button', ['url' => $urlSeguimiento])
+<x-mail::button :url="$urlSeguimiento" color="primary">
 Ver mi incidencia
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

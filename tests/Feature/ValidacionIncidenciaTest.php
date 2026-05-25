@@ -83,6 +83,7 @@ function crearIncidencia(array $override = []): Incidencia
 
 test('se rechaza retardo de 31 o más minutos', function () {
     Mail::fake();
+    Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = crearAreaOperativa([
         'nombre' => 'Area retardo31',
@@ -111,10 +112,13 @@ test('se rechaza retardo de 31 o más minutos', function () {
     ]);
 
     $response->assertSessionHasErrors('minutos_retardo');
+
+    Carbon::setTestNow();
 });
 
 test('se permite retardo de 30 minutos', function () {
     Mail::fake();
+    Carbon::setTestNow(Carbon::parse('2026-04-15'));
 
     $area = crearAreaOperativa([
         'nombre' => 'Area retardo30',
@@ -153,6 +157,34 @@ test('se permite retardo de 30 minutos', function () {
         ->count();
 
     expect($aprobadas)->toBeGreaterThan(0);
+
+    Carbon::setTestNow();
+});
+
+test('se permite registrar una incidencia ocurrida hace 2 dias', function () {
+    Mail::fake();
+
+    ['dataBase' => $data] = crearAreaYOpciones();
+
+    $data['fecha_incidencia'] = now()->subDays(2)->toDateString();
+
+    $this->post(route('incidencias.store'), $data)
+        ->assertRedirect();
+
+    expect(Incidencia::where('numero_empleado', $data['numero_empleado'])->exists())->toBeTrue();
+});
+
+test('se rechaza registrar una incidencia ocurrida hace mas de 2 dias', function () {
+    Mail::fake();
+
+    ['dataBase' => $data] = crearAreaYOpciones();
+
+    $data['fecha_incidencia'] = now()->subDays(3)->toDateString();
+
+    $this->post(route('incidencias.store'), $data)
+        ->assertSessionHasErrors('fecha_incidencia');
+
+    expect(Incidencia::where('numero_empleado', $data['numero_empleado'])->exists())->toBeFalse();
 });
 
 // ─── Retardo: máximo 2 por quincena ──────────────────────────────────────────

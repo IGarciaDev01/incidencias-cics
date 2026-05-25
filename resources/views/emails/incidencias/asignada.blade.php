@@ -1,8 +1,9 @@
-@component('mail::message')
-# Se te ha asignado una incidencia
+<x-mail::message>
+# Incidencia asignada para atencion
 
-Se te ha asignado la siguiente incidencia para su atención:
+Se te asigno una incidencia dentro del flujo institucional. Revisa la informacion y continua con la atencion correspondiente.
 
+<x-mail::table>
 | Campo        | Valor |
 |--------------|-------|
 | **Folio**    | {{ $folio }} |
@@ -10,11 +11,12 @@ Se te ha asignado la siguiente incidencia para su atención:
 @if($area)
 | **Área**     | {{ $area }} |
 @endif
+</x-mail::table>
 
-@component('mail::button', ['url' => $urlSeguimiento, 'color' => 'primary'])
+<x-mail::button :url="$urlSeguimiento" color="primary">
 Ver seguimiento
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

@@ -1,20 +1,25 @@
-@component('mail::message')
-# Actualización en tu incidencia {{ $folio }}
+<x-mail::message>
+# Actualizacion de incidencia
 
-El estado de tu incidencia ha sido actualizado.
+Se registro un cambio en el seguimiento de tu incidencia dentro del sistema institucional.
 
-**Nuevo estado:** {{ $estado }}
+<x-mail::table>
+| | |
+| -------- | ------- |
+| **Folio** | {{ $folio }} |
+| **Nuevo estado** | {{ $estado }} |
+</x-mail::table>
 
 @if($motivoRechazo)
-@component('mail::panel')
+<x-mail::panel>
 **Motivo del rechazo:** {{ $motivoRechazo }}
-@endcomponent
+</x-mail::panel>
 @endif
 
-@component('mail::button', ['url' => $urlSeguimiento])
+<x-mail::button :url="$urlSeguimiento" color="primary">
 Ver mi incidencia
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

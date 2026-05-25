@@ -29,6 +29,14 @@ const TIPOS_INCIDENCIA = [
     { value: 'buena_conducta',    descripcion: '',                                    requiereMinutos: false },
 ];
 
+function formatDateInput(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
 export default function Create({ areas }: Props) {
     const { flash } = usePage().props as { flash?: { error?: string } };
     const { data, setData, post, processing, errors } = useForm({
@@ -50,6 +58,8 @@ export default function Create({ areas }: Props) {
     const [empleadoNoEncontrado, setEmpleadoNoEncontrado] = useState(false);
     const [empleadoIncompleto, setEmpleadoIncompleto] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fechaMaxima = formatDateInput(new Date());
+    const fechaMinima = formatDateInput(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000));
 
     function handleNumeroChange(value: string) {
         setData('numero_empleado', value);
@@ -277,10 +287,14 @@ export default function Create({ areas }: Props) {
                                         name="fecha_incidencia"
                                         type="date"
                                         value={data.fecha_incidencia}
-                                        max={new Date().toISOString().split('T')[0]}
+                                        min={fechaMinima}
+                                        max={fechaMaxima}
                                         onChange={(e) => setData('fecha_incidencia', e.target.value)}
                                         required
                                     />
+                                    <p className="text-xs text-gray-500">
+                                        Solo puedes registrar incidencias ocurridas en los últimos 2 días.
+                                    </p>
                                     <InputError message={errors.fecha_incidencia} />
                                 </div>
 

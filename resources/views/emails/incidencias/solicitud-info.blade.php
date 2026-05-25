@@ -1,18 +1,25 @@
-@component('mail::message')
-# Solicitud de información adicional
+<x-mail::message>
+# Solicitud de informacion adicional
 
-El equipo encargado de tu incidencia **{{ $folio }}** necesita información adicional para continuar con su atención.
+El equipo encargado de tu incidencia necesita informacion adicional para continuar con la revision.
 
-@component('mail::panel')
+<x-mail::table>
+| | |
+| -------- | ------- |
+| **Folio** | {{ $folio }} |
+| **Asunto** | {{ $titulo }} |
+</x-mail::table>
+
+<x-mail::panel>
 {{ $mensaje }}
-@endcomponent
+</x-mail::panel>
 
-Por favor, accede al portal de seguimiento para responder o adjuntar la información solicitada.
+Por favor, accede al portal de seguimiento para responder o adjuntar la informacion solicitada.
 
-@component('mail::button', ['url' => $urlSeguimiento])
+<x-mail::button :url="$urlSeguimiento" color="primary">
 Responder en el portal
-@endcomponent
+</x-mail::button>
 
-Gracias,<br>
+Atentamente,<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>
