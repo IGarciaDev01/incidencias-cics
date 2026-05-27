@@ -1,5 +1,5 @@
 export const ESTADO_LABELS: Record<string, string> = {
-    pendiente_jefe: 'Pendiente — Jefe de Área',
+    pendiente_jefe: 'Pendiente — Jefe de Área Inmediato',
     pendiente_capital_humano: 'Pendiente — Capital Humano',
     pendiente_sindicato: 'Pendiente — Sindicato',
     pendiente_subdireccion: 'Pendiente — Subdirección',

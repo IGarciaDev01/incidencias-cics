@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Empleado;
 use App\Models\Incidencia;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -45,4 +46,40 @@ test('empleado puede descargar comprobante pdf con folio verificado', function (
 
     expect($response->headers->get('content-type'))->toContain('application/pdf')
         ->and($response->getContent())->toStartWith('%PDF');
+});
+
+test('empleado autenticado en seguimiento puede descargar comprobantes de sus incidencias', function () {
+    $empleado = Empleado::factory()->create();
+
+    $primeraIncidencia = Incidencia::factory()->create([
+        'folio' => 'INC-2026-9010',
+        'numero_empleado' => $empleado->numero_empleado,
+    ]);
+
+    $segundaIncidencia = Incidencia::factory()->create([
+        'folio' => 'INC-2026-9011',
+        'numero_empleado' => $empleado->numero_empleado,
+    ]);
+
+    $this->withSession(['empleado_auth' => $empleado->numero_empleado])
+        ->get(route('comprobante.descargar', $primeraIncidencia->folio))
+        ->assertOk()
+        ->assertHeaderContains('content-type', 'application/pdf');
+
+    $this->withSession(['empleado_auth' => $empleado->numero_empleado])
+        ->get(route('comprobante.descargar', $segundaIncidencia->folio))
+        ->assertOk()
+        ->assertHeaderContains('content-type', 'application/pdf');
+});
+
+test('empleado autenticado en seguimiento no puede descargar comprobantes de otro empleado', function () {
+    $empleado = Empleado::factory()->create();
+    $incidencia = Incidencia::factory()->create([
+        'folio' => 'INC-2026-9012',
+        'numero_empleado' => '99999',
+    ]);
+
+    $this->withSession(['empleado_auth' => $empleado->numero_empleado])
+        ->get(route('comprobante.descargar', $incidencia->folio))
+        ->assertForbidden();
 });

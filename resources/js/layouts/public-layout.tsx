@@ -39,19 +39,19 @@ export default function PublicLayout({
                             className="text-sm text-gray-600 transition-colors hover:text-gray-900"
                             aria-label="Levantar incidencia"
                         >
-                            Levantar incidencia
+                            Registrar incidencia
                         </Link>
                         <Link
                             href={seguimientoIndex.url()}
-                            className="text-sm text-gray-600 transition-colors hover:text-gray-900"
+                            className="rounded-md bg-primary px-2 py-1 text-sm text-white transition-colors hover:text-gray-200"
                         >
-                            Seguimiento
+                            Incidencias
                         </Link>
                         <Link
                             href={IniciarSesion.url()}
                             className="rounded-md bg-primary px-2 py-1 text-sm text-white transition-colors hover:text-gray-200"
                         >
-                            Iniciar Sesión
+                            Administración
                         </Link>
                     </nav>
                 </div>

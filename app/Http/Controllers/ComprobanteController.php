@@ -103,6 +103,10 @@ class ComprobanteController extends Controller
             return true;
         }
 
+        if ($request->session()->get('empleado_auth') === $incidencia->numero_empleado) {
+            return true;
+        }
+
         return false;
     }
 }

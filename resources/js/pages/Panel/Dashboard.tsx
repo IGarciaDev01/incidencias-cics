@@ -189,7 +189,7 @@ function TrendChart({ data }: { data: Record<string, { label: string; total: num
                     const height = Math.max((total / max) * 100, total > 0 ? 8 : 0);
 
                     return (
-                        <div key={key} className="flex-1 flex flex-col items-center gap-1">
+                        <div key={key} className="flex-1 flex h-full flex-col items-center justify-end gap-1">
                             <div
                                 className="w-full bg-sky-400 rounded-t-sm transition-all"
                                 style={{ height: `${height}%` }}

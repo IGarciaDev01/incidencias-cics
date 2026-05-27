@@ -278,7 +278,7 @@ class DashboardController extends Controller
         for ($i = $months - 1; $i >= 0; $i--) {
             $fecha = now()->timezone('America/Mexico_City')->subMonths($i);
             $mes = $fecha->format('Y-m');
-            $label = $fecha->format('M');
+            $label = rtrim($fecha->locale('es')->translatedFormat('M'), '.');
             $meses[$mes] = [
                 'label' => ucfirst($label),
                 'total' => $result[$mes] ?? 0,
