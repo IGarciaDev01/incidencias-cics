@@ -73,7 +73,7 @@ export default function Show({ incidencia }: Props) {
     const aprobarForm  = useForm({ comentario: '' });
     const rechazarForm = useForm({ motivo: '' });
 
-    const puedeActuar = incidencia.estado === 'pendiente_sindicato';
+    const puedeActuar = !['aprobada', 'rechazada'].includes(incidencia.estado);
 
     return (
         <>
@@ -165,7 +165,7 @@ export default function Show({ incidencia }: Props) {
                 {puedeActuar && (
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
                         <h3 className="font-semibold text-gray-900 mb-4">Acciones — Sindicato</h3>
-                        <p className="text-sm text-gray-500 mb-4">Esta incidencia fue enviada por Capital Humano para resolución de Sindicato.</p>
+                        <p className="text-sm text-gray-500 mb-4">Sindicato puede resolver definitivamente esta incidencia en cualquier etapa activa del flujo.</p>
                         <div className="flex flex-wrap gap-2 mb-4">
                             <Button size="sm" variant={tab === 'aprobar' ? 'default' : 'outline'} onClick={() => setTab(tab === 'aprobar' ? null : 'aprobar')}>
                                 Aprobar definitivamente

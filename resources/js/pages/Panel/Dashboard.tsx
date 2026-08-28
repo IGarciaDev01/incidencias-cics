@@ -342,12 +342,12 @@ function SindicatoDashboard({ stats }: { stats: CapitalHumanoStats }) {
     return (
         <div className="space-y-6">
             <div>
-                <p className="text-sm text-gray-500 mb-4">Incidencias enviadas por Capital Humano para revisión de Sindicato.</p>
+                <p className="text-sm text-gray-500 mb-4">Incidencias del sistema disponibles para resolución definitiva de Sindicato.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Requieren tu revisión" value={stats.pendientes} color="purple" description="Enviadas por Capital Humano" />
+                    <StatCard label="Activas por resolver" value={stats.pendientes} color="purple" description="Cualquier etapa pendiente" />
                     <StatCard label="Aprobadas" value={stats.aprobadas} color="green" />
                     <StatCard label="Rechazadas" value={stats.rechazadas} color="red" />
-                    <StatCard label="Total enviadas" value={stats.total} color="gray" />
+                    <StatCard label="Total en el sistema" value={stats.total} color="gray" />
                 </div>
             </div>
 

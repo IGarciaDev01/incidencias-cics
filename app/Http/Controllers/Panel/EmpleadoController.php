@@ -39,12 +39,6 @@ class EmpleadoController extends Controller
             $incidenciasBase->where('area_id', $user->area_id);
         }
 
-        if ($user->esSindicato()) {
-            $incidenciasBase
-                ->enviadasSindicato()
-                ->where('tipo_incidencia', '!=', TipoIncidencia::PermisoEconomico->value);
-        }
-
         $empleados = Empleado::query()
             ->selectRaw('numero_empleado, nombre as reportante_nombre, email as email_reportante')
             ->when($buscar->isNotEmpty(), function ($q) use ($buscar) {
@@ -59,10 +53,6 @@ class EmpleadoController extends Controller
             ])
             ->when(
                 $user->esJefeInmediato(),
-                fn ($q) => $q->whereExists((clone $incidenciasBase)->selectRaw('1'))
-            )
-            ->when(
-                $user->esSindicato(),
                 fn ($q) => $q->whereExists((clone $incidenciasBase)->selectRaw('1'))
             )
             ->orderByDesc('ultima_incidencia')
@@ -87,16 +77,6 @@ class EmpleadoController extends Controller
             abort_if(! $user->tieneArea(), 403, 'No tienes un área asignada.');
             $query->where('area_id', $user->area_id);
         }
-
-        if ($user->esSindicato()) {
-            $query
-                ->enviadasSindicato()
-                ->where('tipo_incidencia', '!=', TipoIncidencia::PermisoEconomico->value);
-        }
-
-        $sindicatoTieneIncidencias = $user->esSindicato()
-            ? (clone $query)->exists()
-            : true;
 
         if ($request->filled('fecha') && $request->filled('fecha_fin')) {
             $query->where('fecha_incidencia', '>=', $request->fecha)
@@ -129,13 +109,9 @@ class EmpleadoController extends Controller
             }
         }
 
-        if (! $sindicatoTieneIncidencias) {
-            abort(403, 'No tienes incidencias de sindicato para este empleado.');
-        }
-
         $permisoEconomicoStats = null;
 
-        if (! $user->esJefeInmediato() && ! $user->esSindicato()) {
+        if (! $user->esJefeInmediato()) {
             if ($request->filled('fecha') && $request->filled('fecha_fin')) {
                 $inicio = Carbon::parse($request->fecha)->startOfDay();
                 $fin = Carbon::parse($request->fecha_fin)->endOfDay();
@@ -191,10 +167,7 @@ class EmpleadoController extends Controller
             'estados' => array_map(fn ($e) => ['value' => $e->value, 'name' => $e->name], EstadoIncidencia::cases()),
             'tipos' => array_map(
                 fn ($t) => ['value' => $t->value, 'name' => $t->name],
-                array_values(array_filter(
-                    TipoIncidencia::cases(),
-                    fn (TipoIncidencia $tipo) => ! $user->esSindicato() || $tipo !== TipoIncidencia::PermisoEconomico,
-                ))
+                TipoIncidencia::cases()
             ),
             'permiso_economico_stats' => $permisoEconomicoStats,
         ]);

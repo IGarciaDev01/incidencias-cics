@@ -102,8 +102,7 @@ export default function Index({
                         Incidencias — Sindicato
                     </h2>
                     <p className="text-sm text-gray-500">
-                        {incidencias.total} registros enviados por Capital
-                        Humano
+                        {incidencias.total} registros del sistema
                     </p>
                 </div>
 

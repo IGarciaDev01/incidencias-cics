@@ -83,21 +83,21 @@ class DashboardController extends Controller
 
     private function statsSindicato(): array
     {
-        $base = Incidencia::enviadasSindicato();
+        $base = Incidencia::query();
         $total = (clone $base)->count();
         $aprobadas = (clone $base)->where('estado', EstadoIncidencia::Aprobada)->count();
 
         return [
-            'pendientes' => (clone $base)->where('estado', EstadoIncidencia::PendienteSindicato)->count(),
+            'pendientes' => (clone $base)->whereNotIn('estado', [EstadoIncidencia::Aprobada, EstadoIncidencia::Rechazada])->count(),
             'aprobadas' => $aprobadas,
             'rechazadas' => (clone $base)->where('estado', EstadoIncidencia::Rechazada)->count(),
             'total' => $total,
             'tasa_aprobacion' => $total > 0 ? round(($aprobadas / $total) * 100, 1) : 0,
             'charts' => [
-                'por_estado' => $this->countPorEstado(enviadasSindicato: true),
-                'por_tipo' => $this->countPorTipo(enviadasSindicato: true),
-                'por_area' => $this->countPorArea(enviadasSindicato: true),
-                'solicitudes_mes' => $this->solicitudesPorMes(enviadasSindicato: true),
+                'por_estado' => $this->countPorEstado(),
+                'por_tipo' => $this->countPorTipo(),
+                'por_area' => $this->countPorArea(),
+                'solicitudes_mes' => $this->solicitudesPorMes(),
             ],
         ];
     }

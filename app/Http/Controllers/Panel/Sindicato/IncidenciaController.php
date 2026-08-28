@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Panel\Sindicato;
 
-use App\Enums\EstadoIncidencia;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Panel\Concerns\IncidenciasFiltrosTrait;
 use App\Http\Requests\Sindicato\AprobarIncidenciaRequest;
@@ -23,14 +22,12 @@ class IncidenciaController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Panel/Sindicato/Incidencias/Index',
-            $this->listadoIncidencias($request, queryCallback: fn ($query) => $query->enviadasSindicato()),
+            $this->listadoIncidencias($request),
         );
     }
 
     public function show(Incidencia $incidencia): Response
     {
-        abort_if(! $incidencia->enviado_sindicato_at, 403);
-
         return Inertia::render('Panel/Sindicato/Incidencias/Show', [
             'incidencia' => $this->incidenciaConRelaciones($incidencia),
         ]);
@@ -47,7 +44,7 @@ class IncidenciaController extends Controller
 
     public function rechazar(RechazarIncidenciaRequest $request, Incidencia $incidencia): RedirectResponse
     {
-        $this->incidenciaService->rechazar($incidencia, $request->user(), $request->motivo, EstadoIncidencia::PendienteSindicato);
+        $this->incidenciaService->rechazar($incidencia, $request->user(), $request->motivo);
 
         return redirect()
             ->route('panel.sindicato.incidencias.show', $incidencia)

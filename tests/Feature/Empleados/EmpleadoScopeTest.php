@@ -86,14 +86,14 @@ test('capital humano ve empleados con incidencias de todas las areas', function 
             ->has('empleados.data', 3));
 });
 
-test('sindicato solo ve incidencias enviadas a sindicato en historial de empleado', function () {
+test('sindicato ve el historial completo de incidencias del empleado', function () {
     $empleado = Empleado::factory()->create([
         'numero_empleado' => '44444',
         'nombre' => 'Empleado Sindicato',
         'email' => 'sindicato@example.com',
     ]);
 
-    $visible = Incidencia::factory()->estadoSindicato()->create([
+    Incidencia::factory()->estadoSindicato()->create([
         'numero_empleado' => $empleado->numero_empleado,
         'reportante_nombre' => $empleado->nombre,
         'email_reportante' => $empleado->email,
@@ -124,13 +124,12 @@ test('sindicato solo ve incidencias enviadas a sindicato en historial de emplead
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Panel/Empleados/Show')
-            ->has('incidencias', 1)
-            ->where('incidencias.0.id', $visible->id)
-            ->where('permiso_economico_stats', null)
-            ->where('tipos.1.value', 'comision_oficial'));
+            ->has('incidencias', 3)
+            ->has('permiso_economico_stats')
+            ->where('tipos.1.value', 'permiso_economico'));
 });
 
-test('sindicato no puede abrir empleado sin incidencias visibles para sindicato', function () {
+test('sindicato puede abrir empleado aunque sus incidencias no fueran enviadas a sindicato', function () {
     $empleado = Empleado::factory()->create([
         'numero_empleado' => '55555',
     ]);
@@ -147,5 +146,8 @@ test('sindicato no puede abrir empleado sin incidencias visibles para sindicato'
 
     $this->actingAs($sindicato)
         ->get(route('panel.sindicato.empleados.show', $empleado->numero_empleado))
-        ->assertForbidden();
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Panel/Empleados/Show')
+            ->has('incidencias', 1));
 });

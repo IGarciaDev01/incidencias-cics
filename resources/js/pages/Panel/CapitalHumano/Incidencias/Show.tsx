@@ -9,7 +9,6 @@ import { dashboard } from '@/routes/panel';
 import {
     index,
     aprobar,
-    enviarSindicato,
     rechazar,
 } from '@/routes/panel/capital_humano/incidencias';
 import { formatDateOnly, formatTime } from '@/utils/date';
@@ -65,14 +64,13 @@ return `${(b / 1024).toFixed(1)} KB`;
     return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-type Tab = 'aprobar' | 'sindicato' | 'rechazar';
+type Tab = 'aprobar' | 'rechazar';
 
 export default function Show({ incidencia }: Props) {
     const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
     const [tab, setTab] = useState<Tab | null>(null);
 
     const aprobarForm  = useForm({ comentario: '' });
-    const sindicatoForm = useForm({ comentario: '' });
     const rechazarForm = useForm({ motivo: '' });
     // Comentarios deshabilitados para Capital Humano.
 
@@ -176,11 +174,6 @@ export default function Show({ incidencia }: Props) {
                                 </Button>
                             )}
                             {puedeRechazar && (
-                                <Button size="sm" variant={tab === 'sindicato' ? 'default' : 'outline'} onClick={() => setTab(tab === 'sindicato' ? null : 'sindicato')}>
-                                    Enviar a Sindicato
-                                </Button>
-                            )}
-                            {puedeRechazar && (
                                 <Button size="sm" variant={tab === 'rechazar' ? 'destructive' : 'outline'} onClick={() => setTab(tab === 'rechazar' ? null : 'rechazar')}>
                                     Rechazar
                                 </Button>
@@ -208,31 +201,6 @@ export default function Show({ incidencia }: Props) {
                                 <p className="text-xs text-gray-500">Al aprobar, la incidencia pasará a la Subdirección Administrativa.</p>
                                 <Button type="submit" size="sm" disabled={aprobarForm.processing}>
                                     {aprobarForm.processing && <Spinner />} Confirmar aprobación
-                                </Button>
-                            </form>
-                        )}
-
-                        {tab === 'sindicato' && (
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    sindicatoForm.post(enviarSindicato.url(incidencia.id), { onSuccess: () => setTab(null) });
-                                }}
-                                className="border-t pt-4 space-y-3"
-                            >
-                                <div className="grid gap-1.5">
-                                    <Label>Comentario (opcional)</Label>
-                                    <textarea
-                                        value={sindicatoForm.data.comentario}
-                                        onChange={(e) => sindicatoForm.setData('comentario', e.target.value)}
-                                        rows={2}
-                                        placeholder="Observaciones para Sindicato..."
-                                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500">La incidencia quedará visible para Sindicato y solo ese rol podrá resolverla en esta etapa.</p>
-                                <Button type="submit" size="sm" disabled={sindicatoForm.processing}>
-                                    {sindicatoForm.processing && <Spinner />} Confirmar envío a Sindicato
                                 </Button>
                             </form>
                         )}

@@ -5,6 +5,7 @@ use App\Models\Incidencia;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('el jefe inmediato solo puede acceder a incidencias de su area', function () {
@@ -128,31 +129,11 @@ test('flujo de aprobacion es jefe -> capital humano -> subdireccion', function (
     expect($incidencia->estado->value)->toBe('aprobada');
 });
 
-test('capital humano puede enviar una incidencia pendiente a sindicato', function () {
-    Mail::fake();
-    $this->withoutMiddleware(PreventRequestForgery::class);
-
-    $capitalHumano = User::factory()->create([
-        'rol' => 'capital_humano',
-        'activo' => true,
-    ]);
-
-    $incidencia = Incidencia::factory()->estadoCapitalHumano()->create();
-
-    $this->actingAs($capitalHumano)
-        ->post(route('panel.capital_humano.incidencias.enviar-sindicato', $incidencia), [
-            'comentario' => 'Requiere validación del sindicato.',
-        ])
-        ->assertRedirect();
-
-    $incidencia->refresh();
-
-    expect($incidencia->estado->value)->toBe('pendiente_sindicato')
-        ->and($incidencia->enviado_sindicato_at)->not->toBeNull()
-        ->and($incidencia->revisado_por)->toBe($capitalHumano->id);
+test('capital humano ya no tiene ruta para enviar incidencias a sindicato', function () {
+    expect(Route::has('panel.capital_humano.incidencias.enviar-sindicato'))->toBeFalse();
 });
 
-test('sindicato solo ve incidencias enviadas por capital humano', function () {
+test('sindicato ve todas las incidencias del sistema', function () {
     $sindicato = User::factory()->create([
         'rol' => 'sindicato',
         'activo' => true,
@@ -170,15 +151,16 @@ test('sindicato solo ve incidencias enviadas por capital humano', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Panel/Sindicato/Incidencias/Index')
-            ->has('incidencias.data', 1)
-            ->where('incidencias.data.0.id', $enviada->id));
+            ->has('incidencias.data', 2)
+            ->where('incidencias.data.0.id', $enviada->id)
+            ->where('incidencias.data.1.id', $noEnviada->id));
 
     $this->actingAs($sindicato)
         ->get(route('panel.sindicato.incidencias.show', $noEnviada))
-        ->assertForbidden();
+        ->assertOk();
 });
 
-test('sindicato solo puede resolver incidencias pendientes de sindicato', function () {
+test('sindicato puede resolver incidencias en cualquier etapa activa', function () {
     Mail::fake();
     $this->withoutMiddleware(PreventRequestForgery::class);
 
@@ -187,19 +169,51 @@ test('sindicato solo puede resolver incidencias pendientes de sindicato', functi
         'activo' => true,
     ]);
 
-    $enviada = Incidencia::factory()->estadoSindicato()->create();
-    $noEnviada = Incidencia::factory()->estadoCapitalHumano()->create();
+    $pendienteJefe = Incidencia::factory()->estadoJefe()->create();
+    $pendienteCapitalHumano = Incidencia::factory()->estadoCapitalHumano()->create();
+    $pendienteSubdireccion = Incidencia::factory()->estadoSubdireccion()->create();
 
     $this->actingAs($sindicato)
-        ->post(route('panel.sindicato.incidencias.aprobar', $noEnviada), ['comentario' => 'No permitido'])
+        ->post(route('panel.sindicato.incidencias.aprobar', $pendienteJefe), ['comentario' => 'Aprobación final'])
+        ->assertRedirect();
+
+    $this->actingAs($sindicato)
+        ->post(route('panel.sindicato.incidencias.aprobar', $pendienteCapitalHumano), ['comentario' => 'Aprobación final'])
+        ->assertRedirect();
+
+    $this->actingAs($sindicato)
+        ->post(route('panel.sindicato.incidencias.rechazar', $pendienteSubdireccion), ['motivo' => 'Rechazo definitivo por Sindicato.'])
+        ->assertRedirect();
+
+    $pendienteJefe->refresh();
+    $pendienteCapitalHumano->refresh();
+    $pendienteSubdireccion->refresh();
+
+    expect($pendienteJefe->estado->value)->toBe('aprobada')
+        ->and($pendienteJefe->revisado_por)->toBe($sindicato->id)
+        ->and($pendienteCapitalHumano->estado->value)->toBe('aprobada')
+        ->and($pendienteCapitalHumano->revisado_por)->toBe($sindicato->id)
+        ->and($pendienteSubdireccion->estado->value)->toBe('rechazada')
+        ->and($pendienteSubdireccion->revisado_por)->toBe($sindicato->id);
+});
+
+test('sindicato no puede resolver incidencias finalizadas', function () {
+    Mail::fake();
+    $this->withoutMiddleware(PreventRequestForgery::class);
+
+    $sindicato = User::factory()->create([
+        'rol' => 'sindicato',
+        'activo' => true,
+    ]);
+
+    $aprobada = Incidencia::factory()->aprobada()->create();
+    $rechazada = Incidencia::factory()->rechazada()->create();
+
+    $this->actingAs($sindicato)
+        ->post(route('panel.sindicato.incidencias.aprobar', $aprobada), ['comentario' => 'No permitido'])
         ->assertUnprocessable();
 
     $this->actingAs($sindicato)
-        ->post(route('panel.sindicato.incidencias.aprobar', $enviada), ['comentario' => 'Aprobación final'])
-        ->assertRedirect();
-
-    $enviada->refresh();
-
-    expect($enviada->estado->value)->toBe('aprobada')
-        ->and($enviada->revisado_por)->toBe($sindicato->id);
+        ->post(route('panel.sindicato.incidencias.rechazar', $rechazada), ['motivo' => 'No permitido por estado final.'])
+        ->assertUnprocessable();
 });

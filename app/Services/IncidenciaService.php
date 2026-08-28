@@ -251,9 +251,9 @@ class IncidenciaService
     public function aprobarSindicato(Incidencia $incidencia, User $sindicato, ?string $comentario = null): void
     {
         abort_if(
-            $incidencia->estado !== EstadoIncidencia::PendienteSindicato,
+            $incidencia->estado->esFinal(),
             422,
-            'La incidencia no está pendiente de revisión de Sindicato.'
+            'La incidencia ya se encuentra en un estado final.'
         );
 
         DB::transaction(function () use ($incidencia, $sindicato, $comentario) {
